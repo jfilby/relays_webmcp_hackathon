@@ -33,7 +33,7 @@ export default NextAuth({
         await resend?.emails.send({
           from: provider.from,
           to: identifier,
-          subject: "Sign in to Sfactory",
+          subject: "Sign in to Relays",
           html: `
             <h2>Sign in</h2>
 
@@ -62,7 +62,7 @@ export default NextAuth({
         const demoUser = {
           id: '1',
           name: 'Demo user',
-          email: 'demo@sfactory.dev',
+          email: 'demo@relays.work',
           username: 'demo',
           password: process.env.DEMO_USER_PASSWORD
         }

@@ -92,7 +92,7 @@ export default function DemoLogin({
         <Typography
           variant='body1'
           style={{ marginBottom: '1em' }}>
-          This is a demo account for experimenting with Sfactory.
+          This is a demo account for experimenting with Relays.
         </Typography>
 
         {alertSeverity != null &&
