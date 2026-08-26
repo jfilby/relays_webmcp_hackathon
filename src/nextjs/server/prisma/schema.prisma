@@ -70,3 +70,158 @@ model EmailListUser {
   @@map("email_list_user")
   @@schema("public")
 }
+
+// Relays: Profiles
+
+model Profile {
+  // Professional identity on Relays, extending the core UserProfile. The type
+  // field distinguishes a human from an AI agent (both are first-class users).
+  id                           String               @id @default(cuid())
+  userProfileId                String               @map("user_profile_id") @unique
+  userProfile                  UserProfile          @relation(fields: [userProfileId], references: [id])
+  type                         String               @db.Char(1)   // H (human), A (agent)
+  status                       String               @db.Char(1)
+  displayName                  String               @map("display_name")
+  headline                     String?
+  bio                          String?              @db.Text
+  location                     String?
+  website                      String?
+  avatar                       String?
+  isPublic                     Boolean              @map("is_public")
+  created                      DateTime             @default(now())
+  updated                      DateTime             @updatedAt
+
+  ofConnectionsSent            Connection[]         @relation("connectionFrom")
+  ofConnectionsReceived        Connection[]         @relation("connectionTo")
+  ofOrganizationMemberships    OrganizationMember[]
+  ofProjectMemberships         ProjectMember[]
+  ofPlansCreated               CollaborationPlan[]  @relation("planCreatedBy")
+  ofPlansTargeted              CollaborationPlan[]  @relation("planTargeted")
+
+  @@map("profile")
+  @@schema("public")
+}
+
+// Relays: Networking
+
+model Connection {
+  // A directed link between two profiles (e.g. a connection request). While
+  // pending only the from->to edge exists; on acceptance a symmetric active
+  // edge is implied. status: P (pending), A (active), R (rejected), B (blocked).
+  id                           String               @id @default(cuid())
+  fromProfileId                String               @map("from_profile_id")
+  fromProfile                  Profile              @relation("connectionFrom", fields: [fromProfileId], references: [id])
+  toProfileId                  String               @map("to_profile_id")
+  toProfile                    Profile              @relation("connectionTo", fields: [toProfileId], references: [id])
+  status                       String               @db.Char(1)
+  created                      DateTime             @default(now())
+  updated                      DateTime             @updatedAt
+
+  @@unique([fromProfileId, toProfileId])
+  @@index([toProfileId, status])
+  @@map("connection")
+  @@schema("public")
+}
+
+// Relays: Organizations
+
+model Organization {
+  // A team/company that promotes projects. Organisations are instances
+  // (instanceType 'P') and their Relays-specific details live here.
+  id                           String               @id @default(cuid())
+  instanceId                   String               @map("instance_id") @unique
+  instance                     Instance             @relation(fields: [instanceId], references: [id])
+  name                         String
+  website                      String?
+  description                  String?              @db.Text
+  status                       String               @db.Char(1)
+  created                      DateTime             @default(now())
+  updated                      DateTime             @updatedAt
+
+  ofOrganizationMembers        OrganizationMember[]
+  ofProjects                   Project[]
+
+  @@map("organization")
+  @@schema("public")
+}
+
+model OrganizationMember {
+  id                           String               @id @default(cuid())
+  organizationId               String               @map("organization_id")
+  organization                 Organization         @relation(fields: [organizationId], references: [id])
+  profileId                    String               @map("profile_id")
+  profile                      Profile              @relation(fields: [profileId], references: [id])
+  role                         String               @db.Char(1)   // O (owner), M (member)
+  status                       String               @db.Char(1)
+  created                      DateTime             @default(now())
+
+  @@unique([organizationId, profileId])
+  @@map("organization_member")
+  @@schema("public")
+}
+
+// Relays: Projects
+
+model Project {
+  // Details for a project instance, including how it is presented/promoted.
+  id                           String               @id @default(cuid())
+  instanceId                   String               @map("instance_id") @unique
+  instance                     Instance             @relation(fields: [instanceId], references: [id])
+  organizationId               String?              @map("organization_id")
+  organization                 Organization?        @relation(fields: [organizationId], references: [id])
+  tagline                      String?
+  description                  String?              @db.Text
+  website                      String?
+  image                        String?
+  isPromoted                   Boolean              @map("is_promoted")
+  status                       String               @db.Char(1)
+  created                      DateTime             @default(now())
+  updated                      DateTime             @updatedAt
+
+  ofProjectMembers             ProjectMember[]
+  ofCollaborationPlans         CollaborationPlan[]
+
+  @@map("project")
+  @@schema("public")
+}
+
+model ProjectMember {
+  id                           String               @id @default(cuid())
+  projectId                    String               @map("project_id")
+  project                      Project              @relation(fields: [projectId], references: [id])
+  profileId                    String               @map("profile_id")
+  profile                      Profile              @relation(fields: [profileId], references: [id])
+  role                         String               @db.Char(1)   // O (owner), C (collaborator)
+  status                       String               @db.Char(1)
+  created                      DateTime             @default(now())
+
+  @@unique([projectId, profileId])
+  @@map("project_member")
+  @@schema("public")
+}
+
+// Relays: Collaboration
+
+model CollaborationPlan {
+  // A plan to collaborate on a project, proposed by one profile and optionally
+  // targeted at another. status: D (draft), O (open), A (accepted), C (completed),
+  // X (cancelled).
+  id                           String               @id @default(cuid())
+  createdByProfileId           String               @map("created_by_profile_id")
+  createdByProfile             Profile              @relation("planCreatedBy", fields: [createdByProfileId], references: [id])
+  projectId                    String               @map("project_id")
+  project                      Project              @relation(fields: [projectId], references: [id])
+  targetProfileId              String?              @map("target_profile_id")   // The other party to collaborate with, if any
+  targetProfile                Profile?             @relation("planTargeted", fields: [targetProfileId], references: [id])
+  status                       String               @db.Char(1)
+  title                        String
+  description                  String?              @db.Text
+  startBy                      DateTime?            @map("start_by")
+  created                      DateTime             @default(now())
+  updated                      DateTime             @updatedAt
+
+  @@index([projectId])
+  @@index([targetProfileId])
+  @@map("collaboration_plan")
+  @@schema("public")
+}
