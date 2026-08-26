@@ -14,15 +14,15 @@ import { loadServerPage } from '@/services/page/load-server-page'
 import Layout, { pageBodyWidth } from '@/components/layouts/layout'
 import LoadProfilesByFilter from '@/components/profiles/load-by-filter'
 import ProfileCard from '@/components/profiles/profile-card'
-import type { Profile } from '@/types/client-only-types'
+import type { Profile, UserProfile } from '@/types/client-only-types'
 import type { GetServerSidePropsContext } from 'next'
 
 interface Props {
-  userProfileId?: string | null
+  userProfile: UserProfile
 }
 
 export default function ProfilesPage({
-  userProfileId
+  userProfile
 }: Props) {
 
   // State
@@ -99,7 +99,7 @@ export default function ProfilesPage({
             </Button>
           </div>
 
-          {userProfileId != null ?
+          {userProfile.id != null ?
             <div style={{ marginBottom: '2em' }}>
               <Button
                 onClick={() => window.location.href = '/profile'}

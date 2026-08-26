@@ -6,15 +6,15 @@ import { loadServerPage } from '@/services/page/load-server-page'
 import Layout, { pageBodyWidth } from '@/components/layouts/layout'
 import LoadProfileById from '@/components/profiles/load-by-id'
 import ProfileView from '@/components/profiles/profile-view'
-import type { Profile } from '@/types/client-only-types'
+import type { Profile, UserProfile } from '@/types/client-only-types'
 import type { GetServerSidePropsContext } from 'next'
 
 interface Props {
-  userProfileId?: string | null
+  userProfile: UserProfile
 }
 
 export default function ProfilePage({
-  userProfileId
+  userProfile
 }: Props) {
 
   // Router
@@ -39,7 +39,7 @@ export default function ProfilePage({
           {profile != null ?
             <ProfileView
               profile={profile}
-              owner={profile.userProfileId === userProfileId} />
+              owner={profile.userProfileId === userProfile.id} />
             :
             <></>
           }
@@ -72,7 +72,7 @@ export default function ProfilePage({
       {profileId != null ?
         <LoadProfileById
           id={profileId}
-          userProfileId={userProfileId ?? undefined}
+          userProfileId={userProfile.id ?? undefined}
           setProfile={setProfile}
           setNotFound={setNotFound} />
         :

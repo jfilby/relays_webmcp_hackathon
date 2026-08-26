@@ -5,15 +5,15 @@ import { loadServerPage } from '@/services/page/load-server-page'
 import Layout, { pageBodyWidth } from '@/components/layouts/layout'
 import LoadProfileByUserProfileId from '@/components/profiles/load-by-user-profile-id'
 import ProfileView from '@/components/profiles/profile-view'
-import type { Profile } from '@/types/client-only-types'
+import type { Profile, UserProfile } from '@/types/client-only-types'
 import type { GetServerSidePropsContext } from 'next'
 
 interface Props {
-  userProfileId: string
+  userProfile: UserProfile
 }
 
 export default function MyProfilePage({
-  userProfileId
+  userProfile
 }: Props) {
 
   // State
@@ -26,6 +26,8 @@ export default function MyProfilePage({
       <Head><title>{`${process.env.NEXT_PUBLIC_APP_NAME} - My profile`}</title></Head>
 
       <Layout>
+
+        {/* <p>userProfile: {JSON.stringify(userProfile)}</p> */}
 
         <div style={{ margin: '0 auto', width: pageBodyWidth, textAlign: 'left', verticalAlign: 'textTop' }}>
 
@@ -72,7 +74,7 @@ export default function MyProfilePage({
       </Layout>
 
       <LoadProfileByUserProfileId
-        userProfileId={userProfileId}
+        userProfileId={userProfile.id}
         setProfile={setProfile}
         setNotFound={setNotFound} />
     </>

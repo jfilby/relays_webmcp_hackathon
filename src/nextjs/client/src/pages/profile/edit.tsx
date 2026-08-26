@@ -6,15 +6,15 @@ import Layout, { pageBodyWidth } from '@/components/layouts/layout'
 import LoadProfileByUserProfileId from '@/components/profiles/load-by-user-profile-id'
 import ProfileForm, { ProfileFormValues } from '@/components/profiles/profile-form'
 import UpdateProfile from '@/components/profiles/update'
-import type { Profile } from '@/types/client-only-types'
+import type { Profile, UserProfile } from '@/types/client-only-types'
 import type { GetServerSidePropsContext } from 'next'
 
 interface Props {
-  userProfileId: string
+  userProfile: UserProfile
 }
 
 export default function EditProfilePage({
-  userProfileId
+  userProfile
 }: Props) {
 
   // State
@@ -128,7 +128,7 @@ export default function EditProfilePage({
       </Layout>
 
       <LoadProfileByUserProfileId
-        userProfileId={userProfileId}
+        userProfileId={userProfile.id}
         setProfile={setProfile}
         setNotFound={setNotFound}
         setAlertSeverity={setAlertSeverity}
@@ -137,7 +137,7 @@ export default function EditProfilePage({
       {profile != null ?
         <UpdateProfile
           id={profile.id}
-          userProfileId={userProfileId}
+          userProfileId={userProfile.id}
           displayName={values.displayName}
           type={values.type}
           isPublic={values.isPublic}

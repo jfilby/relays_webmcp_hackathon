@@ -5,13 +5,14 @@ import Layout, { pageBodyWidth } from '@/components/layouts/layout'
 import ProfileForm, { ProfileFormValues } from '@/components/profiles/profile-form'
 import CreateProfile from '@/components/profiles/create'
 import type { GetServerSidePropsContext } from 'next'
+import { UserProfile } from '@/types/client-only-types'
 
 interface Props {
-  userProfileId: string
+  userProfile: UserProfile
 }
 
 export default function AddProfilePage({
-  userProfileId
+  userProfile
 }: Props) {
 
   // State
@@ -87,7 +88,7 @@ export default function AddProfilePage({
       </Layout>
 
       <CreateProfile
-        userProfileId={userProfileId}
+        userProfileId={userProfile.id}
         name={values.displayName}
         updates={false}
         type={values.type}

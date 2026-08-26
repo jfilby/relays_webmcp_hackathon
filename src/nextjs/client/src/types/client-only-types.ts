@@ -42,3 +42,9 @@ export const profileTypes = [
 ]
 
 export const defaultUserPreferences = []
+
+export interface UserProfile {
+  id: string
+  userId: string
+  isAdmin: boolean
+}
