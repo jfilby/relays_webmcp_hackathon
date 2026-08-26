@@ -17,3 +17,16 @@ export const loadServerStartDataMutation = gql`
     }
   }
 `
+
+export const getOrCreateUserByEmailMutation = gql`
+  mutation getOrCreateUserByEmail(
+             $email: String!,
+             $defaultUserPreferences: String) {
+    getOrCreateUserByEmail(
+      email: $email,
+      defaultUserPreferences: $defaultUserPreferences) {
+
+      id
+    }
+  }
+`

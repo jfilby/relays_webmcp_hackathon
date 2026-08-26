@@ -7,6 +7,13 @@ interface Props {
   userProfileId: string
   name: string
   updates: boolean
+  type?: string
+  isPublic?: boolean
+  headline?: string
+  bio?: string
+  location?: string
+  website?: string
+  avatar?: string
   createAction: boolean
   setCreateAction: (value: boolean) => void
   setAlertSeverity: (value: 'success' | 'error' | undefined) => void
@@ -25,6 +32,13 @@ export default function CreateProfile({
   userProfileId,
   name,
   updates,
+  type,
+  isPublic,
+  headline,
+  bio,
+  location,
+  website,
+  avatar,
   createAction,
   setCreateAction,
   setAlertSeverity,
@@ -51,6 +65,13 @@ export default function CreateProfile({
       variables: {
         userProfileId: userProfileId,
         displayName: name,
+        type: type,
+        isPublic: isPublic,
+        headline: headline != null && headline !== '' ? headline : null,
+        bio: bio != null && bio !== '' ? bio : null,
+        location: location != null && location !== '' ? location : null,
+        website: website != null && website !== '' ? website : null,
+        avatar: avatar != null && avatar !== '' ? avatar : null,
         updates: updates === true
       }
     }).then(result => createdData = result.data?.createProfile)

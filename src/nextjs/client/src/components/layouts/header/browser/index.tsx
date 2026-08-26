@@ -54,6 +54,12 @@ export function HeaderBrowser({
             &nbsp;
             &nbsp;
             &nbsp;
+            <HeaderBrowserLink
+              name='Profiles'
+              linkName='profiles'
+              highLevelLink={highLevelLink} />
+            &nbsp;
+            &nbsp;
             {session &&
               <Link
                 href='#'

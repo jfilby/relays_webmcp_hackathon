@@ -10,7 +10,6 @@ import {
   TextField,
   Typography
 } from '@mui/material'
-import { guessUsernameFromEmail } from '@/services/utils/basics'
 import CreateProfile from '@/components/profiles/create'
 import styles from './landing.module.css'
 
@@ -105,15 +104,6 @@ export default function LaunchedHero({
     }
 
   }, [createdAction])
-
-  // Populate the field with a guess from the email (unless the user has edited)
-  useEffect(() => {
-
-    if (authSession != null && name === '') {
-      setName(guessUsernameFromEmail(authSession?.user?.email))
-    }
-
-  }, [authSession])
 
   // Render
   return (

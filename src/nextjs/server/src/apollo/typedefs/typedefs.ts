@@ -124,6 +124,34 @@ export const typeDefs = /* GraphQL */ `
     redirectUrl: String
   }
 
+  type Profile {
+    id: String!
+    userProfileId: String!
+    type: String!
+    status: String!
+    displayName: String!
+    headline: String
+    bio: String
+    location: String
+    website: String
+    avatar: String
+    isPublic: Boolean!
+    created: String!
+    updated: String
+  }
+
+  type ProfileResults {
+    status: Boolean!
+    message: String
+    profile: Profile
+  }
+
+  type ProfilesResults {
+    status: Boolean!
+    message: String
+    profiles: [Profile]
+  }
+
   # Queries
   # ---
 
@@ -199,6 +227,18 @@ export const typeDefs = /* GraphQL */ `
       includeParent: Boolean,
       includeInstanceRefs: Boolean,
       includeStats: Boolean): Instance
+
+    # Profiles
+    getProfileById(
+      id: String!,
+      userProfileId: String): ProfileResults!
+
+    getProfileByUserProfileId(
+      userProfileId: String!): ProfileResults!
+
+    searchProfiles(
+      search: String,
+      type: String): ProfilesResults!
   }
 
   type Mutation {
@@ -216,7 +256,7 @@ export const typeDefs = /* GraphQL */ `
     getOrCreateUserByEmail(
       email: String!,
       defaultUserPreferences: String): UserProfile!
-  
+
     # Tips
     deleteTipGotIt(
       name: String,
@@ -247,5 +287,34 @@ export const typeDefs = /* GraphQL */ `
     signUpForUpdates(
       email: String,
       userProfileId: String): StatusAndMessage!
+
+    # Profiles
+    createProfile(
+      userProfileId: String!,
+      displayName: String!,
+      type: String,
+      isPublic: Boolean,
+      headline: String,
+      bio: String,
+      location: String,
+      website: String,
+      avatar: String,
+      updates: Boolean): ProfileResults!
+
+    updateProfile(
+      id: String!,
+      userProfileId: String!,
+      displayName: String,
+      type: String,
+      isPublic: Boolean,
+      headline: String,
+      bio: String,
+      location: String,
+      website: String,
+      avatar: String): ProfileResults!
+
+    setProfileUpdates(
+      userProfileId: String!,
+      updates: Boolean!): StatusAndMessage!
   }
 `

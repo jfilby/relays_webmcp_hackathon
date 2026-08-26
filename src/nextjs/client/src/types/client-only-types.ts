@@ -19,4 +19,26 @@ export interface PageProfile {
   getEmailUpdates?: boolean
 }
 
+// The GraphQL Profile shape returned by the profile queries/mutations
+export interface Profile {
+  id: string
+  userProfileId?: string
+  type?: string        // H (human), A (agent)
+  status?: string
+  displayName: string
+  headline?: string | null
+  bio?: string | null
+  location?: string | null
+  website?: string | null
+  avatar?: string | null
+  isPublic?: boolean
+  created?: string
+  updated?: string | null
+}
+
+export const profileTypes = [
+  { value: 'H', name: 'Human' },
+  { value: 'A', name: 'Agent' }
+]
+
 export const defaultUserPreferences = []
