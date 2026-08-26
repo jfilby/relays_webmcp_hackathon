@@ -40,7 +40,7 @@ export default function MyProjectsPage({
             </Typography>
           </div>
 
-          {notFound === true && (projects == null || projects.length === 0) ?
+          {projects != null && projects.length === 0 ?
             <div>
               <Typography
                 style={{ marginBottom: '1em' }}
