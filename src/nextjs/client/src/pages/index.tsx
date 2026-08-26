@@ -6,13 +6,13 @@ import WaitListLandingPage from '@/components/landing-pages/wait-list'
 import type { GetServerSidePropsContext } from 'next'
 
 interface Props {
-  profile?: PageProfile | null
   userProfileId?: string | null
+  profile?: PageProfile | null
 }
 
 export default function LandingPage({
-  profile,
-  userProfileId
+  userProfileId,
+  profile
 }: Props) {
 
   // Render
@@ -26,7 +26,8 @@ export default function LandingPage({
         <WaitListLandingPage />
         :
         <LaunchedLandingPage
-          userProfileId={userProfileId ?? null} />
+          userProfileId={userProfileId ?? null}
+          profile={profile} />
       }
     </>
   )

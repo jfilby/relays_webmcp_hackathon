@@ -1,8 +1,12 @@
 import { CustomError, UsersService } from 'serene-core-server'
 import { prisma } from '@/db'
+import { ProfileModel } from '@/models/profiles/profile-model'
 
 // Services
 const usersService = new UsersService()
+
+// Models
+const profileModel = new ProfileModel()
 
 // Code
 export async function loadServerStartData(
@@ -22,9 +26,19 @@ export async function loadServerStartData(
       prisma,
       args.userProfileId)
 
+  // Get profile
+  const profile = await
+    profileModel.getByUserProfileId(
+      prisma,
+      args.userProfileId)
+
+  // Debug
+  console.log(`${fnName}: profile: ` + JSON.stringify(profile))
+
   // Return
   return {
     status: true,
+    profile: profile,
     // redirectUrl: redirectUrl
   }
 }

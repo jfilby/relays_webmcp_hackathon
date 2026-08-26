@@ -3,47 +3,6 @@ export const typeDefs = /* GraphQL */ `
   # Serene Core (types)
   # ---
 
-  type ChatMessage {
-    id: String!
-    name: String!
-    message: String!
-    created: String!
-    updated: String
-  }
-
-  type ChatMessageResults {
-    status: Boolean!
-    message: String
-    chatMessages: [ChatMessage]
-  }
-
-  type ChatParticipant {
-    id: String!
-    userProfileId: String!
-    name: String
-  }
-
-  type ChatParticipantResults {
-    status: Boolean!
-    message: String
-    chatParticipants: [ChatParticipant]
-  }
-
-  type ChatSession {
-    id: String!
-    status: String!
-    updated: String!
-    chatParticipants: [ChatParticipant]
-  }
-
-  type ChatSessionResults {
-    status: Boolean!
-    message: String
-    chatSession: ChatSession
-
-    chatSpeakPreference: Boolean
-  }
-
   type ExistsResults {
     status: Boolean!
     message: String
@@ -120,6 +79,7 @@ export const typeDefs = /* GraphQL */ `
     status: Boolean!
     message: String
     instance: Instance
+    profile: Profile
     authCode: String
     redirectUrl: String
   }
@@ -159,24 +119,6 @@ export const typeDefs = /* GraphQL */ `
 
     # Serene Core
     # ---
-
-    # Chats
-    getChatMessages(
-      chatSessionId: String,
-      userProfileId: String!,
-      lastMessageId: String): ChatMessageResults!
-
-    getChatParticipants(
-      chatSessionId: String,
-      userProfileId: String!): ChatParticipantResults!
-
-    getChatSession(
-      chatSessionId: String,
-      userProfileId: String!): ChatSessionResults!
-
-    getChatSessions(
-      status: String,
-      userProfileId: String!): [ChatSession]
 
     # Profile
     validateProfileCompleted(

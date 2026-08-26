@@ -14,6 +14,17 @@ export const loadServerStartDataMutation = gql`
       message
       authCode
       redirectUrl
+      profile {
+        id
+        type
+        displayName
+        headline
+        bio
+        location
+        website
+        avatar
+        isPublic
+      }
     }
   }
 `
