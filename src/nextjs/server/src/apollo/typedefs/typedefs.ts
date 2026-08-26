@@ -23,13 +23,6 @@ export const typeDefs = /* GraphQL */ `
     parent: Instance
   }
 
-  type ProjectResults {
-    status: Boolean!
-    message: String
-    deletedCount: Int
-    instances: [Instance]
-  }
-
   type StatusAndMessage {
     status: Boolean!
     message: String
@@ -112,6 +105,39 @@ export const typeDefs = /* GraphQL */ `
     profiles: [Profile]
   }
 
+  type Project {
+    id: String!
+    instanceId: String!
+    name: String!
+    isOwner: Boolean!
+    tagline: String
+    description: String
+    website: String
+    image: String
+    isPromoted: Boolean!
+    isPublic: Boolean!
+    status: String!
+    created: String!
+    updated: String
+  }
+
+  type ProjectResults {
+    status: Boolean!
+    message: String
+    project: Project
+  }
+
+  type ProjectsResults {
+    status: Boolean!
+    message: String
+    projects: [Project]
+  }
+
+  type DeleteProjectResults {
+    status: Boolean!
+    message: String
+  }
+
   # Queries
   # ---
 
@@ -184,6 +210,18 @@ export const typeDefs = /* GraphQL */ `
 
     getNetwork(
       userProfileId: String!): ProfilesResults!
+
+    # Projects
+    getProjectById(
+      id: String!,
+      userProfileId: String): ProjectResults!
+
+    searchProjects(
+      search: String,
+      isPromoted: Boolean): ProjectsResults!
+
+    getProjectsByUserProfileId(
+      userProfileId: String!): ProjectsResults!
   }
 
   type Mutation {
@@ -261,5 +299,31 @@ export const typeDefs = /* GraphQL */ `
     setProfileUpdates(
       userProfileId: String!,
       updates: Boolean!): StatusAndMessage!
+
+    # Projects
+    createProject(
+      userProfileId: String!,
+      name: String!,
+      tagline: String,
+      description: String,
+      website: String,
+      image: String,
+      isPromoted: Boolean,
+      isPublic: Boolean): ProjectResults!
+
+    updateProject(
+      id: String!,
+      userProfileId: String!,
+      name: String,
+      tagline: String,
+      description: String,
+      website: String,
+      image: String,
+      isPromoted: Boolean,
+      isPublic: Boolean): ProjectResults!
+
+    deleteProject(
+      id: String!,
+      userProfileId: String!): DeleteProjectResults!
   }
 `

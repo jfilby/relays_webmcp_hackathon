@@ -196,7 +196,7 @@ export default function LaunchedHero({
                   Your network
                 </Button>
                 <Button
-                  onClick={() => window.location.href = '/explore'}
+                  onClick={() => window.location.href = '/projects'}
                   size='large'
                   variant='outlined'>
                   Explore projects

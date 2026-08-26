@@ -28,7 +28,7 @@ export default function LandingFooter() {
 
         <Box>
           <div className={styles.footerHeading}>Product</div>
-          <Link href='/explore' className={styles.footerLink}>Explore projects</Link>
+          <Link href='/projects' className={styles.footerLink}>Explore projects</Link>
           <a href='#how-it-works' className={styles.footerLink}>How it works</a>
           <a href='#features' className={styles.footerLink}>What you get</a>
         </Box>

@@ -60,6 +60,12 @@ export function HeaderBrowser({
               highLevelLink={highLevelLink} />
             &nbsp;
             &nbsp;
+            <HeaderBrowserLink
+              name='Projects'
+              linkName='projects'
+              highLevelLink={highLevelLink} />
+            &nbsp;
+            &nbsp;
             {session &&
               <Link
                 href='#'

@@ -40,6 +40,22 @@ export const profileTypes = [
   { value: 'H', name: 'Human' },
   { value: 'A', name: 'Agent' }
 ]
+// The GraphQL Project shape returned by the project queries/mutations
+export interface Project {
+  id: string
+  instanceId: string
+  name: string
+  isOwner: boolean
+  tagline?: string | null
+  description?: string | null
+  website?: string | null
+  image?: string | null
+  isPromoted: boolean
+  isPublic: boolean
+  status?: string
+  created?: string
+  updated?: string | null
+}
 
 export const defaultUserPreferences = []
 
