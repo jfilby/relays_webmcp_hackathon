@@ -1,0 +1,72 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  schemas  = ["public", "core"]
+}
+
+// Project specific
+
+// Batch
+
+model BatchJob {
+  id                           String               @id @default(cuid())
+  instanceId                   String?              @map("instance_id")
+  instance                     Instance?            @relation(fields: [instanceId], references: [id])
+  userProfileId                String?              @map("user_profile_id")
+  userProfile                  UserProfile?         @relation(fields: [userProfileId], references: [id])
+  runInATransaction            Boolean              @map("run_in_a_transaction")
+  status                       String               @db.Char(1)
+  statusReason                 String?              @map("status_reason") @db.Char(3)
+  progressPct                  Int?                 @map("progress_pct")
+  message                      String?
+  jobType                      String               @map("job_type")
+  refModel                     String?              @map("ref_model")
+  refId                        String?              @map("ref_id")
+  parameters                   String?              // Stringified JSON
+  created                      DateTime             @default(now())
+  updated                      DateTime             @updatedAt
+
+  @@index([refId])
+  @@map("batch_job")
+  @@schema("public")
+}
+
+// Email lists
+
+model EmailList {
+  id                           String               @id @default(cuid())
+  status                       String               @db.Char(1)
+  name                         String               @unique
+  created                      DateTime             @default(now())
+  updated                      DateTime             @updatedAt
+
+  ofEmailListUsers             EmailListUser[]
+
+  @@map("email_list")
+  @@schema("public")
+}
+
+model EmailListUser {
+  id                           String               @id @default(cuid())
+  emailListId                  String               @map("email_list_id")
+  emailList                    EmailList            @relation(fields: [emailListId], references: [id])
+  // A subscribed user profile (for signed-in users), or an email address (for
+  // visitors who aren't signed-in). One of the two must be set.
+  userProfileId                String?              @map("user_profile_id")
+  userProfile                  UserProfile?         @relation(fields: [userProfileId], references: [id])
+  email                        String?
+  created                      DateTime             @default(now())
+  updated                      DateTime             @updatedAt
+
+  @@unique([emailListId, userProfileId])
+  @@unique([emailListId, email])
+  @@map("email_list_user")
+  @@schema("public")
+}
