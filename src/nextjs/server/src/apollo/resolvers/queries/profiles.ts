@@ -18,6 +18,10 @@ interface SearchProfilesArgs {
   type?: string | null
 }
 
+interface GetNetworkArgs {
+  userProfileId: string
+}
+
 // Code
 export async function getProfileById(
   parent: unknown,
@@ -82,6 +86,28 @@ export async function searchProfiles(
       prisma,
       search ?? undefined,
       type ?? undefined)
+
+  // Return
+  return results
+}
+
+export async function getNetwork(
+  parent: unknown,
+  args: unknown,
+  context: unknown,
+  info: unknown) {
+
+  // Debug
+  const fnName = `getNetwork()`
+
+  // GraphQL args are schema-validated before the resolver runs
+  const { userProfileId } = args as unknown as GetNetworkArgs
+
+  // Query
+  const results = await
+    profilesQueryService.getNetwork(
+      prisma,
+      userProfileId)
 
   // Return
   return results

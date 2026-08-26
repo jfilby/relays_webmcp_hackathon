@@ -181,6 +181,9 @@ export const typeDefs = /* GraphQL */ `
     searchProfiles(
       search: String,
       type: String): ProfilesResults!
+
+    getNetwork(
+      userProfileId: String!): ProfilesResults!
   }
 
   type Mutation {

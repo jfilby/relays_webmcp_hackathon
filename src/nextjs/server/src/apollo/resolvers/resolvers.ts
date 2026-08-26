@@ -3,7 +3,7 @@ import { sereneCoreAccessQueryResolvers, sereneCoreUserPreferencesQueryResolvers
 import { sereneCoreUserPreferencesMutationResolvers, sereneCoreUsersMutationResolvers } from 'serene-core-server'
 
 // Relays queries imports
-import { getProfileById, getProfileByUserProfileId, searchProfiles } from './queries/profiles'
+import { getProfileById, getProfileByUserProfileId, searchProfiles, getNetwork } from './queries/profiles'
 
 // Relays mutations imports
 import { loadServerStartData } from './mutations/server-data-start'
@@ -48,6 +48,7 @@ const Query = {
   getProfileById,
   getProfileByUserProfileId,
   searchProfiles,
+  getNetwork,
 }
 
 const Mutation = {

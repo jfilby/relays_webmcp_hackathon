@@ -140,6 +140,71 @@ export class ProfilesQueryService {
     }
   }
 
+  // Get a signed-in user's network: the profiles they have active connections
+  // with, in either direction.
+  async getNetwork(
+    prisma: PrismaClient,
+    userProfileId: string) {
+
+    // Debug
+    const fnName = `${this.clName}.getNetwork()`
+
+    // Query
+    const profile = await
+      profileModel.getByUserProfileId(
+        prisma,
+        userProfileId)
+
+    // No profile, no network
+    if (profile == null) {
+      return {
+        status: true,
+        profiles: []
+      }
+    }
+
+    // Fetch active connections in either direction
+    const connections = await
+      prisma.connection.findMany({
+        where: {
+          status: 'A',
+          OR: [
+            { fromProfileId: profile.id },
+            { toProfileId: profile.id }
+          ]
+        }
+      })
+
+    // The peers are the other end of each connection
+    const peerIds = connections
+      .map(connection =>
+        connection.fromProfileId === profile.id ?
+          connection.toProfileId :
+          connection.fromProfileId)
+
+    // No peers, no network
+    if (peerIds.length === 0) {
+      return {
+        status: true,
+        profiles: []
+      }
+    }
+
+    // Fetch the connected profiles
+    const peers = await
+      prisma.profile.findMany({
+        where: {
+          id: { in: peerIds }
+        }
+      })
+
+    // Return
+    return {
+      status: true,
+      profiles: peers.map(peer => this.toGraphQL(peer))
+    }
+  }
+
   // Validate a display name for create/update
   async validateDisplayName(
     displayName: string | undefined):
