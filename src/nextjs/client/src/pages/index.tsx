@@ -26,8 +26,7 @@ export default function LandingPage({
         <WaitListLandingPage />
         :
         <LaunchedLandingPage
-          userProfileId={userProfileId ?? null}
-          profile={profile ?? null} />
+          userProfileId={userProfileId ?? null} />
       }
     </>
   )

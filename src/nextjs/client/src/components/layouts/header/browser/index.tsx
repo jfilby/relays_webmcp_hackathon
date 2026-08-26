@@ -2,23 +2,12 @@ import { useEffect, useState } from 'react'
 import { signIn, signOut, useSession } from 'next-auth/react'
 import { Box, Link, Typography } from '@mui/material'
 import { HeaderBrowserLink } from './link'
-import { HeaderBrowserUsernameProject } from './username-project'
-import { HeaderBrowserProjectMenu } from './project-menu'
 
 interface Props {
-  pageUser?: {
-    profile?: { id?: string; displayName?: string }
-    isViewer?: boolean
-  } | null
-  pageProject?: {
-    instance?: { key?: string; name?: string }
-  } | null
   highLevelLink: string
 }
 
 export function HeaderBrowser({
-  pageUser,
-  pageProject,
   highLevelLink
 }: Props) {
 
@@ -53,14 +42,6 @@ export function HeaderBrowser({
               highLevelLink={highLevelLink} />
             &nbsp;
             &nbsp;
-            {pageUser != null ?
-              <HeaderBrowserUsernameProject
-                pageUser={pageUser}
-                pageProject={pageProject}
-                highLevelLink={highLevelLink} />
-              :
-              <></>
-            }
           </Typography>
         </div>
         <div style={{ textAlign: 'right' }}>
@@ -100,36 +81,6 @@ export function HeaderBrowser({
           </Typography>
         </div>
       </div>
-      {pageUser != null ?
-        <>
-          <div style={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            marginTop: '0.5em',
-          }}>
-          {pageProject != null ?
-            <HeaderBrowserProjectMenu
-              pageUser={pageUser}
-              pageProject={pageProject}
-              highLevelLink={highLevelLink} />
-            :
-            <Typography>
-              {pageUser.isViewer === true ?
-                <HeaderBrowserLink
-                  name='Settings'
-                  linkName={`${pageUser.profile?.id ?? ''}/settings`}
-                  highLevelLink={highLevelLink} />
-                :
-                <></>
-              }
-            </Typography>
-          }
-          </div>
-        </>
-        :
-        <></>
-      }
     </Box>
   )
 }

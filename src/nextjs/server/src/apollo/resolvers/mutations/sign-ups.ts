@@ -1,9 +1,5 @@
 import { prisma } from '@/db'
 import { EmailListsMutateService } from '@/services/email-lists/mutate-service'
-import { UsernameModel } from '@/models/users/username-model'
-
-// Models
-const usernameModel = new UsernameModel()
 
 // Services
 const emailListsMutateService = new EmailListsMutateService()
@@ -24,18 +20,6 @@ export async function signUpForUpdates(parent: any, args: any, context: any, inf
       emailListsMutateService.subscribeByUserProfileId(
         prisma,
         args.userProfileId)
-
-    // Keep the username's preference and email-list membership in sync, if a
-    // username exists yet.
-    try {
-      await
-        usernameModel.setGetEmailUpdates(
-          prisma,
-          args.userProfileId,
-          true)
-    } catch (error) {
-      console.error(`${fnName}: no username to update: ${error}`)
-    }
 
     // Return OK
     return {

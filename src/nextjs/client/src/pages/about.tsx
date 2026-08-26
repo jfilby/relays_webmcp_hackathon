@@ -15,7 +15,7 @@ export default function AboutPage({}: Props) {
     <>
       <Head><title>{`${process.env.NEXT_PUBLIC_APP_NAME} - About`}</title></Head>
 
-      <Layout pageUser={null}>
+      <Layout>
 
         <div style={{ margin: '0 auto', width: pageBodyWidth, textAlign: 'left', verticalAlign: 'textTop' }}>
 

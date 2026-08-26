@@ -2,20 +2,18 @@ import { useEffect, useState } from 'react'
 import { useSession } from 'next-auth/react'
 import { pageBodyWidth } from '@/components/layouts/full-height-layout'
 import MoreInformation from '@/components/layouts/more-information'
+import type { PageProfile } from '@/types/client-only-types'
+import Layout from '../layouts/layout'
 import LaunchedHero from './launched-hero'
 import LaunchedFeatures from './launched-features'
 import LaunchedHowItWorks from './launched-how-it-works'
 import LaunchedDetails from './launched-details'
-import Layout from '../layouts/layout'
 import LandingFooter from './landing-footer'
 import styles from './landing.module.css'
 
 interface Props {
   userProfileId?: string | null
-  profile?: {
-    displayName?: string
-    getEmailUpdates?: boolean
-  } | null
+  profile?: PageProfile | null
 }
 
 export default function LaunchedLandingPage({
@@ -46,11 +44,7 @@ export default function LaunchedLandingPage({
 
   // Render
   return (
-    <Layout
-      pageUser={profile != null ?
-        { profile }
-        :
-        null}>
+    <Layout>
 
       <div style={{ margin: '0 auto', maxWidth: pageBodyWidth, width: '100%', textAlign: 'left', verticalAlign: 'textTop' }}>
 

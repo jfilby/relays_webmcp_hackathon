@@ -84,7 +84,6 @@ export default function WaitListLandingPage() {
   return (
     <>
       <FullHeightLayout
-        pageUser={null}
         withHeader={false}>
 
         <div style={{ margin: '0 auto', width: pageBodyWidth, verticalAlign: 'textTop' }}>

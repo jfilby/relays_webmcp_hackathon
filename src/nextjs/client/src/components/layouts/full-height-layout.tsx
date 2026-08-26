@@ -2,14 +2,10 @@ import { useMediaQuery } from '@mui/material'
 import PageHeader from './header'
 import Footer from './footer'
 import LayoutBox from './layout-box'
-import type { PageUser, PageProject } from '@/types/client-only-types'
 
 interface Props {
   children: React.ReactNode
   withHeader?: boolean
-  username?: string
-  pageUser?: PageUser | null
-  pageProject?: PageProject | null
 }
 
 export const pageBodyWidthPlusPlus = '80em'
@@ -20,9 +16,6 @@ export const columnBodyWidth = '40em'
 export default function FullHeightLayout({
   children,
   withHeader = true,
-  username,
-  pageUser,
-  pageProject = null
 }: Props) {
 
   // Consts
@@ -35,9 +28,6 @@ export default function FullHeightLayout({
 
         {withHeader === true ?
           <PageHeader
-            username={username}
-            pageUser={pageUser}
-            pageProject={pageProject}
             isMobile={isMobile} />
         :
           <></>

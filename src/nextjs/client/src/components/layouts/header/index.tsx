@@ -2,22 +2,15 @@ import { useEffect, useState } from 'react'
 import Grid from '@mui/material/Grid'
 import { HeaderBrowser } from './browser'
 import { HeaderMobile } from './mobile'
-import type { PageUser, PageProject } from '@/types/client-only-types'
 
 // The approach used in this component shows how to build a sign in and sign out
 // component that works on pages which support both client and server side
 // rendering, and avoids any flash of incorrect content on initial page load.
 interface Props {
-  username?: string | null
-  pageUser?: PageUser | null
-  pageProject?: PageProject | null
   isMobile: boolean
 }
 
 export default function PageHeader({
-  username,
-  pageUser,
-  pageProject,
   isMobile
 }: Props) {
 
@@ -54,8 +47,6 @@ export default function PageHeader({
             <>
               {isMobile === false ?
                 <HeaderBrowser
-                  pageUser={pageUser}
-                  pageProject={pageProject}
                   highLevelLink={highLevelLink} />
                 :
                 <HeaderMobile

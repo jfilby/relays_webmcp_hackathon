@@ -120,13 +120,8 @@ export const typeDefs = /* GraphQL */ `
     status: Boolean!
     message: String
     instance: Instance
-    chatSession: ChatSession
     authCode: String
-    username: Username
     redirectUrl: String
-
-    pageUser: PageUser
-    pageProject: PageProject
   }
 
   # Queries
@@ -182,16 +177,6 @@ export const typeDefs = /* GraphQL */ `
 
     # Relays
     # ---
-
-    # API keys
-    getApiKeys(
-      userProfileId: String!,
-      instanceId: String): ApiKeyResults!
-
-    # Environments
-    getEnvInstances(
-      userProfileId: String!,
-      projectId: String!): EnvInstancesResults!
 
     # Instances
     filterInstances(
@@ -256,21 +241,11 @@ export const typeDefs = /* GraphQL */ `
     loadServerStartData(
       userProfileId: String!,
       instanceId: String,
-      pageUsername: String,
-      pageProjectKey: String,
-      serverAction: String,
-      loadChatSession: Boolean,
-      chatSessionId: String,
-      chatSettingsName: String): ServerStartData!
+      serverAction: String): ServerStartData!
 
     # Sign-ups
     signUpForUpdates(
       email: String,
       userProfileId: String): StatusAndMessage!
-
-    # Email updates
-    setUsernameUpdates(
-      userProfileId: String!,
-      updates: Boolean!): StatusAndMessage!
   }
 `
