@@ -33,7 +33,7 @@ export async function loadServerStartData(
       args.userProfileId)
 
   // Debug
-  console.log(`${fnName}: profile: ` + JSON.stringify(profile))
+  // console.log(`${fnName}: profile: ` + JSON.stringify(profile))
 
   // Return
   return {
