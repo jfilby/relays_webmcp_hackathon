@@ -1,110 +1,205 @@
 import { getSession } from 'next-auth/react'
-import type { GetServerSidePropsContext } from 'next'
-import type { Session } from 'next-auth'
+import { AccessService, UsersService } from 'serene-core-client'
 import { ApolloClient, HttpLink, InMemoryCache } from '@apollo/client'
-import { getOrCreateUserByEmailMutation } from '@/apollo/load-server-start'
-import { defaultUserPreferences } from '@/types/client-only-types'
+import { loadServerStartDataMutation } from '@/apollo/load-server-start'
+import { defaultUserPreferences } from '@/services/user-preferences/service'
 
 export interface PageContext {
+
   serverAction?: string
 
   verifyLoggedInUsersOnly?: boolean
   verifyAdminUsersOnly?: boolean
 }
 
-/**
- * Auth.js appends `id` to the session user when the session callback maps the
- * User model id (see the relays server's `[...nextauth].ts`). This isn't part
- * of the default Session type, so establish it with a type guard.
- */
-type SessionUserWithId = { id: string } & NonNullable<Session['user']>
+export async function loadServerStartData(
+  apolloClient: any,
+  pageContext: PageContext,
+  queryParams: any) {
 
-function isSessionUserWithId(user: NonNullable<Session['user']>): user is SessionUserWithId {
-  return 'id' in user && typeof user.id === 'string'
-}
+  // Debug
+  const fnName = `loadServerStartData()`
 
-export function getSessionUserId(session: Session | null): string | null {
+  console.log(`${fnName}: starting with queryParams: ` +
+              JSON.stringify(queryParams))
 
-  if (session?.user == null) {
-    return null
+  // Validate
+  if (queryParams.userProfile == null) {
+    throw `queryParams.userProfile == null`
   }
 
-  return isSessionUserWithId(session.user) ? session.user.id : null
+  // GraphQL call to get or create instance chat session
+  var results: any = null
+
+  await apolloClient.mutate({
+    mutation: loadServerStartDataMutation,
+    variables: {
+      userProfileId: queryParams.userProfile.id,
+      instanceId: queryParams.instanceId,
+      serverAction: pageContext.serverAction,
+    }
+  }).then((result: any) => results = result)
+    .catch((error: { networkError: any }) => {
+      console.log(`${fnName}: error: ${error}`)
+      console.log(`${fnName}: error.networkError: ${JSON.stringify(error.networkError)}`)
+    })
+
+  // Debug
+  // console.log(`${fnName}: results: ` + JSON.stringify(results))
+
+  if (results == null) {
+    throw `Failed to load server data`
+  }
+
+  // Get data
+  const resultsData = results.data.loadServerStartData
+
+  // Handle failed to load
+  if (resultsData.status === false) {
+
+    console.log(`${fnName}: loadServerStartDataMutation failed: ` +
+      JSON.stringify(resultsData.message))
+  }
+
+  // Return
+  return resultsData
 }
 
-// Get-or-create the signed-in user's UserProfile record (server-side), so the
-// page identifies the user by their UserProfile id (the identity all Relays
-// records link to) rather than the Auth.js User id. When the GraphQL server
-// isn't reachable (e.g. a build) falls back to the session User id.
-async function getUserProfileId(session: Session | null): Promise<string | null> {
+export async function loadServerPage(
+  context: any,
+  pageContext: PageContext) {
 
-  const sessionUserId = getSessionUserId(session)
-
-  if (session == null ||
-      session.user?.email == null) {
-    return sessionUserId
-  }
+  // Debug
+  const fnName = `loadServerPage()`
 
   // ApolloClient
   const apolloClient = new ApolloClient({
     link: new HttpLink({
-      uri: process.env.NEXT_PUBLIC_GRAPHQL_URL_FULL
+      uri: process.env.GRAPHQL_URL
     }),
     cache: new InMemoryCache(),
   })
 
-  try {
-    const { data } = await apolloClient.mutate<{
-      getOrCreateUserByEmail: { id: string }
-    }>({
-      mutation: getOrCreateUserByEmailMutation,
-      variables: {
-        email: session.user.email,
-        defaultUserPreferences: JSON.stringify(defaultUserPreferences)
-      }
-    })
+  // console.log(`${fnName}: created ApolloClient`)
 
-    const userProfileId = data?.getOrCreateUserByEmail?.id
+  // URL parameters
+  const queryParams = normalizeQuery(context.query)
 
-    return userProfileId != null ? userProfileId : sessionUserId
-  } catch (error) {
-    console.error(`getUserProfileId(): error: ${error}`)
-    return sessionUserId
+  // Debug
+  // console.log(`${fnName}: queryParams: ` + JSON.stringify(queryParams))
+
+  // Check access
+  const accessService = new AccessService()
+
+  queryParams.hasAccessCode = false
+
+  if (accessService.validateAccessCode(
+    { req: context.req, res: context.res },
+    queryParams.accessCode)) {
+    queryParams.hasAccessCode = true
   }
-}
 
-// Loads the server-side props each Pages-router page needs.
-export async function loadServerPage(
-  context: GetServerSidePropsContext,
-  pageContext: PageContext) {
+  // Check isAdmin if required
+  if (pageContext.verifyAdminUsersOnly === true) {
+
+    const results =
+      await accessService.validateUserIsAdmin(
+        {
+          req: context.req,
+          res: context.res
+        },
+        apolloClient)
+
+    if (results.status === false) {
+      console.error(`Access code validation failed: ${results.message}`)
+
+      return {
+        notFound: true,
+        props: {
+          _status: false
+        }
+      }
+    }
+  }
 
   // Session
   const session = await getSession(context)
 
-  // Logged-in-only pages redirect elsewhere
+  /* if (session != null) {
+
+    console.log(`${fnName}: session exists`)
+  } else {
+    console.log(`${fnName}: session doesn't exist`)
+  } */
+
   if (pageContext.verifyLoggedInUsersOnly === true &&
     session == null) {
 
     return {
       redirect: {
-        destination: '/api/auth/signin',
+        destination: '/account/auth/sign-in',
         permanent: false
       },
       props: {}
     }
   }
 
-  // Resolve the UserProfile id (the id all Relays records link to)
-  const userProfileId = await getUserProfileId(session)
+  // Get/create User
+  const usersService = new UsersService()
 
-  // Return page props (profile is resolved client-side for now)
-  return {
-    props: {
+  queryParams.userProfile = await
+    usersService.getOrCreateUser(
+      { req: context.req, res: context.res },
       session,
-      userProfileId,
-      profile: null,
-      clientUrl: process.env.CLIENT_URL,
-      serverUrl: process.env.SERVER_URL
+      apolloClient,
+      defaultUserPreferences)
+
+  // Get/create server-start data
+  const data = await
+    loadServerStartData(
+      apolloClient,
+      pageContext,
+      queryParams)
+
+  // Debug
+  // console.log(`${fnName}: data: ` + JSON.stringify(data))
+
+  // Signed-in redirects
+  if (session != null &&
+    data.redirectUrl !== null) {
+
+    return {
+      redirect: {
+        destination: data.redirectUrl,
+        permanent: false
+      },
+      props: {}
     }
   }
+
+  // Set data results to queryParam entries
+  Object.assign(queryParams, data)
+
+  // Set additional queryParams
+  queryParams.clientUrl = process.env.CLIENT_URL
+  queryParams.serverUrl = process.env.SERVER_URL
+
+  // Debug
+  // console.log(`${fnName}: queryParams: ` + JSON.stringify(queryParams))
+
+  // Return with empty props
+  return {
+    props: queryParams
+  }
+}
+
+function normalizeQuery(query: Record<string, any>): Record<string, any> {
+
+  const normalized: Record<string, any> = {}
+
+  for (const key in query) {
+    normalized[key] = query[key] !== undefined ? query[key] : null
+  }
+
+  return normalized
 }
