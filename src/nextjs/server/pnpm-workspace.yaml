@@ -1,6 +1,12 @@
 allowBuilds:
+  '@apollo/protobufjs': true
+  '@prisma/engines': true
   esbuild: true
   msgpackr-extract: true
+  prisma: true
   sharp: false
   unrs-resolver: false
   workerd: true
+minimumReleaseAgeExclude:
+  - '@prisma/client@7.10.0'
+  - prisma@7.10.0

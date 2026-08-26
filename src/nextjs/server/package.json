@@ -8,25 +8,29 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "postinstall": "prisma skills sync || exit 0",
-    "contract:emit": "prisma contract emit"
+    "postinstall": "prisma generate",
+    "db:generate": "prisma generate",
+    "db:migrate": "prisma migrate dev",
+    "db:push": "prisma db push"
   },
   "dependencies": {
-    "@prisma/orm-postgres": "8.0.0-rc.6-dev.1",
+    "@prisma/adapter-pg": "^7.9.1",
+    "@prisma/client": "^7.10.0",
     "dotenv": "^17.4.2",
     "next": "16.3.2",
-    "prisma": "8.0.0-rc.9-dev.79",
+    "prisma": "^7.10.0",
     "react": "19.2.8",
-    "react-dom": "19.2.8"
+    "react-dom": "19.2.8",
+    "serene-core-server": "^0.1.17"
   },
   "devDependencies": {
-    "@prisma/cli-engine": "^0.2.3",
-    "@types/node": "^20",
-    "@types/react": "^19",
-    "@types/react-dom": "^19",
-    "eslint": "^9",
+    "@apollo/server": "^5.5.1",
+    "@types/node": "^20.19.43",
+    "@types/react": "^19.2.18",
+    "@types/react-dom": "^19.2.5",
+    "eslint": "^9.39.5",
     "eslint-config-next": "16.3.2",
-    "typescript": "^5"
+    "typescript": "^5.9.3"
   },
   "packageManager": "pnpm@11.7.0"
 }
