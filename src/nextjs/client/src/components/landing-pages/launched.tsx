@@ -1,0 +1,86 @@
+import { useEffect, useState } from 'react'
+import { useSession } from 'next-auth/react'
+import { pageBodyWidth } from '@/components/layouts/full-height-layout'
+import MoreInformation from '@/components/layouts/more-information'
+import LaunchedHero from './launched-hero'
+import LaunchedFeatures from './launched-features'
+import LaunchedHowItWorks from './launched-how-it-works'
+import LaunchedDetails from './launched-details'
+import Layout from '../layouts/layout'
+import LandingFooter from './landing-footer'
+import styles from './landing.module.css'
+
+interface Props {
+  userProfileId?: string | null
+  profile?: {
+    displayName?: string
+    getEmailUpdates?: boolean
+  } | null
+}
+
+export default function LaunchedLandingPage({
+  userProfileId,
+  profile
+}: Props) {
+
+  // Session
+  const { data: session } = useSession()
+
+  // State
+  type AuthSession = {
+    user?: { email?: string | null }
+  } | null | undefined
+  const [authSession, setAuthSession] = useState<AuthSession>(undefined)
+
+  // Effects
+  useEffect(() => {
+
+    if (session === undefined) {
+      return
+    } else if (session != null) {
+      setAuthSession(session)
+    } else {
+      setAuthSession(null)
+    }
+  }, [session])
+
+  // Render
+  return (
+    <Layout
+      pageUser={profile != null ?
+        { profile }
+        :
+        null}>
+
+      <div style={{ margin: '0 auto', maxWidth: pageBodyWidth, width: '100%', textAlign: 'left', verticalAlign: 'textTop' }}>
+
+        {/* Hero */}
+        <LaunchedHero
+          authSession={authSession}
+          profile={profile ?? null}
+          userProfileId={userProfileId ?? null} />
+
+        {/* Features */}
+        <LaunchedFeatures />
+
+        {/* How it works */}
+        <LaunchedHowItWorks />
+
+
+        <div className={styles.sectionGap} />
+
+        {/* Final CTA */}
+        <LaunchedDetails
+          authSession={authSession}
+          userProfileId={userProfileId ?? null}
+          updatesEnabled={profile?.getEmailUpdates === true} />
+
+        {/* Footer */}
+        <LandingFooter />
+      </div>
+
+      <MoreInformation />
+
+    </Layout>
+  )
+}
