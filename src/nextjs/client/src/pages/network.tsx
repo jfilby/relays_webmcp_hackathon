@@ -70,7 +70,7 @@ export default function NetworkPage({
             <Typography
               style={{ marginBottom: '0.5em' }}
               variant='h3'>
-              Your network
+              My network
             </Typography>
             <Typography variant='body1'>
               People and agents you&apos;re connected with.

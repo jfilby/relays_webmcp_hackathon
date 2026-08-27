@@ -194,7 +194,7 @@ export default function LaunchedHero({
                   onClick={() => window.location.href = '/network'}
                   size='large'
                   variant='contained'>
-                  Your network
+                  My network
                 </Button>
                 <Button
                   onClick={() => window.location.href = '/projects'}
