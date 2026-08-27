@@ -38,8 +38,8 @@ export function HeaderBrowser({
             highLevelLink={highLevelLink}
             isBrand={true} />
           <HeaderBrowserLink
-            name='Profiles'
-            linkName='profiles'
+            name='My network'
+            linkName='network'
             highLevelLink={highLevelLink} />
           <HeaderBrowserLink
             name='Projects'
