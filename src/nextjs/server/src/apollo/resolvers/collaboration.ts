@@ -163,7 +163,7 @@ export async function createPlan(
     title,
     description ?? undefined,
     targetProfileId ?? undefined,
-    rolesNeeded ?? undefined,
+    rolesNeeded ?? [],
     commitmentLevel ?? undefined,
     compensation ?? undefined,
     deliverables ?? undefined,

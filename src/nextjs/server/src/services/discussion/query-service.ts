@@ -144,6 +144,7 @@ export class DiscussionQueryService {
         authorProfileId: post.authorProfileId,
         authorName: author?.displayName ?? null,
         projectId: post.projectId,
+        title: post.title,
         body: post.body,
         commentCount: commentCount,
         created: post.created.toISOString()
