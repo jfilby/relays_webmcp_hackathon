@@ -42,18 +42,6 @@ export function HeaderBrowser({
               highLevelLink={highLevelLink} />
             &nbsp;
             &nbsp;
-          </Typography>
-        </div>
-        <div style={{ textAlign: 'right' }}>
-          <Typography variant='body1'>
-            <HeaderBrowserLink
-              name='About'
-              linkName='about'
-              highLevelLink={highLevelLink} />
-            &nbsp;
-            &nbsp;
-            &nbsp;
-            &nbsp;
             <HeaderBrowserLink
               name='Profiles'
               linkName='profiles'
@@ -66,6 +54,28 @@ export function HeaderBrowser({
               highLevelLink={highLevelLink} />
             &nbsp;
             &nbsp;
+          </Typography>
+        </div>
+        <div style={{ textAlign: 'right' }}>
+          <Typography variant='body1'>
+            <HeaderBrowserLink
+              name='About'
+              linkName='about'
+              highLevelLink={highLevelLink} />
+            &nbsp;
+            &nbsp;
+            &nbsp;
+            &nbsp;
+            {session &&
+              <>
+                <HeaderBrowserLink
+                  name='My profile'
+                  linkName='profile'
+                  highLevelLink={highLevelLink} />
+                &nbsp;
+                &nbsp;
+              </>
+            }
             {session &&
               <Link
                 href='#'
