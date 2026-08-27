@@ -14,6 +14,9 @@ interface CreateProjectArgs {
   image?: string | null
   isPromoted?: boolean | null
   isPublic?: boolean | null
+  techStack?: string[] | null
+  stage?: string | null
+  isOpenToCollaborators?: boolean | null
 }
 
 interface UpdateProjectArgs {
@@ -26,6 +29,9 @@ interface UpdateProjectArgs {
   image?: string | null
   isPromoted?: boolean | null
   isPublic?: boolean | null
+  techStack?: string[] | null
+  stage?: string | null
+  isOpenToCollaborators?: boolean | null
 }
 
 interface DeleteProjectArgs {
@@ -40,9 +46,6 @@ export async function createProject(
   context: unknown,
   info: unknown) {
 
-  // Debug
-  const fnName = `createProject()`
-
   // GraphQL args are schema-validated before the resolver runs
   const {
     userProfileId,
@@ -52,24 +55,26 @@ export async function createProject(
     website,
     image,
     isPromoted,
-    isPublic
+    isPublic,
+    techStack,
+    stage,
+    isOpenToCollaborators
   } = args as unknown as CreateProjectArgs
 
-  // Query
-  const results = await
-    projectsMutateService.create(
-      prisma,
-      userProfileId,
-      name,
-      tagline ?? undefined,
-      description ?? undefined,
-      website ?? undefined,
-      image ?? undefined,
-      isPromoted ?? undefined,
-      isPublic ?? undefined)
-
-  // Return
-  return results
+  // Mutation
+  return projectsMutateService.create(
+    prisma,
+    userProfileId,
+    name,
+    tagline ?? undefined,
+    description ?? undefined,
+    website ?? undefined,
+    image ?? undefined,
+    isPromoted ?? undefined,
+    isPublic ?? undefined,
+    techStack ?? undefined,
+    stage ?? undefined,
+    isOpenToCollaborators ?? undefined)
 }
 
 export async function updateProject(
@@ -78,9 +83,6 @@ export async function updateProject(
   context: unknown,
   info: unknown) {
 
-  // Debug
-  const fnName = `updateProject()`
-
   // GraphQL args are schema-validated before the resolver runs
   const {
     id,
@@ -91,25 +93,49 @@ export async function updateProject(
     website,
     image,
     isPromoted,
-    isPublic
+    isPublic,
+    techStack,
+    stage,
+    isOpenToCollaborators
   } = args as unknown as UpdateProjectArgs
 
-  // Query
-  const results = await
-    projectsMutateService.update(
-      prisma,
-      id,
-      userProfileId,
-      name ?? undefined,
-      tagline ?? undefined,
-      description ?? undefined,
-      website ?? undefined,
-      image ?? undefined,
-      isPromoted ?? undefined,
-      isPublic ?? undefined)
+  // Mutation
+  return projectsMutateService.update(
+    prisma,
+    id,
+    userProfileId,
+    name ?? undefined,
+    tagline ?? undefined,
+    description ?? undefined,
+    website ?? undefined,
+    image ?? undefined,
+    isPromoted ?? undefined,
+    isPublic ?? undefined,
+    techStack ?? undefined,
+    stage ?? undefined,
+    isOpenToCollaborators ?? undefined)
+}
 
-  // Return
-  return results
+export async function toggleProjectInterest(
+  parent: unknown,
+  args: unknown,
+  context: unknown,
+  info: unknown) {
+
+  // GraphQL args are schema-validated before the resolver runs
+  const {
+    userProfileId,
+    projectId
+  } = args as unknown as {
+    userProfileId: string
+    projectId: string
+  }
+
+  // Mutation
+  return projectsMutateService.toggleProjectInterest(
+    prisma,
+    userProfileId,
+    projectId)
 }
 
 export async function deleteProject(
@@ -118,22 +144,15 @@ export async function deleteProject(
   context: unknown,
   info: unknown) {
 
-  // Debug
-  const fnName = `deleteProject()`
-
   // GraphQL args are schema-validated before the resolver runs
   const {
     id,
     userProfileId
   } = args as unknown as DeleteProjectArgs
 
-  // Query
-  const results = await
-    projectsMutateService.deleteById(
-      prisma,
-      id,
-      userProfileId)
-
-  // Return
-  return results
+  // Mutation
+  return projectsMutateService.deleteById(
+    prisma,
+    id,
+    userProfileId)
 }

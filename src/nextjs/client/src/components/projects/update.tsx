@@ -20,6 +20,9 @@ interface Props {
   image: string
   isPromoted: boolean
   isPublic: boolean
+  techStack?: string[]
+  stage: string
+  isOpenToCollaborators: boolean
   updateAction: boolean
   setUpdateAction: (value: boolean) => void
   setAlertSeverity: (value: 'success' | 'error' | undefined) => void
@@ -37,6 +40,9 @@ export default function UpdateProject({
   image,
   isPromoted,
   isPublic,
+  techStack,
+  stage,
+  isOpenToCollaborators,
   updateAction,
   setUpdateAction,
   setAlertSeverity,
@@ -68,7 +74,10 @@ export default function UpdateProject({
         website: website !== '' ? website : null,
         image: image !== '' ? image : null,
         isPromoted: isPromoted === true,
-        isPublic: isPublic === true
+        isPublic: isPublic === true,
+        techStack: Array.isArray(techStack) && techStack.length > 0 ? techStack : null,
+        stage: stage != null && stage !== '' ? stage : null,
+        isOpenToCollaborators: isOpenToCollaborators === true
       }
     }).then(result => updatedData = result.data?.updateProject)
 

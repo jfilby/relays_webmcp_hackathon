@@ -16,6 +16,7 @@ interface CreateProfileArgs {
   website?: string | null
   avatar?: string | null
   updates?: boolean | null
+  availabilityStatus?: string | null
 }
 
 interface UpdateProfileArgs {
@@ -29,6 +30,7 @@ interface UpdateProfileArgs {
   location?: string | null
   website?: string | null
   avatar?: string | null
+  availabilityStatus?: string | null
 }
 
 interface SetProfileUpdatesArgs {
@@ -43,9 +45,6 @@ export async function createProfile(
   context: unknown,
   info: unknown) {
 
-  // Debug
-  const fnName = `createProfile()`
-
   // GraphQL args are schema-validated before the resolver runs
   const {
     userProfileId,
@@ -57,28 +56,24 @@ export async function createProfile(
     location,
     website,
     avatar,
-    updates
+    updates,
+    availabilityStatus
   } = args as unknown as CreateProfileArgs
 
-  console.log(`${fnName}: userProfileId: ${userProfileId}`)
-
-  // Query
-  const results = await
-    profilesMutateService.create(
-      prisma,
-      userProfileId,
-      displayName,
-      type ?? undefined,
-      isPublic ?? undefined,
-      headline ?? undefined,
-      bio ?? undefined,
-      location ?? undefined,
-      website ?? undefined,
-      avatar ?? undefined,
-      updates ?? undefined)
-
-  // Return
-  return results
+  // Mutation
+  return profilesMutateService.create(
+    prisma,
+    userProfileId,
+    displayName,
+    type ?? undefined,
+    isPublic ?? undefined,
+    headline ?? undefined,
+    bio ?? undefined,
+    location ?? undefined,
+    website ?? undefined,
+    avatar ?? undefined,
+    updates ?? undefined,
+    availabilityStatus ?? undefined)
 }
 
 export async function updateProfile(
@@ -86,9 +81,6 @@ export async function updateProfile(
   args: unknown,
   context: unknown,
   info: unknown) {
-
-  // Debug
-  const fnName = `updateProfile()`
 
   // GraphQL args are schema-validated before the resolver runs
   const {
@@ -101,26 +93,24 @@ export async function updateProfile(
     bio,
     location,
     website,
-    avatar
+    avatar,
+    availabilityStatus
   } = args as unknown as UpdateProfileArgs
 
-  // Query
-  const results = await
-    profilesMutateService.update(
-      prisma,
-      id,
-      userProfileId,
-      displayName ?? undefined,
-      type ?? undefined,
-      isPublic ?? undefined,
-      headline ?? undefined,
-      bio ?? undefined,
-      location ?? undefined,
-      website ?? undefined,
-      avatar ?? undefined)
-
-  // Return
-  return results
+  // Mutation
+  return profilesMutateService.update(
+    prisma,
+    id,
+    userProfileId,
+    displayName ?? undefined,
+    type ?? undefined,
+    isPublic ?? undefined,
+    headline ?? undefined,
+    bio ?? undefined,
+    location ?? undefined,
+    website ?? undefined,
+    avatar ?? undefined,
+    availabilityStatus ?? undefined)
 }
 
 export async function setProfileUpdates(
@@ -129,19 +119,178 @@ export async function setProfileUpdates(
   context: unknown,
   info: unknown) {
 
-  // Debug
-  const fnName = `setProfileUpdates()`
-
   // GraphQL args are schema-validated before the resolver runs
   const { userProfileId, updates } = args as unknown as SetProfileUpdatesArgs
 
-  // Query
-  const results = await
-    profilesMutateService.setGetEmailUpdates(
-      prisma,
-      userProfileId,
-      updates)
+  // Mutation
+  return profilesMutateService.setGetEmailUpdates(
+    prisma,
+    userProfileId,
+    updates)
+}
 
-  // Return
-  return results
+export async function addSkillToProfile(
+  parent: unknown,
+  args: unknown,
+  context: unknown,
+  info: unknown) {
+
+  // GraphQL args are schema-validated before the resolver runs
+  const {
+    userProfileId,
+    skillName,
+    level
+  } = args as unknown as {
+    userProfileId: string
+    skillName: string
+    level?: string | null
+  }
+
+  // Mutation
+  return profilesMutateService.addSkillToProfile(
+    prisma,
+    userProfileId,
+    skillName,
+    level ?? undefined)
+}
+
+export async function removeSkillFromProfile(
+  parent: unknown,
+  args: unknown,
+  context: unknown,
+  info: unknown) {
+
+  // GraphQL args are schema-validated before the resolver runs
+  const {
+    userProfileId,
+    profileSkillId
+  } = args as unknown as {
+    userProfileId: string
+    profileSkillId: string
+  }
+
+  // Mutation
+  return profilesMutateService.removeSkillFromProfile(
+    prisma,
+    userProfileId,
+    profileSkillId)
+}
+
+export async function addProfileLink(
+  parent: unknown,
+  args: unknown,
+  context: unknown,
+  info: unknown) {
+
+  // GraphQL args are schema-validated before the resolver runs
+  const {
+    userProfileId,
+    kind,
+    url,
+    handle
+  } = args as unknown as {
+    userProfileId: string
+    kind: string
+    url: string
+    handle?: string | null
+  }
+
+  // Mutation
+  return profilesMutateService.addProfileLink(
+    prisma,
+    userProfileId,
+    kind,
+    url,
+    handle ?? undefined)
+}
+
+export async function deleteProfileLink(
+  parent: unknown,
+  args: unknown,
+  context: unknown,
+  info: unknown) {
+
+  // GraphQL args are schema-validated before the resolver runs
+  const { id, userProfileId } = args as unknown as {
+    id: string
+    userProfileId: string
+  }
+
+  // Mutation
+  return profilesMutateService.deleteProfileLinkById(
+    prisma,
+    userProfileId,
+    id)
+}
+
+export async function endorseSkill(
+  parent: unknown,
+  args: unknown,
+  context: unknown,
+  info: unknown) {
+
+  // GraphQL args are schema-validated before the resolver runs
+  const {
+    userProfileId,
+    toProfileId,
+    skillId,
+    comment
+  } = args as unknown as {
+    userProfileId: string
+    toProfileId: string
+    skillId: string
+    comment?: string | null
+  }
+
+  // Mutation
+  return profilesMutateService.endorseSkill(
+    prisma,
+    userProfileId,
+    toProfileId,
+    skillId,
+    comment ?? undefined)
+}
+
+export async function createPost(
+  parent: unknown,
+  args: unknown,
+  context: unknown,
+  info: unknown) {
+
+  // GraphQL args are schema-validated before the resolver runs
+  const {
+    userProfileId,
+    body,
+    projectId
+  } = args as unknown as {
+    userProfileId: string
+    body: string
+    projectId?: string | null
+  }
+
+  // Mutation
+  return profilesMutateService.createPost(
+    prisma,
+    userProfileId,
+    body,
+    projectId ?? undefined)
+}
+
+export async function deletePost(
+  parent: unknown,
+  args: unknown,
+  context: unknown,
+  info: unknown) {
+
+  // GraphQL args are schema-validated before the resolver runs
+  const { id, userProfileId } = args as unknown as {
+    id: string
+    userProfileId: string
+  }
+
+  // Mutation
+  return profilesMutateService.deletePost(
+    prisma,
+    userProfileId,
+    id)
 }

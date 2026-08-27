@@ -23,7 +23,8 @@ export default function AddProfilePage({
     headline: '',
     bio: '',
     location: '',
-    website: ''
+    website: '',
+    availabilityStatus: 'A'
   })
 
   const [alertSeverity, setAlertSeverity] = useState<'success' | 'error' | undefined>(undefined)
@@ -97,6 +98,7 @@ export default function AddProfilePage({
         bio={values.bio}
         location={values.location}
         website={values.website}
+        availabilityStatus={values.availabilityStatus}
         createAction={createAction}
         setCreateAction={setCreateAction}
         setAlertSeverity={setAlertSeverity}

@@ -31,6 +31,9 @@ export class ProjectsMutateService {
   // Project URLs: W (website)
   websiteKind = 'W'
 
+  // Project stages: I (idea), A (alpha), B (beta), G (generally available)
+  validStages = ['I', 'A', 'B', 'G']
+
   // Code
   async create(
     prisma: PrismaClient,
@@ -41,7 +44,10 @@ export class ProjectsMutateService {
     website: string | undefined,
     image: string | undefined,
     isPromoted: boolean | undefined,
-    isPublic: boolean | undefined) {
+    isPublic: boolean | undefined,
+    techStack: string[] = [],
+    stage: string | undefined = undefined,
+    isOpenToCollaborators: boolean | undefined = undefined) {
 
     // Debug
     const fnName = `${this.clName}.create()`
@@ -54,6 +60,15 @@ export class ProjectsMutateService {
       }
     }
     name = name.trim()
+
+    // Validate the stage
+    if (stage != null &&
+        this.validStages.includes(stage) === false) {
+      return {
+        status: false,
+        message: `Invalid project stage`
+      }
+    }
 
     // Validate the user profile exists
     const userProfile = await
@@ -110,7 +125,10 @@ export class ProjectsMutateService {
         undefined,  // organizationId
         tagline != null && tagline.trim() !== '' ? tagline.trim() : undefined,
         description != null && description.trim() !== '' ? description.trim() : undefined,
-        image != null && image.trim() !== '' ? image.trim() : undefined)
+        image != null && image.trim() !== '' ? image.trim() : undefined,
+        techStack.filter(item => item.trim() !== '').map(item => item.trim()),
+        stage != null && stage.trim() !== '' ? stage.trim() : undefined,
+        isOpenToCollaborators === true)
 
     // Save the website URL as a typed project URL
     if (website != null && website.trim() !== '') {
@@ -132,7 +150,7 @@ export class ProjectsMutateService {
     return {
       status: true,
       message: `Your project was created`,
-      project: projectsQueryService.toGraphQL(project, instance, true)
+      project: projectsQueryService.toGraphQL(project, instance, true, [], 0, false)
     }
   }
 
@@ -146,7 +164,10 @@ export class ProjectsMutateService {
     website: string | undefined,
     image: string | undefined,
     isPromoted: boolean | undefined,
-    isPublic: boolean | undefined) {
+    isPublic: boolean | undefined,
+    techStack: string[] | undefined = undefined,
+    stage: string | undefined = undefined,
+    isOpenToCollaborators: boolean | undefined = undefined) {
 
     // Debug
     const fnName = `${this.clName}.update()`
@@ -204,6 +225,16 @@ export class ProjectsMutateService {
       name = name.trim()
     }
 
+    // Validate the stage, if being changed
+    if (stage != null &&
+        stage.trim() !== '' &&
+        this.validStages.includes(stage) === false) {
+      return {
+        status: false,
+        message: `Invalid project stage`
+      }
+    }
+
     // At least one field must be provided
     if (name == null &&
         tagline == null &&
@@ -211,7 +242,10 @@ export class ProjectsMutateService {
         website == null &&
         image == null &&
         isPromoted == null &&
-        isPublic == null) {
+        isPublic == null &&
+        techStack == null &&
+        stage == null &&
+        isOpenToCollaborators == null) {
       return {
         status: false,
         message: `No changes to save`
@@ -233,9 +267,11 @@ export class ProjectsMutateService {
         tagline,
         description,
         image,
-        undefined,  // techStack
-        undefined,  // stage
-        undefined,  // isOpenToCollaborators
+        techStack != null ?
+          techStack.filter(item => item.trim() !== '').map(item => item.trim()) :
+          undefined,
+        stage != null && stage.trim() !== '' ? stage.trim() : undefined,
+        isOpenToCollaborators ?? undefined,
         isPromoted,
         undefined)  // status
 
@@ -282,7 +318,99 @@ export class ProjectsMutateService {
     return {
       status: true,
       message: `Your project was updated`,
-      project: projectsQueryService.toGraphQL(project, instance, true)
+      project: projectsQueryService.toGraphQL(project, instance, true, [], 0, false)
+    }
+  }
+
+  // Toggle the signed-in user's interest in a project ("starring" it).
+  // Interest can only be registered on public projects or the viewer's own.
+  async toggleProjectInterest(
+    prisma: PrismaClient,
+    userProfileId: string,
+    projectId: string) {
+
+    // Debug
+    const fnName = `${this.clName}.toggleProjectInterest()`
+
+    // Load the project and its instance for visibility checks
+    const project = await
+      prisma.project.findUnique({
+        where: {
+          id: projectId
+        },
+        include: {
+          instance: true
+        }
+      })
+
+    if (project == null) {
+      return {
+        status: false,
+        message: `Project not found`
+      }
+    }
+
+    const isOwner = await
+      projectsQueryService.isOwner(
+        prisma,
+        projectId,
+        userProfileId)
+
+    if (project.instance.publicAccess == null && isOwner === false) {
+      return {
+        status: false,
+        message: `Project not found`
+      }
+    }
+
+    // Resolve the profile expressing interest
+    const profile = await
+      prisma.profile.findUnique({
+        where: {
+          userProfileId: userProfileId
+        }
+      })
+
+    if (profile == null) {
+      return {
+        status: false,
+        message: `You need a profile to follow a project`
+      }
+    }
+
+    // Toggle
+    const existingInterest = await
+      prisma.projectInterest.findUnique({
+        where: {
+          profileId_projectId: {
+            profileId: profile.id,
+            projectId: projectId
+          }
+        }
+      })
+
+    if (existingInterest != null) {
+      await
+        prisma.projectInterest.delete({
+          where: {
+            id: existingInterest.id
+          }
+        })
+    } else {
+      await
+        prisma.projectInterest.create({
+          data: {
+            profileId: profile.id,
+            projectId: projectId
+          }
+        })
+    }
+
+    // Return
+    return {
+      status: true,
+      message: existingInterest != null ? `Interest removed` : `Interest added`,
+      interested: existingInterest == null
     }
   }
 

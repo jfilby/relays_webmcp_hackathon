@@ -22,15 +22,16 @@ interface GetNetworkArgs {
   userProfileId: string
 }
 
+interface ProfileIdArgs {
+  profileId: string
+}
+
 // Code
 export async function getProfileById(
   parent: unknown,
   args: unknown,
   context: unknown,
   info: unknown) {
-
-  // Debug
-  const fnName = `getProfileById()`
 
   // GraphQL args are schema-validated before the resolver runs
   const { id, userProfileId } = args as unknown as ProfileByIdArgs & ProfileByUserProfileIdArgs
@@ -52,9 +53,6 @@ export async function getProfileByUserProfileId(
   context: unknown,
   info: unknown) {
 
-  // Debug
-  const fnName = `getProfileByUserProfileId()`
-
   // GraphQL args are schema-validated before the resolver runs
   const { userProfileId } = args as unknown as ProfileByUserProfileIdArgs
 
@@ -73,9 +71,6 @@ export async function searchProfiles(
   args: unknown,
   context: unknown,
   info: unknown) {
-
-  // Debug
-  const fnName = `searchProfiles()`
 
   // GraphQL args are schema-validated before the resolver runs
   const { search, type } = args as unknown as SearchProfilesArgs
@@ -97,9 +92,6 @@ export async function getNetwork(
   context: unknown,
   info: unknown) {
 
-  // Debug
-  const fnName = `getNetwork()`
-
   // GraphQL args are schema-validated before the resolver runs
   const { userProfileId } = args as unknown as GetNetworkArgs
 
@@ -111,4 +103,64 @@ export async function getNetwork(
 
   // Return
   return results
+}
+
+export async function getSkillsByProfileId(
+  parent: unknown,
+  args: unknown,
+  context: unknown,
+  info: unknown) {
+
+  // GraphQL args are schema-validated before the resolver runs
+  const { profileId } = args as unknown as ProfileIdArgs
+
+  // Query
+  return profilesQueryService.getSkillsByProfileId(
+    prisma,
+    profileId)
+}
+
+export async function getProfileLinksByProfileId(
+  parent: unknown,
+  args: unknown,
+  context: unknown,
+  info: unknown) {
+
+  // GraphQL args are schema-validated before the resolver runs
+  const { profileId } = args as unknown as ProfileIdArgs
+
+  // Query
+  return profilesQueryService.getLinksByProfileId(
+    prisma,
+    profileId)
+}
+
+export async function getEndorsementsByProfileId(
+  parent: unknown,
+  args: unknown,
+  context: unknown,
+  info: unknown) {
+
+  // GraphQL args are schema-validated before the resolver runs
+  const { profileId } = args as unknown as ProfileIdArgs
+
+  // Query
+  return profilesQueryService.getEndorsementsByProfileId(
+    prisma,
+    profileId)
+}
+
+export async function getPostsByProfileId(
+  parent: unknown,
+  args: unknown,
+  context: unknown,
+  info: unknown) {
+
+  // GraphQL args are schema-validated before the resolver runs
+  const { profileId } = args as unknown as ProfileIdArgs
+
+  // Query
+  return profilesQueryService.getPostsByProfileId(
+    prisma,
+    profileId)
 }

@@ -1,5 +1,31 @@
 import { gql } from '@apollo/client'
 
+// Project fields selected everywhere a project is returned. Kept in one
+// fragment-like list so queries stay consistent.
+const projectFields = `
+        id
+        instanceId
+        name
+        isOwner
+        tagline
+        description
+        website
+        image
+        techStack
+        stage
+        isOpenToCollaborators
+        isPromoted
+        isPublic
+        urls {
+          id
+          kind
+          url
+          label
+        }
+        interestCount
+        viewerIsInterested
+`
+
 export const createProjectMutation = gql`
   mutation createProject(
     $userProfileId: String!,
@@ -9,7 +35,10 @@ export const createProjectMutation = gql`
     $website: String,
     $image: String,
     $isPromoted: Boolean,
-    $isPublic: Boolean)
+    $isPublic: Boolean,
+    $techStack: [String],
+    $stage: String,
+    $isOpenToCollaborators: Boolean)
   {
     createProject(
       userProfileId: $userProfileId,
@@ -19,21 +48,15 @@ export const createProjectMutation = gql`
       website: $website,
       image: $image,
       isPromoted: $isPromoted,
-      isPublic: $isPublic) {
+      isPublic: $isPublic,
+      techStack: $techStack,
+      stage: $stage,
+      isOpenToCollaborators: $isOpenToCollaborators) {
 
       status
       message
       project {
-        id
-        instanceId
-        name
-        isOwner
-        tagline
-        description
-        website
-        image
-        isPromoted
-        isPublic
+${projectFields}
       }
     }
   }
@@ -49,7 +72,10 @@ export const updateProjectMutation = gql`
     $website: String,
     $image: String,
     $isPromoted: Boolean,
-    $isPublic: Boolean)
+    $isPublic: Boolean,
+    $techStack: [String],
+    $stage: String,
+    $isOpenToCollaborators: Boolean)
   {
     updateProject(
       id: $id,
@@ -60,22 +86,32 @@ export const updateProjectMutation = gql`
       website: $website,
       image: $image,
       isPromoted: $isPromoted,
-      isPublic: $isPublic) {
+      isPublic: $isPublic,
+      techStack: $techStack,
+      stage: $stage,
+      isOpenToCollaborators: $isOpenToCollaborators) {
 
       status
       message
       project {
-        id
-        instanceId
-        name
-        isOwner
-        tagline
-        description
-        website
-        image
-        isPromoted
-        isPublic
+${projectFields}
       }
+    }
+  }
+`
+
+export const toggleProjectInterestMutation = gql`
+  mutation toggleProjectInterest(
+    $userProfileId: String!,
+    $projectId: String!)
+  {
+    toggleProjectInterest(
+      userProfileId: $userProfileId,
+      projectId: $projectId) {
+
+      status
+      message
+      interested
     }
   }
 `
@@ -106,16 +142,7 @@ export const getProjectByIdQuery = gql`
       status
       message
       project {
-        id
-        instanceId
-        name
-        isOwner
-        tagline
-        description
-        website
-        image
-        isPromoted
-        isPublic
+${projectFields}
         status
         created
         updated
@@ -135,16 +162,7 @@ export const searchProjectsQuery = gql`
       status
       message
       projects {
-        id
-        instanceId
-        name
-        isOwner
-        tagline
-        description
-        website
-        image
-        isPromoted
-        isPublic
+${projectFields}
       }
     }
   }
@@ -159,16 +177,7 @@ export const getProjectsByUserProfileIdQuery = gql`
       status
       message
       projects {
-        id
-        instanceId
-        name
-        isOwner
-        tagline
-        description
-        website
-        image
-        isPromoted
-        isPublic
+${projectFields}
         status
         created
         updated

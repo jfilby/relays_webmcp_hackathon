@@ -13,6 +13,7 @@ interface Props {
   bio?: string
   location?: string
   website?: string
+  availabilityStatus?: string
   avatar?: string
   createAction: boolean
   setCreateAction: (value: boolean) => void
@@ -38,6 +39,7 @@ export default function CreateProfile({
   bio,
   location,
   website,
+  availabilityStatus,
   avatar,
   createAction,
   setCreateAction,
@@ -72,7 +74,8 @@ export default function CreateProfile({
         location: location != null && location !== '' ? location : null,
         website: website != null && website !== '' ? website : null,
         avatar: avatar != null && avatar !== '' ? avatar : null,
-        updates: updates === true
+        updates: updates === true,
+        availabilityStatus: availabilityStatus != null && availabilityStatus !== '' ? availabilityStatus : null,
       }
     }).then(result => createdData = result.data?.createProfile)
 

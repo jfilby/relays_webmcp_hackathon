@@ -20,6 +20,7 @@ interface Props {
   bio: string
   location: string
   website: string
+  availabilityStatus: string
   avatar: string
   updateAction: boolean
   setUpdateAction: (value: boolean) => void
@@ -39,6 +40,7 @@ export default function UpdateProfile({
   location,
   website,
   avatar,
+  availabilityStatus,
   updateAction,
   setUpdateAction,
   setAlertSeverity,
@@ -71,7 +73,8 @@ export default function UpdateProfile({
         bio: bio !== '' ? bio : null,
         location: location !== '' ? location : null,
         website: website !== '' ? website : null,
-        avatar: avatar !== '' ? avatar : null
+        avatar: avatar !== '' ? avatar : null,
+        availabilityStatus: availabilityStatus !== '' ? availabilityStatus : null
       }
     }).then(result => updatedData = result.data?.updateProfile)
 

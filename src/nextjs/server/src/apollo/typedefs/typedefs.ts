@@ -89,6 +89,9 @@ export const typeDefs = /* GraphQL */ `
     website: String
     avatar: String
     isPublic: Boolean!
+    availabilityStatus: String
+    isVerified: Boolean
+    verifiedAt: String
     created: String!
     updated: String
   }
@@ -105,6 +108,115 @@ export const typeDefs = /* GraphQL */ `
     profiles: [Profile]
   }
 
+  # Skills
+
+  type ProfileSkillItem {
+    id: String!
+    skillId: String!
+    name: String
+    level: String
+  }
+
+  type ProfileSkillsResults {
+    status: Boolean!
+    message: String
+    skills: [ProfileSkillItem]
+  }
+
+  # Profile links
+
+  type ProfileLinkItem {
+    id: String!
+    kind: String!
+    url: String!
+    handle: String
+  }
+
+  type ProfileLinksResults {
+    status: Boolean!
+    message: String
+    links: [ProfileLinkItem]
+  }
+
+  # Endorsements
+
+  type EndorsementItem {
+    id: String!
+    fromProfileId: String!
+    fromDisplayName: String
+    skillId: String!
+    skillName: String
+    comment: String
+    created: String!
+  }
+
+  type EndorsementsResults {
+    status: Boolean!
+    message: String
+    endorsements: [EndorsementItem]
+  }
+
+  # Posts
+
+  type PostItem {
+    id: String!
+    authorProfileId: String!
+    authorName: String
+    projectId: String
+    body: String!
+    created: String!
+  }
+
+  type PostsResults {
+    status: Boolean!
+    message: String
+    posts: [PostItem]
+  }
+
+  # Connections
+
+  type IncomingConnectionRequest {
+    id: String!
+    fromProfileId: String!
+    fromDisplayName: String!
+    fromAvatar: String
+    fromType: String
+    message: String
+    created: String!
+  }
+
+  type IncomingConnectionRequestsResults {
+    status: Boolean!
+    message: String
+    requests: [IncomingConnectionRequest]
+  }
+
+  # Notifications
+
+  type NotificationItem {
+    id: String!
+    type: String!
+    refModel: String
+    refId: String
+    readAt: String
+    created: String!
+  }
+
+  type NotificationsResults {
+    status: Boolean!
+    message: String
+    notifications: [NotificationItem]
+  }
+
+  # Projects
+
+  type ProjectUrl {
+    id: String!
+    kind: String!
+    url: String!
+    label: String
+  }
+
   type Project {
     id: String!
     instanceId: String!
@@ -114,8 +226,14 @@ export const typeDefs = /* GraphQL */ `
     description: String
     website: String
     image: String
+    techStack: [String]
+    stage: String
+    isOpenToCollaborators: Boolean
     isPromoted: Boolean!
     isPublic: Boolean!
+    urls: [ProjectUrl]
+    interestCount: Int
+    viewerIsInterested: Boolean
     status: String!
     created: String!
     updated: String
@@ -136,6 +254,62 @@ export const typeDefs = /* GraphQL */ `
   type DeleteProjectResults {
     status: Boolean!
     message: String
+  }
+
+  type InterestToggleResult {
+    status: Boolean!
+    message: String
+    interested: Boolean
+  }
+
+  # Collaboration plans
+
+  type CollaborationPlan {
+    id: String!
+    projectId: String!
+    projectName: String
+    createdByProfileId: String!
+    createdByName: String
+    targetProfileId: String
+    targetName: String
+    status: String!
+    title: String!
+    description: String
+    rolesNeeded: [String]
+    commitmentLevel: String
+    compensation: String
+    deliverables: String
+    startBy: String
+    completedAt: String
+    created: String!
+    updated: String
+  }
+
+  type PlansResults {
+    status: Boolean!
+    message: String
+    plans: [CollaborationPlan]
+  }
+
+  type PlanResults {
+    status: Boolean!
+    message: String
+    plan: CollaborationPlan
+  }
+
+  type PlanStep {
+    id: String!
+    planId: String!
+    seq: Int!
+    title: String!
+    description: String
+    status: String!
+  }
+
+  type PlanStepsResults {
+    status: Boolean!
+    message: String
+    steps: [PlanStep]
   }
 
   # Queries
@@ -211,6 +385,42 @@ export const typeDefs = /* GraphQL */ `
     getNetwork(
       userProfileId: String!): ProfilesResults!
 
+    # Profile skills, links, endorsements, posts
+    getSkillsByProfileId(
+      profileId: String!): ProfileSkillsResults!
+
+    getProfileLinksByProfileId(
+      profileId: String!): ProfileLinksResults!
+
+    getEndorsementsByProfileId(
+      profileId: String!): EndorsementsResults!
+
+    getPostsByProfileId(
+      profileId: String!): PostsResults!
+
+    getPostsByProjectId(
+      projectId: String!): PostsResults!
+
+    # Connections
+    getIncomingConnectionRequests(
+      userProfileId: String!): IncomingConnectionRequestsResults!
+
+    # Notifications
+    getNotifications(
+      userProfileId: String!,
+      unreadOnly: Boolean): NotificationsResults!
+
+    # Collaboration plans
+    searchCollaborationPlans(
+      projectId: String,
+      userProfileId: String): PlansResults!
+
+    getCollaborationPlanById(
+      id: String!): PlanResults!
+
+    getPlanStepsByPlanId(
+      planId: String!): PlanStepsResults!
+
     # Projects
     getProjectById(
       id: String!,
@@ -282,7 +492,8 @@ export const typeDefs = /* GraphQL */ `
       location: String,
       website: String,
       avatar: String,
-      updates: Boolean): ProfileResults!
+      updates: Boolean,
+      availabilityStatus: String): ProfileResults!
 
     updateProfile(
       id: String!,
@@ -294,11 +505,116 @@ export const typeDefs = /* GraphQL */ `
       bio: String,
       location: String,
       website: String,
-      avatar: String): ProfileResults!
+      avatar: String,
+      availabilityStatus: String): ProfileResults!
 
     setProfileUpdates(
       userProfileId: String!,
       updates: Boolean!): StatusAndMessage!
+
+    # Profile skills
+    addSkillToProfile(
+      userProfileId: String!,
+      skillName: String!,
+      level: String): StatusAndMessage!
+
+    removeSkillFromProfile(
+      userProfileId: String!,
+      profileSkillId: String!): StatusAndMessage!
+
+    # Profile links
+    addProfileLink(
+      userProfileId: String!,
+      kind: String!,
+      url: String!,
+      handle: String): StatusAndMessage!
+
+    deleteProfileLink(
+      userProfileId: String!,
+      id: String!): StatusAndMessage!
+
+    # Endorsements
+    endorseSkill(
+      userProfileId: String!,
+      toProfileId: String!,
+      skillId: String!,
+      comment: String): StatusAndMessage!
+
+    # Posts
+    createPost(
+      userProfileId: String!,
+      body: String!,
+      projectId: String): StatusAndMessage!
+
+    deletePost(
+      userProfileId: String!,
+      id: String!): StatusAndMessage!
+
+    # Connections
+    sendConnectionRequest(
+      userProfileId: String!,
+      toProfileId: String!,
+      message: String): StatusAndMessage!
+
+    respondToConnectionRequest(
+      userProfileId: String!,
+      connectionId: String!,
+      response: String!): StatusAndMessage!
+
+    removeConnection(
+      userProfileId: String!,
+      peerProfileId: String!): StatusAndMessage!
+
+    # Notifications
+    markNotificationAsRead(
+      userProfileId: String!,
+      id: String!): StatusAndMessage!
+
+    # Collaboration plans
+    createPlan(
+      userProfileId: String!,
+      projectId: String!,
+      title: String!,
+      description: String,
+      targetProfileId: String,
+      rolesNeeded: [String],
+      commitmentLevel: String,
+      compensation: String,
+      deliverables: String,
+      startBy: String): StatusAndMessage!
+
+    updatePlan(
+      id: String!,
+      userProfileId: String!,
+      title: String,
+      description: String,
+      rolesNeeded: [String],
+      commitmentLevel: String,
+      compensation: String,
+      deliverables: String,
+      startBy: String): StatusAndMessage!
+
+    setPlanStatus(
+      id: String!,
+      userProfileId: String!,
+      status: String!): StatusAndMessage!
+
+    addPlanStep(
+      userProfileId: String!,
+      planId: String!,
+      title: String!,
+      description: String): StatusAndMessage!
+
+    updatePlanStep(
+      id: String!,
+      userProfileId: String!,
+      title: String,
+      description: String,
+      status: String): StatusAndMessage!
+
+    deletePlanStep(
+      id: String!,
+      userProfileId: String!): StatusAndMessage!
 
     # Projects
     createProject(
@@ -309,7 +625,10 @@ export const typeDefs = /* GraphQL */ `
       website: String,
       image: String,
       isPromoted: Boolean,
-      isPublic: Boolean): ProjectResults!
+      isPublic: Boolean,
+      techStack: [String],
+      stage: String,
+      isOpenToCollaborators: Boolean): ProjectResults!
 
     updateProject(
       id: String!,
@@ -320,7 +639,14 @@ export const typeDefs = /* GraphQL */ `
       website: String,
       image: String,
       isPromoted: Boolean,
-      isPublic: Boolean): ProjectResults!
+      isPublic: Boolean,
+      techStack: [String],
+      stage: String,
+      isOpenToCollaborators: Boolean): ProjectResults!
+
+    toggleProjectInterest(
+      userProfileId: String!,
+      projectId: String!): InterestToggleResult!
 
     deleteProject(
       id: String!,

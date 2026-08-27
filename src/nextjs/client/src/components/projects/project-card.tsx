@@ -1,5 +1,6 @@
 import { Chip, Link, Paper, Typography } from '@mui/material'
 import type { Project } from '@/types/client-only-types'
+import { projectStageName } from '@/types/client-only-types'
 
 interface Props {
   project: Project
@@ -82,6 +83,21 @@ export default function ProjectCard({
             backgroundColor: '#f0f0f0',
             color: '#444444'
           }} />
+
+        {projectStageName(project.stage) !== '' ?
+          <Chip
+            label={projectStageName(project.stage)}
+            size='small'
+            sx={{
+              height: '1.6em',
+              fontSize: '0.72rem',
+              fontWeight: 600,
+              backgroundColor: '#f0f0f0',
+              color: '#444444'
+            }} />
+          :
+          <></>
+        }
 
         {project.website != null && project.website !== '' ?
           <Link

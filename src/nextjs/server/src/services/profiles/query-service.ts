@@ -243,8 +243,255 @@ export class ProfilesQueryService {
       website: profile.website,
       avatar: profile.avatar,
       isPublic: profile.isPublic,
+      availabilityStatus: profile.availabilityStatus,
+      isVerified: profile.isVerified,
+      verifiedAt: profile.verifiedAt != null ? profile.verifiedAt.toISOString() : undefined,
       created: profile.created.toISOString(),
       updated: profile.updated != null ? profile.updated.toISOString() : undefined
+    }
+  }
+
+  // Get the skills claimed by a profile, each with its name and the claimed
+  // proficiency level.
+  async getSkillsByProfileId(
+    prisma: PrismaClient,
+    profileId: string) {
+
+    // Debug
+    const fnName = `${this.clName}.getSkillsByProfileId()`
+
+    // Fetch the profile skill links
+    const profileSkills = await
+      prisma.profileSkill.findMany({
+        where: {
+          profileId: profileId
+        }
+      })
+
+    // No skills, nothing else to fetch
+    if (profileSkills.length === 0) {
+      return {
+        status: true,
+        skills: []
+      }
+    }
+
+    // Fetch the skill catalog entries for display
+    const skills = await
+      prisma.skill.findMany({
+        where: {
+          id: { in: profileSkills.map(profileSkill => profileSkill.skillId) }
+        }
+      })
+
+    const nameBySkillId = new Map(skills.map(skill => [skill.id, skill.name]))
+
+    // Return
+    return {
+      status: true,
+      skills: profileSkills
+        .map(profileSkill => ({
+          id: profileSkill.id,
+          skillId: profileSkill.skillId,
+          name: nameBySkillId.get(profileSkill.skillId),
+          level: profileSkill.level
+        }))
+        .filter(skill => skill.name != null)
+    }
+  }
+
+  // Get the external links on a profile
+  async getLinksByProfileId(
+    prisma: PrismaClient,
+    profileId: string) {
+
+    // Debug
+    const fnName = `${this.clName}.getLinksByProfileId()`
+
+    // Query
+    const links = await
+      prisma.profileLink.findMany({
+        where: {
+          profileId: profileId
+        },
+        orderBy: {
+          created: 'asc'
+        }
+      })
+
+    // Return
+    return {
+      status: true,
+      links: links.map(link => ({
+        id: link.id,
+        kind: link.kind,
+        url: link.url,
+        handle: link.handle
+      }))
+    }
+  }
+
+  // Get the endorsements a profile has received, with giver and skill names.
+  async getEndorsementsByProfileId(
+    prisma: PrismaClient,
+    profileId: string) {
+
+    // Debug
+    const fnName = `${this.clName}.getEndorsementsByProfileId()`
+
+    // Query
+    const endorsements = await
+      prisma.endorsement.findMany({
+        where: {
+          toProfileId: profileId
+        },
+        orderBy: {
+          created: 'desc'
+        }
+      })
+
+    // No endorsements, nothing to enrich
+    if (endorsements.length === 0) {
+      return {
+        status: true,
+        endorsements: []
+      }
+    }
+
+    // Fetch givers and skills for display
+    const profiles = await
+      prisma.profile.findMany({
+        where: {
+          id: { in: endorsements.map(endorsement => endorsement.fromProfileId) }
+        }
+      })
+
+    const skills = await
+      prisma.skill.findMany({
+        where: {
+          id: { in: endorsements.map(endorsement => endorsement.skillId) }
+        }
+      })
+
+    const nameByProfileId = new Map(profiles.map(profile => [profile.id, profile.displayName]))
+    const nameBySkillId = new Map(skills.map(skill => [skill.id, skill.name]))
+
+    // Return
+    return {
+      status: true,
+      endorsements: endorsements
+        .map(endorsement => ({
+          id: endorsement.id,
+          fromProfileId: endorsement.fromProfileId,
+          fromDisplayName: nameByProfileId.get(endorsement.fromProfileId),
+          skillId: endorsement.skillId,
+          skillName: nameBySkillId.get(endorsement.skillId),
+          comment: endorsement.comment,
+          created: endorsement.created.toISOString()
+        }))
+        .filter(endorsement =>
+          endorsement.fromDisplayName != null &&
+          endorsement.skillName != null)
+    }
+  }
+
+  // Get the posts authored by a profile (their mini-feed)
+  async getPostsByProfileId(
+    prisma: PrismaClient,
+    profileId: string) {
+
+    // Debug
+    const fnName = `${this.clName}.getPostsByProfileId()`
+
+    // Load the author once so every post carries their display name
+    const author = await
+      profileModel.getById(
+        prisma,
+        profileId)
+
+    // Validate
+    if (author == null) {
+      return {
+        status: false,
+        message: `Profile not found`
+      }
+    }
+
+    // Query
+    const posts = await
+      prisma.post.findMany({
+        where: {
+          authorProfileId: profileId,
+          status: 'A'
+        },
+        orderBy: {
+          created: 'desc'
+        }
+      })
+
+    // Return
+    return {
+      status: true,
+      posts: posts.map(post => ({
+        id: post.id,
+        authorProfileId: post.authorProfileId,
+        authorName: author.displayName,
+        projectId: post.projectId,
+        body: post.body,
+        created: post.created.toISOString()
+      }))
+    }
+  }
+
+  // Get the posts attached to a project, with each author's display name.
+  async getPostsByProjectId(
+    prisma: PrismaClient,
+    projectId: string) {
+
+    // Debug
+    const fnName = `${this.clName}.getPostsByProjectId()`
+
+    // Query
+    const posts = await
+      prisma.post.findMany({
+        where: {
+          projectId: projectId,
+          status: 'A'
+        },
+        orderBy: {
+          created: 'desc'
+        }
+      })
+
+    // No posts, no authors to fetch
+    if (posts.length === 0) {
+      return {
+        status: true,
+        posts: []
+      }
+    }
+
+    // Fetch authors for display
+    const authors = await
+      prisma.profile.findMany({
+        where: {
+          id: { in: posts.map(post => post.authorProfileId) }
+        }
+      })
+
+    const nameByProfileId = new Map(authors.map(author => [author.id, author.displayName]))
+
+    // Return
+    return {
+      status: true,
+      posts: posts.map(post => ({
+        id: post.id,
+        authorProfileId: post.authorProfileId,
+        authorName: nameByProfileId.get(post.authorProfileId),
+        projectId: post.projectId,
+        body: post.body,
+        created: post.created.toISOString()
+      }))
     }
   }
 }

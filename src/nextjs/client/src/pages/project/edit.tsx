@@ -30,6 +30,9 @@ export default function EditProjectPage({
     description: '',
     website: '',
     image: '',
+    techStack: '',
+    stage: '',
+    isOpenToCollaborators: false,
     isPromoted: false,
     isPublic: true
   })
@@ -66,6 +69,11 @@ export default function EditProjectPage({
         description: project.description ?? '',
         website: project.website ?? '',
         image: project.image ?? '',
+        techStack: project.techStack != null ?
+          project.techStack.join(', ') :
+          '',
+        stage: project.stage ?? '',
+        isOpenToCollaborators: project.isOpenToCollaborators === true,
         isPromoted: project.isPromoted === true,
         isPublic: project.isPublic === true
       })
@@ -248,6 +256,9 @@ export default function EditProjectPage({
             image={values.image}
             isPromoted={values.isPromoted}
             isPublic={values.isPublic}
+            techStack={values.techStack.split(',').map(tech => tech.trim()).filter(tech => tech !== '')}
+            stage={values.stage}
+            isOpenToCollaborators={values.isOpenToCollaborators}
             updateAction={updateAction}
             setUpdateAction={setUpdateAction}
             setAlertSeverity={setAlertSeverity}

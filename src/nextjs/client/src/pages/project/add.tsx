@@ -22,6 +22,9 @@ export default function AddProjectPage({
     description: '',
     website: '',
     image: '',
+    techStack: '',
+    stage: '',
+    isOpenToCollaborators: false,
     isPromoted: false,
     isPublic: true
   })
@@ -94,8 +97,9 @@ export default function AddProjectPage({
         description={values.description}
         website={values.website}
         image={values.image}
-        isPromoted={values.isPromoted}
-        isPublic={values.isPublic}
+        techStack={values.techStack.split(',').map(tech => tech.trim()).filter(tech => tech !== '')}
+        stage={values.stage}
+        isOpenToCollaborators={values.isOpenToCollaborators}
         createAction={createAction}
         setCreateAction={setCreateAction}
         setAlertSeverity={setAlertSeverity}

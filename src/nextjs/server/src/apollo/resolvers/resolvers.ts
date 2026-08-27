@@ -3,14 +3,65 @@ import { sereneCoreAccessQueryResolvers, sereneCoreUserPreferencesQueryResolvers
 import { sereneCoreUserPreferencesMutationResolvers, sereneCoreUsersMutationResolvers } from 'serene-core-server'
 
 // Relays queries imports
-import { getProfileById, getProfileByUserProfileId, searchProfiles, getNetwork } from './queries/profiles'
-import { getProjectById, searchProjects, getProjectsByUserProfileId } from './queries/projects'
+import {
+  getProfileById,
+  getProfileByUserProfileId,
+  searchProfiles,
+  getNetwork,
+  getSkillsByProfileId,
+  getProfileLinksByProfileId,
+  getEndorsementsByProfileId,
+  getPostsByProfileId
+} from './queries/profiles'
+import {
+  getProjectById,
+  searchProjects,
+  getProjectsByUserProfileId,
+  getPostsByProjectId
+} from './queries/projects'
+import {
+  getIncomingConnectionRequests,
+  sendConnectionRequest,
+  respondToConnectionRequest,
+  removeConnection
+} from './connections'
+import {
+  getNotifications,
+  markNotificationAsRead
+} from './notifications'
+import {
+  getCollaborationPlanById,
+  searchCollaborationPlans,
+  getPlanStepsByPlanId,
+  createPlan,
+  updatePlan,
+  setPlanStatus,
+  addPlanStep,
+  updatePlanStep,
+  deletePlanStep
+} from './collaboration'
 
 // Relays mutations imports
 import { loadServerStartData } from './mutations/server-data-start'
 import { signUpForUpdates } from './mutations/sign-ups'
-import { createProfile, updateProfile, setProfileUpdates } from './mutations/profiles'
-import { createProject, updateProject, deleteProject } from './mutations/projects'
+import {
+  createProfile,
+  updateProfile,
+  setProfileUpdates,
+  addSkillToProfile,
+  removeSkillFromProfile,
+  addProfileLink,
+  deleteProfileLink,
+  endorseSkill,
+  createPost,
+  deletePost
+} from './mutations/profiles'
+import {
+  createProject,
+  updateProject,
+  toggleProjectInterest,
+  deleteProject
+} from './mutations/projects'
 
 // Code
 const Query = {
@@ -52,6 +103,24 @@ const Query = {
   searchProfiles,
   getNetwork,
 
+  // Profile skills, links, endorsements, posts
+  getSkillsByProfileId,
+  getProfileLinksByProfileId,
+  getEndorsementsByProfileId,
+  getPostsByProfileId,
+  getPostsByProjectId,
+
+  // Connections
+  getIncomingConnectionRequests,
+
+  // Notifications
+  getNotifications,
+
+  // Collaboration plans
+  searchCollaborationPlans,
+  getCollaborationPlanById,
+  getPlanStepsByPlanId,
+
   // Projects
   getProjectById,
   searchProjects,
@@ -90,9 +159,35 @@ const Mutation = {
   updateProfile,
   setProfileUpdates,
 
+  // Profile skills, links, endorsements, posts
+  addSkillToProfile,
+  removeSkillFromProfile,
+  addProfileLink,
+  deleteProfileLink,
+  endorseSkill,
+  createPost,
+  deletePost,
+
+  // Connections
+  sendConnectionRequest,
+  respondToConnectionRequest,
+  removeConnection,
+
+  // Notifications
+  markNotificationAsRead,
+
+  // Collaboration plans
+  createPlan,
+  updatePlan,
+  setPlanStatus,
+  addPlanStep,
+  updatePlanStep,
+  deletePlanStep,
+
   // Projects
   createProject,
   updateProject,
+  toggleProjectInterest,
   deleteProject,
 }
 

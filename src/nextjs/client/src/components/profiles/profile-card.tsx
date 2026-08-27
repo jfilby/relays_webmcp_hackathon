@@ -1,5 +1,5 @@
 import { Avatar, Chip, Link, Paper, Typography } from '@mui/material'
-import type { Profile } from '@/types/client-only-types'
+import { availabilityStatusName, type Profile } from '@/types/client-only-types'
 
 interface Props {
   profile: Profile
@@ -70,6 +70,22 @@ export default function ProfileCard({
                 backgroundColor: '#f0f0f0',
                 color: '#444444'
               }} />
+
+          {profile.availabilityStatus != null && profile.availabilityStatus !== '' ?
+            <Chip
+              label={availabilityStatusName(profile.availabilityStatus)}
+              size='small'
+              sx={{
+                marginLeft: '0.5em',
+                height: '1.6em',
+                fontSize: '0.72rem',
+                fontWeight: 600,
+                backgroundColor: '#e5f3e5',
+                color: '#2c6e2c'
+              }} />
+            :
+            <></>
+          }
           </div>
         </div>
       </Link>

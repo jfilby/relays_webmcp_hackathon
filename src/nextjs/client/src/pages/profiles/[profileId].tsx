@@ -5,8 +5,12 @@ import { Typography } from '@mui/material'
 import { loadServerPage } from '@/services/page/load-server-page'
 import Layout, { pageBodyWidth } from '@/components/layouts/layout'
 import LoadProfileById from '@/components/profiles/load-by-id'
+import LoadSkillsByProfileId from '@/components/profiles/load-skills'
+import LoadLinksByProfileId from '@/components/profiles/load-links'
+import LoadEndorsementsByProfileId from '@/components/profiles/load-endorsements'
+import LoadPostsByProfileId from '@/components/profiles/load-posts'
 import ProfileView from '@/components/profiles/profile-view'
-import type { Profile, UserProfile } from '@/types/client-only-types'
+import type { Endorsement, PostItem, Profile, ProfileLink, ProfileSkill, UserProfile } from '@/types/client-only-types'
 import type { GetServerSidePropsContext } from 'next'
 
 interface Props {
@@ -27,6 +31,18 @@ export default function ProfilePage({
   const [profile, setProfile] = useState<Profile | undefined>(undefined)
   const [notFound, setNotFound] = useState<boolean>(false)
 
+  const [skills, setSkills] = useState<ProfileSkill[]>([])
+  const [links, setLinks] = useState<ProfileLink[]>([])
+  const [endorsements, setEndorsements] = useState<Endorsement[]>([])
+  const [posts, setPosts] = useState<PostItem[]>([])
+  const [postsReloadToken, setPostsReloadToken] = useState<number>(0)
+
+  // Functions
+  function onPostsChanged() {
+
+    setPostsReloadToken(token => token + 1)
+  }
+
   // Render
   return (
     <>
@@ -39,7 +55,13 @@ export default function ProfilePage({
           {profile != null ?
             <ProfileView
               profile={profile}
-              owner={profile.userProfileId === userProfile.id} />
+              owner={profile.userProfileId === userProfile.id}
+              viewerUserProfileId={userProfile.id}
+              skills={skills}
+              links={links}
+              endorsements={endorsements}
+              posts={posts}
+              onPostsChanged={onPostsChanged} />
             :
             <></>
           }
@@ -75,6 +97,39 @@ export default function ProfilePage({
           userProfileId={userProfile.id ?? undefined}
           setProfile={setProfile}
           setNotFound={setNotFound} />
+        :
+        <></>
+      }
+
+      {profileId != null ?
+        <LoadSkillsByProfileId
+          profileId={profileId}
+          setSkills={setSkills} />
+        :
+        <></>
+      }
+
+      {profileId != null ?
+        <LoadLinksByProfileId
+          profileId={profileId}
+          setLinks={setLinks} />
+        :
+        <></>
+      }
+
+      {profileId != null ?
+        <LoadEndorsementsByProfileId
+          profileId={profileId}
+          setEndorsements={setEndorsements} />
+        :
+        <></>
+      }
+
+      {profileId != null ?
+        <LoadPostsByProfileId
+          profileId={profileId}
+          reloadToken={postsReloadToken}
+          setPosts={setPosts} />
         :
         <></>
       }

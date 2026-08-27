@@ -11,7 +11,7 @@ import {
   TextField,
   Typography
 } from '@mui/material'
-import { profileTypes } from '@/types/client-only-types'
+import { availabilityStatuses, profileTypes } from '@/types/client-only-types'
 
 // The editable fields of a profile form
 export interface ProfileFormValues {
@@ -22,6 +22,7 @@ export interface ProfileFormValues {
   bio: string
   location: string
   website: string
+  availabilityStatus: string
 }
 
 interface Props {
@@ -104,6 +105,23 @@ export default function ProfileForm({
               key={profileType.value}
               value={profileType.value}>
               {profileType.name}
+            </MenuItem>
+          ))}
+        </Select>
+      </FormControl>
+
+      <FormControl style={{ marginBottom: '1em', width: '20em', display: 'flex' }}>
+        <InputLabel id='profile-availability-status'>Availability</InputLabel>
+        <Select
+          labelId='profile-availability-status'
+          label='Availability'
+          onChange={(event: SelectChangeEvent) => onChange('availabilityStatus', event.target.value as string)}
+          value={values.availabilityStatus}>
+          {availabilityStatuses.map(availabilityStatus => (
+            <MenuItem
+              key={availabilityStatus.value}
+              value={availabilityStatus.value}>
+              {availabilityStatus.name}
             </MenuItem>
           ))}
         </Select>

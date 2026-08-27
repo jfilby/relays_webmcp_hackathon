@@ -12,6 +12,9 @@ interface Props {
   image?: string
   isPromoted?: boolean
   isPublic?: boolean
+  techStack?: string[]
+  stage?: string
+  isOpenToCollaborators?: boolean
   createAction: boolean
   setCreateAction: (value: boolean) => void
   setAlertSeverity: (value: 'success' | 'error' | undefined) => void
@@ -34,6 +37,9 @@ export default function CreateProject({
   image,
   isPromoted,
   isPublic,
+  techStack,
+  stage,
+  isOpenToCollaborators,
   createAction,
   setCreateAction,
   setAlertSeverity,
@@ -64,7 +70,10 @@ export default function CreateProject({
         website: website != null && website !== '' ? website : null,
         image: image != null && image !== '' ? image : null,
         isPromoted: isPromoted === true,
-        isPublic: isPublic === true
+        isPublic: isPublic === true,
+        techStack: techStack != null && techStack.length > 0 ? techStack : null,
+        stage: stage != null && stage !== '' ? stage : null,
+        isOpenToCollaborators: isOpenToCollaborators === true
       }
     }).then(result => createdData = result.data?.createProject)
 
@@ -74,6 +83,7 @@ export default function CreateProject({
       setMessage(`Failed to create your project`)
     } else if (createdData.status === true) {
       setAlertSeverity('success')
+      setMessage(createdData.message)
       toast(`Created`)
 
       if (createdData.project?.id != null) {
