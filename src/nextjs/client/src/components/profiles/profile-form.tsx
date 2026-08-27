@@ -198,6 +198,7 @@ export default function ProfileForm({
           disabled={saving}
           onClick={onSubmit}
           size='large'
+          style={{ marginBottom: '2em' }}
           variant='contained'>
           {submitLabel}
         </Button>
