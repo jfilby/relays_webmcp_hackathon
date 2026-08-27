@@ -105,6 +105,8 @@ model Profile {
   ofEndorsementsGiven         Endorsement[]        @relation("endorsementFrom")
   ofEndorsementsReceived      Endorsement[]        @relation("endorsementTo")
   ofPosts                     Post[]
+  ofDiscussPosts               DiscussPost[]
+  ofDiscussComments            DiscussComment[]     @relation("discussCommentAuthor")
   ofProjectInterests          ProjectInterest[]
 
   @@map("profile")
@@ -360,6 +362,46 @@ model Post {
   @@index([projectId])
   @@index([authorProfileId])
   @@map("post")
+  @@schema("public")
+}
+
+// Relays: Discussion
+
+model DiscussPost {
+  // A discussion topic posted by a profile on the Discuss page. Comments on
+  // the post live in DiscussComment.
+  id                           String               @id @default(cuid())
+  authorProfileId              String               @map("author_profile_id")
+  authorProfile                Profile              @relation(fields: [authorProfileId], references: [id])
+  title                        String
+  body                         String               @db.Text
+  status                       String               @db.Char(1)
+  created                      DateTime             @default(now())
+  updated                      DateTime             @updatedAt
+
+  ofDiscussComments            DiscussComment[]
+
+  @@index([authorProfileId])
+  @@index([created])
+  @@map("discuss_post")
+  @@schema("public")
+}
+
+model DiscussComment {
+  // A comment on a DiscussPost.
+  id                           String               @id @default(cuid())
+  postId                       String               @map("post_id")
+  post                         DiscussPost          @relation(fields: [postId], references: [id])
+  authorProfileId              String               @map("author_profile_id")
+  authorProfile                Profile              @relation("discussCommentAuthor", fields: [authorProfileId], references: [id])
+  body                         String               @db.Text
+  status                       String               @db.Char(1)
+  created                      DateTime             @default(now())
+  updated                      DateTime             @updatedAt
+
+  @@index([postId])
+  @@index([authorProfileId])
+  @@map("discuss_comment")
   @@schema("public")
 }
 

@@ -173,6 +173,45 @@ export const typeDefs = /* GraphQL */ `
     posts: [PostItem]
   }
 
+
+  # Discussion
+
+  type DiscussPostItem {
+    id: String!
+    authorProfileId: String!
+    authorName: String
+    title: String!
+    body: String!
+    commentCount: Int!
+    created: String!
+  }
+
+  type DiscussPostResults {
+    status: Boolean!
+    message: String
+    post: DiscussPostItem
+  }
+
+  type DiscussPostsResults {
+    status: Boolean!
+    message: String
+    posts: [DiscussPostItem]
+  }
+
+  type DiscussCommentItem {
+    id: String!
+    postId: String!
+    authorProfileId: String!
+    authorName: String
+    body: String!
+    created: String!
+  }
+
+  type DiscussCommentsResults {
+    status: Boolean!
+    message: String
+    comments: [DiscussCommentItem]
+  }
   # Connections
 
   type IncomingConnectionRequest {
@@ -410,6 +449,15 @@ export const typeDefs = /* GraphQL */ `
       userProfileId: String!,
       unreadOnly: Boolean): NotificationsResults!
 
+    # Discussion
+    getDiscussPosts: DiscussPostsResults!
+
+    getDiscussPostById(
+      id: String!): DiscussPostResults!
+
+    getDiscussCommentsByPostId(
+      postId: String!): DiscussCommentsResults!
+
     # Collaboration plans
     searchCollaborationPlans(
       projectId: String,
@@ -565,6 +613,26 @@ export const typeDefs = /* GraphQL */ `
       userProfileId: String!,
       peerProfileId: String!): StatusAndMessage!
 
+
+    # Discussion
+    createDiscussPost(
+      userProfileId: String!,
+      title: String!,
+      body: String!): StatusAndMessageAndPost!
+
+    deleteDiscussPost(
+      userProfileId: String!,
+      id: String!): StatusAndMessage!
+
+    createDiscussComment(
+      userProfileId: String!,
+      postId: String!,
+      body: String!): StatusAndMessageAndComment!
+
+    deleteDiscussComment(
+      userProfileId: String!,
+      id: String!): StatusAndMessage!
+
     # Notifications
     markNotificationAsRead(
       userProfileId: String!,
@@ -651,5 +719,17 @@ export const typeDefs = /* GraphQL */ `
     deleteProject(
       id: String!,
       userProfileId: String!): DeleteProjectResults!
+  }
+
+  type StatusAndMessageAndPost {
+    status: Boolean!
+    message: String
+    post: DiscussPostItem
+  }
+
+  type StatusAndMessageAndComment {
+    status: Boolean!
+    message: String
+    comment: DiscussCommentItem
   }
 `

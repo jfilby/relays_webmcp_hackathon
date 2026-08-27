@@ -109,6 +109,27 @@ export interface PostItem {
   created: string
 }
 
+// A discussion post on the Discuss page
+export interface DiscussPostItem {
+  id: string
+  authorProfileId: string
+  authorName?: string | null
+  title: string
+  body: string
+  commentCount: number
+  created: string
+}
+
+// A comment on a discussion post
+export interface DiscussCommentItem {
+  id: string
+  postId: string
+  authorProfileId: string
+  authorName?: string | null
+  body: string
+  created: string
+}
+
 // An incoming pending connection request
 export interface IncomingConnectionRequest {
   id: string

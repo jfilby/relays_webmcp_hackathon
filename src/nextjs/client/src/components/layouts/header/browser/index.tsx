@@ -45,6 +45,10 @@ export function HeaderBrowser({
             name='Projects'
             linkName='projects'
             highLevelLink={highLevelLink} />
+          <HeaderBrowserLink
+            name='Discuss'
+            linkName='discuss'
+            highLevelLink={highLevelLink} />
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.4em', textAlign: 'right' }}>
           <HeaderBrowserLink

@@ -26,6 +26,15 @@ import {
   removeConnection
 } from './connections'
 import {
+  getDiscussPosts,
+  getDiscussPostById,
+  getDiscussCommentsByPostId,
+  createDiscussPost,
+  deleteDiscussPost,
+  createDiscussComment,
+  deleteDiscussComment
+} from './discussion'
+import {
   getNotifications,
   markNotificationAsRead
 } from './notifications'
@@ -113,6 +122,11 @@ const Query = {
   // Connections
   getIncomingConnectionRequests,
 
+  // Discussion
+  getDiscussPosts,
+  getDiscussPostById,
+  getDiscussCommentsByPostId,
+
   // Notifications
   getNotifications,
 
@@ -172,6 +186,12 @@ const Mutation = {
   sendConnectionRequest,
   respondToConnectionRequest,
   removeConnection,
+
+  // Discussion
+  createDiscussPost,
+  deleteDiscussPost,
+  createDiscussComment,
+  deleteDiscussComment,
 
   // Notifications
   markNotificationAsRead,
