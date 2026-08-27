@@ -383,6 +383,73 @@ export default function ProfileView({
         <></>
       }
 
+      {viewerUserProfileId != null && owner !== true && connectionSent !== true ?
+        <div style={{ marginBottom: '2em' }}>
+          {connectOpen === false ?
+            <Button
+              onClick={() => setConnectOpen(true)}
+              variant='contained'>
+              Connect
+            </Button>
+            :
+            <div>
+              <TextField
+                fullWidth
+                label='Message (optional)'
+                minRows={3}
+                multiline
+                onChange={(event) => setConnectionMessage(event.target.value)}
+                slotProps={{
+                  inputLabel: {
+                    shrink: Boolean(connectionMessage),
+                  }
+                }}
+                style={{ marginBottom: '1em', maxWidth: '30em' }}
+                value={connectionMessage} />
+
+              <div style={{ display: 'flex', gap: '0.75em' }}>
+                <Button
+                  disabled={connecting}
+                  onClick={onSendConnectionRequest}
+                  variant='contained'>
+                  Send request
+                </Button>
+
+                <Button
+                  disabled={connecting}
+                  onClick={() => setConnectOpen(false)}>
+                  Cancel
+                </Button>
+              </div>
+            </div>
+          }
+        </div>
+        :
+        <></>
+      }
+
+      {viewerUserProfileId != null && owner !== true && connectionSent === true ?
+        <Typography
+          style={{ color: '#2c6e2c', marginBottom: '2em' }}
+          variant='body1'>
+          Connection request sent
+        </Typography>
+        :
+        <></>
+      }
+
+      {owner === true ?
+        <div style={{ marginBottom: '2em' }}>
+          <Button
+            onClick={() => window.location.href = '/profile/edit'}
+            variant='outlined'>
+            Edit my profile
+          </Button>
+        </div>
+        :
+        <></>
+      }
+
       <div style={{ marginBottom: '2em' }}>
         <Typography
           style={{ marginBottom: '0.5em' }}
@@ -478,73 +545,6 @@ export default function ProfileView({
           </Typography>
         }
       </div>
-
-      {viewerUserProfileId != null && owner !== true && connectionSent !== true ?
-        <div style={{ marginBottom: '2em' }}>
-          {connectOpen === false ?
-            <Button
-              onClick={() => setConnectOpen(true)}
-              variant='contained'>
-              Connect
-            </Button>
-            :
-            <div>
-              <TextField
-                fullWidth
-                label='Message (optional)'
-                minRows={3}
-                multiline
-                onChange={(event) => setConnectionMessage(event.target.value)}
-                slotProps={{
-                  inputLabel: {
-                    shrink: Boolean(connectionMessage),
-                  }
-                }}
-                style={{ marginBottom: '1em', maxWidth: '30em' }}
-                value={connectionMessage} />
-
-              <div style={{ display: 'flex', gap: '0.75em' }}>
-                <Button
-                  disabled={connecting}
-                  onClick={onSendConnectionRequest}
-                  variant='contained'>
-                  Send request
-                </Button>
-
-                <Button
-                  disabled={connecting}
-                  onClick={() => setConnectOpen(false)}>
-                  Cancel
-                </Button>
-              </div>
-            </div>
-          }
-        </div>
-        :
-        <></>
-      }
-
-      {viewerUserProfileId != null && owner !== true && connectionSent === true ?
-        <Typography
-          style={{ color: '#2c6e2c', marginBottom: '2em' }}
-          variant='body1'>
-          Connection request sent
-        </Typography>
-        :
-        <></>
-      }
-
-      {owner === true ?
-        <div style={{ marginBottom: '2em' }}>
-          <Button
-            onClick={() => window.location.href = '/profile/edit'}
-            variant='outlined'>
-            Edit my profile
-          </Button>
-        </div>
-        :
-        <></>
-      }
     </>
   )
 }
