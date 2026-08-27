@@ -60,6 +60,7 @@ export const getDiscussCommentsByPostIdQuery = gql`
         id
         publicId
         postId
+        parentCommentId
         authorProfileId
         authorName
         body
@@ -111,12 +112,14 @@ export const createDiscussCommentMutation = gql`
   mutation createDiscussComment(
     $userProfileId: String!,
     $postId: String!,
-    $body: String!)
+    $body: String!,
+    $parentCommentId: String)
   {
     createDiscussComment(
       userProfileId: $userProfileId,
       postId: $postId,
-      body: $body) {
+      body: $body,
+      parentCommentId: $parentCommentId) {
 
       status
       message

@@ -1,8 +1,9 @@
 import { PrismaClient } from '@/generated/prisma/client'
+import { BaseDataTypes } from '@/types/base-data-types'
+import { maxCommentsLevel } from '@/types/discussion-types'
 import { DiscussPostModel } from '@/models/discussion/discuss-post-model'
 import { DiscussCommentModel } from '@/models/discussion/discuss-comment-model'
 import { ProfileModel } from '@/models/profiles/profile-model'
-import { BaseDataTypes } from '@/types/base-data-types'
 
 // Models
 const discussPostModel = new DiscussPostModel()
@@ -152,12 +153,15 @@ export class DiscussionMutateService {
     }
   }
 
-  // Create a comment on a discussion post
+  // Create a comment on a discussion post, optionally as a reply to another
+  // comment. Replies can nest up to a max number of levels (comment, reply,
+  // reply-to-reply).
   async createDiscussComment(
     prisma: PrismaClient,
     userProfileId: string,
     postId: string,
-    body: string) {
+    body: string,
+    parentCommentId: string | undefined = undefined) {
 
     // Debug
     const fnName = `${this.clName}.createDiscussComment()`
@@ -196,6 +200,51 @@ export class DiscussionMutateService {
       }
     }
 
+    // Validate the parent comment, if this is a reply
+    let parentComment = null
+
+    if (parentCommentId != null) {
+      parentComment = await
+        discussCommentModel.getById(
+          prisma,
+          parentCommentId)
+
+      if (parentComment == null ||
+          parentComment.postId !== post.id ||
+          parentComment.status !== BaseDataTypes.activeStatus) {
+        return {
+          status: false,
+          message: `Parent comment not found`
+        }
+      }
+
+      // Enforce a maximum number of levels
+      let parentDepth = 1
+      let cursor = parentComment
+
+      while (cursor.parentCommentId != null) {
+        const ancestor = await
+          discussCommentModel.getById(
+            prisma,
+            cursor.parentCommentId)
+
+        if (ancestor == null) {
+          break
+        }
+
+        parentDepth = parentDepth + 1
+        cursor = ancestor
+      }
+
+      if (parentDepth >= maxCommentsLevel) {
+        return {
+          status: false,
+          message: `Replies can only be nested up to ${maxCommentsLevel} ` +
+          `levels`
+        }
+      }
+    }
+
     // Create the comment
     const comment = await
       discussCommentModel.create(
@@ -203,8 +252,8 @@ export class DiscussionMutateService {
         post.id,
         profile.id,
         BaseDataTypes.activeStatus,
-        body)
-
+        body,
+        parentCommentId)
     // Return
     return {
       status: true,
@@ -212,6 +261,7 @@ export class DiscussionMutateService {
       comment: {
         id: comment.id,
         postId: comment.postId,
+        parentCommentId: comment.parentCommentId,
         authorProfileId: comment.authorProfileId,
         authorName: profile.displayName,
         body: comment.body,
@@ -254,11 +304,34 @@ export class DiscussionMutateService {
       }
     }
 
-    // Delete
+    // Collect the comment and all of its replies, then delete them together.
+    // Deletes happen at most 2 levels below the comment since nesting is
+    // capped at a max number of levels.
+    const idsToDelete = [comment.id]
+    const frontierIds = [comment.id]
+
+    while (frontierIds.length > 0) {
+      const children = await
+        prisma.discussComment.findMany({
+          where: {
+            parentCommentId: {
+              in: frontierIds
+            }
+          }
+        })
+
+      frontierIds.length = 0
+
+      for (const child of children) {
+        idsToDelete.push(child.id)
+        frontierIds.push(child.id)
+      }
+    }
+
     await
-      discussCommentModel.deleteById(
+      discussCommentModel.deleteManyByIds(
         prisma,
-        comment.id)
+        idsToDelete)
 
     // Return
     return {

@@ -113,11 +113,13 @@ export interface DiscussPostItem {
   created: string
 }
 
-// A comment on a discussion post
+// A comment on a discussion post, optionally a reply to another comment.
+// parentCommentId is null for top-level comments.
 export interface DiscussCommentItem {
   id: string
   publicId?: string
   postId: string
+  parentCommentId?: string | null
   authorProfileId: string
   authorName?: string | null
   body: string

@@ -187,6 +187,7 @@ export const typeDefs = /* GraphQL */ `
     id: String!
     publicId: String!
     postId: String!
+    parentCommentId: String
     authorProfileId: String!
     authorName: String
     body: String!
@@ -601,7 +602,8 @@ export const typeDefs = /* GraphQL */ `
     createDiscussComment(
       userProfileId: String!,
       postId: String!,
-      body: String!): StatusAndMessageAndComment!
+      body: String!,
+      parentCommentId: String): StatusAndMessageAndComment!
 
     deleteDiscussComment(
       userProfileId: String!,

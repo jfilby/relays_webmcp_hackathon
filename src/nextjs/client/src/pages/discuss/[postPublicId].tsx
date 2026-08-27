@@ -4,6 +4,13 @@ import { useRouter } from 'next/router'
 import { Button, IconButton, Paper, TextField, Typography } from '@mui/material'
 import DeleteIcon from '@mui/icons-material/Delete'
 import { loadServerPage } from '@/services/page/load-server-page'
+import type {
+  DiscussCommentItem,
+  DiscussPostItem,
+  Profile,
+  UserProfile
+} from '@/types/client-only-types'
+import { maxCommentsLevel } from '@/types/discussion-types'
 import Layout, { pageBodyWidth } from '@/components/layouts/layout'
 import LoadDiscussPostByPublicId from '@/components/discussion/load-discuss-post-by-id'
 import LoadDiscussCommentsByPostId from '@/components/discussion/load-discuss-comments-by-post-id'
@@ -11,12 +18,6 @@ import SaveDiscussComment from '@/components/discussion/save-discuss-comment'
 import DeleteDiscussPost from '@/components/discussion/delete-discuss-post'
 import DeleteDiscussComment from '@/components/discussion/delete-discuss-comment'
 import LoadProfileByUserProfileId from '@/components/profiles/load-by-user-profile-id'
-import type {
-  DiscussCommentItem,
-  DiscussPostItem,
-  Profile,
-  UserProfile
-} from '@/types/client-only-types'
 import type { GetServerSidePropsContext } from 'next'
 
 interface Props {
@@ -42,6 +43,48 @@ function formatDate(value: string | undefined | null): string {
   })
 }
 
+// A comment plus its nested replies
+interface CommentNode {
+  comment: DiscussCommentItem
+  children: CommentNode[]
+}
+
+// Build a nested tree from the flat comment list. Comments whose parent is
+// missing (e.g. deleted) fall back to top-level so they stay visible.
+function buildCommentTree(comments: DiscussCommentItem[]): CommentNode[] {
+
+  const nodesById = new Map<string, CommentNode>()
+
+  for (const comment of comments) {
+    nodesById.set(comment.id, {
+      comment: comment,
+      children: []
+    })
+  }
+
+  const roots: CommentNode[] = []
+
+  for (const comment of comments) {
+    const node = nodesById.get(comment.id)
+
+    if (node == null) {
+      continue
+    }
+
+    const parent = comment.parentCommentId != null ?
+      nodesById.get(comment.parentCommentId) :
+      undefined
+
+    if (parent != null) {
+      parent.children.push(node)
+    } else {
+      roots.push(node)
+    }
+  }
+
+  return roots
+}
+
 export default function DiscussPostPage({
   userProfile
 }: Props) {
@@ -60,6 +103,8 @@ export default function DiscussPostPage({
   const [deleteCommentId, setDeleteCommentId] = useState<string | undefined>(undefined)
   const [deleteCommentAction, setDeleteCommentAction] = useState<boolean>(false)
   const [newCommentBody, setNewCommentBody] = useState<string>('')
+  const [replyToCommentId, setReplyToCommentId] = useState<string | undefined>(undefined)
+  const [replyBody, setReplyBody] = useState<string>('')
   const [saveCommentAction, setSaveCommentAction] = useState<boolean>(false)
   const [deletePostAction, setDeletePostAction] = useState<boolean>(false)
 
@@ -80,6 +125,22 @@ export default function DiscussPostPage({
       return
     }
 
+    // A top-level comment is never a reply
+    setReplyToCommentId(undefined)
+    setAlertSeverity(undefined)
+    setMessage(undefined)
+    setSaveCommentAction(true)
+  }
+
+  function onReplySubmit(commentId: string) {
+
+    if (replyBody.trim() === '') {
+      setAlertSeverity('error')
+      setMessage(`Reply body is required`)
+      return
+    }
+
+    setReplyToCommentId(commentId)
     setAlertSeverity(undefined)
     setMessage(undefined)
     setSaveCommentAction(true)
@@ -87,6 +148,107 @@ export default function DiscussPostPage({
 
   function onDeleteComment() {
     setDeletePostAction(true)
+  }
+
+  // Renders one comment, its inline reply form, and its nested replies.
+  function renderCommentNode(node: CommentNode, depth: number) {
+
+    const comment = node.comment
+
+    return (
+      <div key={comment.id}>
+        <Paper
+          sx={{
+            marginBottom: '0.75em',
+            padding: depth > 1 ? '0.75em 1em' : '1em 1.25em',
+            display: 'flex',
+            alignItems: 'flex-start',
+            gap: '0.75em'
+          }}>
+          <div style={{ flex: 1 }}>
+            <Typography
+              style={{ color: '#5a5a5a', fontSize: '0.85rem' }}
+              variant='body2'>
+              {comment.authorName != null && comment.authorName !== '' ?
+                comment.authorName :
+                'Unknown'}
+              {' · '}
+              {formatDate(comment.created)}
+            </Typography>
+
+            <Typography
+              style={{ marginTop: '0.35em', whiteSpace: 'pre-wrap' }}
+              variant='body1'>
+              {comment.body}
+            </Typography>
+
+            {signedIn && depth < maxCommentsLevel ?
+              <Button
+                onClick={() => {
+                  setReplyBody('')
+                  setReplyToCommentId(replyToCommentId === comment.id ?
+                    undefined :
+                    comment.id)
+                }}
+                size='small'
+                style={{ marginTop: '0.25em' }}>
+                Reply
+              </Button>
+              :
+              <></>
+            }
+
+            {replyToCommentId === comment.id ?
+              <>
+                <TextField
+                  fullWidth
+                  label='Your reply'
+                  maxRows={6}
+                  multiline
+                  onChange={(e) => setReplyBody(e.target.value)}
+                  size='small'
+                  style={{ marginTop: '0.5em', marginBottom: '0.5em' }}
+                  value={replyBody} />
+
+                <Button
+                  disabled={saveCommentAction}
+                  onClick={() => onReplySubmit(comment.id)}
+                  size='small'
+                  variant='contained'>
+                  {saveCommentAction ? 'Posting..' : 'Reply'}
+                </Button>
+              </>
+              :
+              <></>
+            }
+          </div>
+
+          {signedIn && viewerProfile != null &&
+            comment.authorProfileId === viewerProfile.id ?
+            <IconButton
+              aria-label='delete comment'
+              color='error'
+              onClick={() => {
+                setDeleteCommentId(comment.id)
+                setDeleteCommentAction(true)
+              }}
+              size='small'>
+              <DeleteIcon />
+            </IconButton>
+            :
+            <></>
+          }
+        </Paper>
+
+        {node.children.length > 0 ?
+          <div style={{ marginLeft: '1.5em' }}>
+            {node.children.map(child => renderCommentNode(child, depth + 1))}
+          </div>
+          :
+          <></>
+        }
+      </div>
+    )
   }
 
   // Render
@@ -157,51 +319,7 @@ export default function DiscussPostPage({
               </Typography>
 
               {comments != null && comments.length > 0 ?
-                comments.map(comment => (
-                  <Paper
-                    key={comment.id}
-                    sx={{
-                      marginBottom: '0.75em',
-                      padding: '1em 1.25em',
-                      display: 'flex',
-                      alignItems: 'flex-start',
-                      gap: '0.75em'
-                    }}>
-                    <div style={{ flex: 1 }}>
-                      <Typography
-                        style={{ color: '#5a5a5a', fontSize: '0.85rem' }}
-                        variant='body2'>
-                        {comment.authorName != null && comment.authorName !== '' ?
-                          comment.authorName :
-                          'Unknown'}
-                        {' · '}
-                        {formatDate(comment.created)}
-                      </Typography>
-
-                      <Typography
-                        style={{ marginTop: '0.35em', whiteSpace: 'pre-wrap' }}
-                        variant='body1'>
-                        {comment.body}
-                      </Typography>
-                    </div>
-
-                    {signedIn && viewerProfile != null &&
-                      comment.authorProfileId === viewerProfile.id ?
-                      <IconButton
-                        aria-label='delete comment'
-                        color='error'
-                        onClick={() => {
-                          setDeleteCommentId(comment.id)
-                          setDeleteCommentAction(true)
-                        }}
-                        size='small'>
-                        <DeleteIcon />
-                      </IconButton>
-                      :
-                      <></>
-                    }
-                  </Paper>
-                ))
+                buildCommentTree(comments).map(node => renderCommentNode(node, 1))
                 :
                 <>
                   {comments != null ?
@@ -292,10 +410,15 @@ export default function DiscussPostPage({
                 setProfile={setViewerProfile} />
 
               <SaveDiscussComment
-                body={newCommentBody}
+                body={replyToCommentId != null ? replyBody : newCommentBody}
+                parentCommentId={replyToCommentId}
                 postId={post.id}
                 setComments={setComments}
-                onSaved={() => setNewCommentBody('')}
+                onSaved={() => {
+                  setNewCommentBody('')
+                  setReplyBody('')
+                  setReplyToCommentId(undefined)
+                }}
                 saveAction={saveCommentAction}
                 setAlertSeverity={setAlertSeverity}
                 setMessage={setMessage}

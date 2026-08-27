@@ -381,11 +381,15 @@ model DiscussComment {
   body                         String               @db.Text
   status                       String               @db.Char(1)
   publicId                     String               @map("public_id") @unique
+  parentCommentId              String?              @map("parent_comment_id")
+  parentComment                DiscussComment?      @relation("discussCommentReplies", fields: [parentCommentId], references: [id])
+  ofDiscussCommentReplies      DiscussComment[]     @relation("discussCommentReplies")
   created                      DateTime             @default(now())
   updated                      DateTime             @updatedAt
 
   @@index([postId])
   @@index([authorProfileId])
+  @@index([parentCommentId])
   @@map("discuss_comment")
   @@schema("public")
 }

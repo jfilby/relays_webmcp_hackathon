@@ -23,6 +23,7 @@ interface CreateDiscussCommentArgs {
   userProfileId: string
   postId: string
   body: string
+  parentCommentId?: string
 }
 
 interface DeleteDiscussCommentArgs {
@@ -129,7 +130,8 @@ export async function createDiscussComment(
   const {
     userProfileId,
     postId,
-    body
+    body,
+    parentCommentId
   } = args as unknown as CreateDiscussCommentArgs
 
   // Mutation
@@ -137,7 +139,8 @@ export async function createDiscussComment(
     prisma,
     userProfileId,
     postId,
-    body)
+    body,
+    parentCommentId)
 }
 
 export async function deleteDiscussComment(

@@ -204,6 +204,7 @@ export class DiscussionQueryService {
         id: comment.id,
         publicId: comment.publicId,
         postId: comment.postId,
+        parentCommentId: comment.parentCommentId,
         authorProfileId: comment.authorProfileId,
         authorName: authorNames.get(comment.authorProfileId) ?? null,
         body: comment.body,

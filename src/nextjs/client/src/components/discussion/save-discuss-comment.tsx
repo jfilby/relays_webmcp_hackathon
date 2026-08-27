@@ -19,6 +19,7 @@ interface CommentsResults {
 interface Props {
   userProfileId: string
   postId: string
+  parentCommentId?: string
   body: string
   saveAction: boolean
   setSaveAction: (value: boolean) => void
@@ -31,6 +32,7 @@ interface Props {
 export default function SaveDiscussComment({
   userProfileId,
   postId,
+  parentCommentId,
   body,
   saveAction,
   setSaveAction,
@@ -65,7 +67,8 @@ export default function SaveDiscussComment({
       variables: {
         userProfileId: userProfileId,
         postId: postId,
-        body: body
+        body: body,
+        parentCommentId: parentCommentId
       }
     }).then(result => savedData = result.data?.createDiscussComment)
 

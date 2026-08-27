@@ -12,7 +12,8 @@ export class DiscussCommentModel {
     postId: string,
     authorProfileId: string,
     status: string,
-    body: string) {
+    body: string,
+    parentCommentId: string | undefined = undefined) {
 
     // Debug
     const fnName = `${this.clName}.create()`
@@ -25,7 +26,8 @@ export class DiscussCommentModel {
           postId: postId,
           authorProfileId: authorProfileId,
           status: status,
-          body: body
+          body: body,
+          parentCommentId: parentCommentId
         }
       })
     } catch (error) {
@@ -97,18 +99,20 @@ export class DiscussCommentModel {
     }
   }
 
-  async deleteById(
+  async deleteManyByIds(
     prisma: PrismaClient,
-    id: string) {
+    ids: string[]) {
 
     // Debug
-    const fnName = `${this.clName}.deleteById()`
+    const fnName = `${this.clName}.deleteManyByIds()`
 
     // Delete
     try {
-      return await prisma.discussComment.delete({
+      return await prisma.discussComment.deleteMany({
         where: {
-          id: id
+          id: {
+            in: ids
+          }
         }
       })
     } catch (error) {
