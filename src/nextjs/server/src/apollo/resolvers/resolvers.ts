@@ -10,14 +10,12 @@ import {
   getNetwork,
   getSkillsByProfileId,
   getProfileLinksByProfileId,
-  getEndorsementsByProfileId,
-  getPostsByProfileId
+  getEndorsementsByProfileId
 } from './queries/profiles'
 import {
   getProjectByPublicId,
   searchProjects,
-  getProjectsByUserProfileId,
-  getPostsByProjectId
+  getProjectsByUserProfileId
 } from './queries/projects'
 import {
   getIncomingConnectionRequests,
@@ -61,9 +59,7 @@ import {
   removeSkillFromProfile,
   addProfileLink,
   deleteProfileLink,
-  endorseSkill,
-  createPost,
-  deletePost
+  endorseSkill
 } from './mutations/profiles'
 import {
   createProject,
@@ -112,12 +108,10 @@ const Query = {
   searchProfiles,
   getNetwork,
 
-  // Profile skills, links, endorsements, posts
+  // Profile skills, links, endorsements
   getSkillsByProfileId,
   getProfileLinksByProfileId,
   getEndorsementsByProfileId,
-  getPostsByProfileId,
-  getPostsByProjectId,
 
   // Connections
   getIncomingConnectionRequests,
@@ -173,14 +167,12 @@ const Mutation = {
   updateProfile,
   setProfileUpdates,
 
-  // Profile skills, links, endorsements, posts
+  // Profile skills, links, endorsements
   addSkillToProfile,
   removeSkillFromProfile,
   addProfileLink,
   deleteProfileLink,
   endorseSkill,
-  createPost,
-  deletePost,
 
   // Connections
   sendConnectionRequest,

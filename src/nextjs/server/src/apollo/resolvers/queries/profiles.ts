@@ -149,18 +149,3 @@ export async function getEndorsementsByProfileId(
     prisma,
     profileId)
 }
-
-export async function getPostsByProfileId(
-  parent: unknown,
-  args: unknown,
-  context: unknown,
-  info: unknown) {
-
-  // GraphQL args are schema-validated before the resolver runs
-  const { profileId } = args as unknown as ProfileIdArgs
-
-  // Query
-  return profilesQueryService.getPostsByProfileId(
-    prisma,
-    profileId)
-}

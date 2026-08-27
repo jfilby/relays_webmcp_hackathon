@@ -10,8 +10,8 @@ import {
 } from '@mui/material'
 import { useMutation } from '@apollo/client/react'
 import { toggleProjectInterestMutation } from '@/apollo/projects'
-import { createPostMutation, deletePostMutation } from '@/apollo/posts'
-import type { PostItem, Project } from '@/types/client-only-types'
+import { createDiscussPostMutation, deleteDiscussPostMutation } from '@/apollo/discussion'
+import type { DiscussPostItem, Project } from '@/types/client-only-types'
 import { projectStageName } from '@/types/client-only-types'
 import { projectVisibilityName } from './project-card'
 
@@ -32,12 +32,12 @@ interface ToggleProjectInterestResult {
   interested: boolean
 }
 
-interface CreatePostResult {
+interface CreateDiscussPostResult {
   status: boolean
   message: string
 }
 
-interface DeletePostResult {
+interface DeleteDiscussPostResult {
   status: boolean
   message: string
 }
@@ -47,7 +47,7 @@ interface Props {
   owner?: boolean
   // Signed-in viewer profile id; empty/undefined means a guest
   userProfileId?: string
-  posts?: PostItem[]
+  posts?: DiscussPostItem[]
   onPostsChanged?: () => void
 }
 
@@ -68,6 +68,7 @@ export default function ProjectView({
     useState<boolean>(project.viewerIsInterested === true)
 
   // Compose box state
+  const [title, setTitle] = useState<string>('')
   const [body, setBody] = useState<string>('')
 
   // GraphQL
@@ -78,17 +79,17 @@ export default function ProjectView({
       fetchPolicy: 'no-cache'
     })
 
-  const [sendCreatePostMutation] =
+  const [sendCreateDiscussPostMutation] =
     useMutation<{
-      createPost: CreatePostResult
-    }>(createPostMutation, {
+      createDiscussPost: CreateDiscussPostResult
+    }>(createDiscussPostMutation, {
       fetchPolicy: 'no-cache'
     })
 
-  const [sendDeletePostMutation] =
+  const [sendDeleteDiscussPostMutation] =
     useMutation<{
-      deletePost: DeletePostResult
-    }>(deletePostMutation, {
+      deleteDiscussPost: DeleteDiscussPostResult
+    }>(deleteDiscussPostMutation, {
       fetchPolicy: 'no-cache'
     })
 
@@ -138,21 +139,22 @@ export default function ProjectView({
   async function createPost() {
 
     if (userProfileId == null || userProfileId === '' ||
-      body.trim() === '') {
+      title.trim() === '' || body.trim() === '') {
       return
     }
 
     setCreatingPost(true)
 
-    let createdData: CreatePostResult | undefined
+    let createdData: CreateDiscussPostResult | undefined
 
-    await sendCreatePostMutation({
+    await sendCreateDiscussPostMutation({
       variables: {
         userProfileId: userProfileId,
+        title: title.trim(),
         body: body.trim(),
         projectId: project.id
       }
-    }).then(result => createdData = result.data?.createPost)
+    }).then(result => createdData = result.data?.createDiscussPost)
 
     setCreatingPost(false)
 
@@ -163,6 +165,7 @@ export default function ProjectView({
 
     toast(createdData.message)
 
+    setTitle('')
     setBody('')
 
     if (createdData.status === true && onPostsChanged != null) {
@@ -176,14 +179,14 @@ export default function ProjectView({
       return
     }
 
-    let deletedData: DeletePostResult | undefined
+    let deletedData: DeleteDiscussPostResult | undefined
 
-    await sendDeletePostMutation({
+    await sendDeleteDiscussPostMutation({
       variables: {
         userProfileId: userProfileId,
         id: postId
       }
-    }).then(result => deletedData = result.data?.deletePost)
+    }).then(result => deletedData = result.data?.deleteDiscussPost)
 
     if (deletedData == null) {
       toast.error(`Failed to delete the post`)
@@ -387,6 +390,13 @@ export default function ProjectView({
             variant='outlined'>
             <TextField
               fullWidth
+              label={'Title'}
+              onChange={(event) => setTitle(event.target.value)}
+              style={{ marginBottom: '0.75em' }}
+              value={title} />
+
+            <TextField
+              fullWidth
               label={'Write a post about this project...'}
               minRows={3}
               multiline
@@ -394,7 +404,8 @@ export default function ProjectView({
               value={body} />
 
             <Button
-              disabled={creatingPost || body.trim() === ''}
+              disabled={creatingPost || title.trim() === '' ||
+                body.trim() === ''}
               onClick={createPost}
               style={{ marginTop: '0.75em' }}
               variant='contained'>
@@ -418,14 +429,15 @@ export default function ProjectView({
                 gap: '0.5em',
                 justifyContent: 'space-between'
               }}>
-                <Typography variant='subtitle2'>
-                  {post.authorName != null && post.authorName !== '' ?
-                    post.authorName
-                    :
-                    'Unknown author'}
-                  {' · '}
-                  {post.created}
-                </Typography>
+                <Link
+                  href={`/discuss/${post.publicId}`}
+                  underline='hover'>
+                  <Typography
+                    style={{ fontWeight: 600 }}
+                    variant='subtitle2'>
+                    {post.title}
+                  </Typography>
+                </Link>
 
                 {signedIn === true &&
                   post.authorProfileId === userProfileId ?
@@ -445,6 +457,16 @@ export default function ProjectView({
                 style={{ whiteSpace: 'pre-wrap' }}
                 variant='body2'>
                 {post.body}
+              </Typography>
+
+              <Typography
+                style={{ color: '#5a5a5a', marginTop: '0.5em', fontSize: '0.85rem' }}
+                variant='body2'>
+                {post.authorName != null && post.authorName !== '' ?
+                  `${post.authorName} · ` :
+                  ''}
+                {post.created} · {post.commentCount}{' '}
+                {post.commentCount === 1 ? 'comment' : 'comments'}
               </Typography>
             </Paper>
           ))

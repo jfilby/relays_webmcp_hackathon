@@ -14,10 +14,13 @@ export class DiscussionQueryService {
   clName = 'DiscussionQueryService'
 
   // Code
-  // Get all active discussion posts, newest first, with each author's display
-  // name and comment count.
+  // Get active discussion posts, newest first, with each author's display
+  // name and comment count. Optionally filtered by author profile or by the
+  // project the posts are attached to.
   async getDiscussPosts(
-    prisma: PrismaClient) {
+    prisma: PrismaClient,
+    profileId: string | undefined = undefined,
+    projectId: string | undefined = undefined) {
 
     // Debug
     const fnName = `${this.clName}.getDiscussPosts()`
@@ -26,7 +29,8 @@ export class DiscussionQueryService {
     const posts = await
       discussPostModel.filter(
         prisma,
-        undefined,
+        profileId,
+        projectId,
         BaseDataTypes.activeStatus)
     // No posts, no authors to fetch
     if (posts.length === 0) {
@@ -83,6 +87,7 @@ export class DiscussionQueryService {
         publicId: post.publicId,
         authorProfileId: post.authorProfileId,
         authorName: authorNames.get(post.authorProfileId) ?? null,
+        projectId: post.projectId,
         title: post.title,
         body: post.body,
         commentCount: commentCountMap.get(post.id) ?? 0,
@@ -138,8 +143,8 @@ export class DiscussionQueryService {
         publicId: post.publicId,
         authorProfileId: post.authorProfileId,
         authorName: author?.displayName ?? null,
+        projectId: post.projectId,
         title: post.title,
-        body: post.body,
         commentCount: commentCount,
         created: post.created.toISOString()
       }

@@ -12,7 +12,8 @@ export class DiscussPostModel {
     authorProfileId: string,
     status: string,
     title: string,
-    body: string) {
+    body: string,
+    projectId: string | undefined = undefined) {
 
     // Debug
     const fnName = `${this.clName}.create()`
@@ -24,6 +25,7 @@ export class DiscussPostModel {
           publicId: PublicIdService.generate(title),
           authorProfileId: authorProfileId,
           status: status,
+          projectId: projectId,
           title: title,
           body: body
         }
@@ -77,8 +79,8 @@ export class DiscussPostModel {
   async filter(
     prisma: PrismaClient,
     authorProfileId: string | undefined = undefined,
+    projectId: string | undefined = undefined,
     status: string | undefined = undefined) {
-
     // Debug
     const fnName = `${this.clName}.filter()`
 
@@ -87,6 +89,7 @@ export class DiscussPostModel {
       return await prisma.discussPost.findMany({
         where: {
           authorProfileId: authorProfileId,
+          projectId: projectId,
           status: status
         },
         orderBy: {

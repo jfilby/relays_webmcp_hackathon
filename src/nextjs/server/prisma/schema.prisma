@@ -105,7 +105,6 @@ model Profile {
   ofProfileSkills             ProfileSkill[]
   ofEndorsementsGiven         Endorsement[]        @relation("endorsementFrom")
   ofEndorsementsReceived      Endorsement[]        @relation("endorsementTo")
-  ofPosts                     Post[]
   ofDiscussPosts               DiscussPost[]
   ofDiscussComments            DiscussComment[]     @relation("discussCommentAuthor")
   ofProjectInterests          ProjectInterest[]
@@ -200,7 +199,7 @@ model Project {
   updated                      DateTime             @updatedAt
 
   ofProjectMembers             ProjectMember[]
-  ofPosts                      Post[]
+  ofDiscussPosts                DiscussPost[]
   ofProjectInterests           ProjectInterest[]
   ofCollaborationPlans         CollaborationPlan[]
   ofProjectUrls                ProjectUrl[]
@@ -347,38 +346,18 @@ model Endorsement {
   @@schema("public")
 }
 
-// Relays: Activity feed
 
-model Post {
-  // A short update posted by a profile, optionally attached to a project.
+model DiscussPost {
+  // A discussion topic posted by a profile, optionally attached to a project.
+  // Comments on the post live in DiscussComment.
   id                           String               @id @default(cuid())
   authorProfileId              String               @map("author_profile_id")
+  authorProfile                Profile              @relation(fields: [authorProfileId], references: [id])
   publicId                     String               @map("public_id") @unique
   projectId                    String?              @map("project_id")
   project                      Project?             @relation(fields: [projectId], references: [id])
-  authorProfile                Profile              @relation(fields: [authorProfileId], references: [id])
   body                         String               @db.Text
-  status                       String               @db.Char(1)
-  created                      DateTime             @default(now())
-  updated                      DateTime             @updatedAt
-
-  @@index([projectId])
-  @@index([authorProfileId])
-  @@map("post")
-  @@schema("public")
-}
-
-// Relays: Discussion
-
-model DiscussPost {
-  // A discussion topic posted by a profile on the Discuss page. Comments on
-  // the post live in DiscussComment.
-  id                           String               @id @default(cuid())
-  authorProfileId              String               @map("author_profile_id")
-  authorProfile                Profile              @relation(fields: [authorProfileId], references: [id])
-  publicId                     String               @map("public_id") @unique
   title                        String
-  body                         String               @db.Text
   status                       String               @db.Char(1)
   created                      DateTime             @default(now())
   updated                      DateTime             @updatedAt
@@ -386,6 +365,7 @@ model DiscussPost {
   ofDiscussComments            DiscussComment[]
 
   @@index([authorProfileId])
+  @@index([projectId])
   @@index([created])
   @@map("discuss_post")
   @@schema("public")

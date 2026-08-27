@@ -11,6 +11,7 @@ interface CreateDiscussPostArgs {
   userProfileId: string
   title: string
   body: string
+  projectId?: string | null
 }
 
 interface DeleteDiscussPostArgs {
@@ -36,9 +37,17 @@ export async function getDiscussPosts(
   context: unknown,
   info: unknown) {
 
+  // GraphQL args are schema-validated before the resolver runs
+  const { profileId, projectId } = args as unknown as {
+    profileId?: string | null
+    projectId?: string | null
+  }
+
   // Query
   return discussionQueryService.getDiscussPosts(
-    prisma)
+    prisma,
+    profileId ?? undefined,
+    projectId ?? undefined)
 }
 
 export async function getDiscussPostByPublicId(
@@ -81,7 +90,8 @@ export async function createDiscussPost(
   const {
     userProfileId,
     title,
-    body
+    body,
+    projectId
   } = args as unknown as CreateDiscussPostArgs
 
   // Mutation
@@ -89,7 +99,8 @@ export async function createDiscussPost(
     prisma,
     userProfileId,
     title,
-    body)
+    body,
+    projectId ?? undefined)
 }
 
 export async function deleteDiscussPost(

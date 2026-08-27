@@ -1,8 +1,12 @@
 import { gql } from '@apollo/client'
 
 export const getDiscussPostsQuery = gql`
-  query getDiscussPosts {
-    getDiscussPosts {
+  query getDiscussPosts(
+          $profileId: String,
+          $projectId: String) {
+    getDiscussPosts(
+      profileId: $profileId,
+      projectId: $projectId) {
 
       status
       message
@@ -11,6 +15,7 @@ export const getDiscussPostsQuery = gql`
         publicId
         authorProfileId
         authorName
+        projectId
         title
         body
         commentCount
@@ -33,6 +38,7 @@ export const getDiscussPostByPublicIdQuery = gql`
         publicId
         authorProfileId
         authorName
+        projectId
         title
         body
         commentCount
@@ -67,12 +73,14 @@ export const createDiscussPostMutation = gql`
   mutation createDiscussPost(
     $userProfileId: String!,
     $title: String!,
-    $body: String!)
+    $body: String!,
+    $projectId: String)
   {
     createDiscussPost(
       userProfileId: $userProfileId,
       title: $title,
-      body: $body) {
+      body: $body,
+      projectId: $projectId) {
       status
       message
 

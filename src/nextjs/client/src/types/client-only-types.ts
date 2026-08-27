@@ -100,23 +100,13 @@ export interface Endorsement {
   created?: string
 }
 
-// A short post (mini-feed update)
-export interface PostItem {
-  id: string
-  publicId?: string
-  authorProfileId: string
-  authorName?: string | null
-  projectId?: string | null
-  body: string
-  created: string
-}
-
-// A discussion post on the Discuss page
+// A discussion post, optionally attached to a project
 export interface DiscussPostItem {
   id: string
   publicId?: string
   authorProfileId: string
   authorName?: string | null
+  projectId?: string | null
   title: string
   body: string
   commentCount: number

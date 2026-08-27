@@ -21,7 +21,8 @@ export class DiscussionMutateService {
     prisma: PrismaClient,
     userProfileId: string,
     title: string,
-    body: string) {
+    body: string,
+    projectId: string | undefined = undefined) {
 
     // Debug
     const fnName = `${this.clName}.createDiscussPost()`
@@ -54,6 +55,23 @@ export class DiscussionMutateService {
       }
     }
 
+    // Validate the project, if one is attached
+    if (projectId != null) {
+      const project = await
+        prisma.project.findUnique({
+          where: {
+            id: projectId
+          }
+        })
+
+      if (project == null) {
+        return {
+          status: false,
+          message: `Project not found`
+        }
+      }
+    }
+
     // Create the post
     const post = await
       discussPostModel.create(
@@ -61,7 +79,8 @@ export class DiscussionMutateService {
         profile.id,
         BaseDataTypes.activeStatus,
         title.trim(),
-        body)
+        body,
+        projectId)
 
     // Return
     return {
@@ -72,6 +91,7 @@ export class DiscussionMutateService {
         publicId: post.publicId,
         authorProfileId: post.authorProfileId,
         authorName: profile.displayName,
+        projectId: post.projectId,
         title: post.title,
         body: post.body,
         commentCount: 0,

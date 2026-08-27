@@ -2,10 +2,10 @@ import { useState } from 'react'
 import { Button, Chip, Link, TextField, Tooltip, Typography } from '@mui/material'
 import { Toaster, toast } from 'sonner'
 import { useMutation } from '@apollo/client/react'
-import { createPostMutation, deletePostMutation } from '@/apollo/posts'
+import { createDiscussPostMutation, deleteDiscussPostMutation } from '@/apollo/discussion'
 import { sendConnectionRequestMutation } from '@/apollo/connections'
 import { availabilityStatusName, skillLevelName } from '@/types/client-only-types'
-import type { Endorsement, PostItem, Profile, ProfileLink, ProfileSkill } from '@/types/client-only-types'
+import type { DiscussPostItem, Endorsement, Profile, ProfileLink, ProfileSkill } from '@/types/client-only-types'
 import { profileTypeName } from './profile-card'
 
 // Human-readable label for a profile link kind:
@@ -31,7 +31,7 @@ interface Props {
   skills?: ProfileSkill[]
   links?: ProfileLink[]
   endorsements?: Endorsement[]
-  posts?: PostItem[]
+  posts?: DiscussPostItem[]
   onPostsChanged?: () => void
 }
 
@@ -40,12 +40,12 @@ interface SendConnectionRequestResult {
   message: string
 }
 
-interface CreatePostResult {
+interface CreateDiscussPostResult {
   status: boolean
   message: string
 }
 
-interface DeletePostResult {
+interface DeleteDiscussPostResult {
   status: boolean
   message: string
 }
@@ -67,6 +67,7 @@ export default function ProfileView({
   const [connectionSent, setConnectionSent] = useState<boolean>(false)
   const [connecting, setConnecting] = useState<boolean>(false)
 
+  const [newPostTitle, setNewPostTitle] = useState<string>('')
   const [newPostBody, setNewPostBody] = useState<string>('')
   const [posting, setPosting] = useState<boolean>(false)
 
@@ -78,17 +79,17 @@ export default function ProfileView({
       fetchPolicy: 'no-cache'
     })
 
-  const [sendCreatePostMutation] =
+  const [sendCreateDiscussPostMutation] =
     useMutation<{
-      createPost: CreatePostResult
-    }>(createPostMutation, {
+      createDiscussPost: CreateDiscussPostResult
+    }>(createDiscussPostMutation, {
       fetchPolicy: 'no-cache'
     })
 
-  const [sendDeletePostMutation] =
+  const [sendDeleteDiscussPostMutation] =
     useMutation<{
-      deletePost: DeletePostResult
-    }>(deletePostMutation, {
+      deleteDiscussPost: DeleteDiscussPostResult
+    }>(deleteDiscussPostMutation, {
       fetchPolicy: 'no-cache'
     })
 
@@ -129,27 +130,29 @@ export default function ProfileView({
 
   async function onCreatePost() {
 
-    if (newPostBody.trim() === '') {
+    if (newPostTitle.trim() === '' || newPostBody.trim() === '') {
       return
     }
 
     setPosting(true)
 
     // Query
-    let createdData: CreatePostResult | undefined
+    let createdData: CreateDiscussPostResult | undefined
 
-    await sendCreatePostMutation({
+    await sendCreateDiscussPostMutation({
       variables: {
         userProfileId: viewerUserProfileId,
+        title: newPostTitle.trim(),
         body: newPostBody.trim()
       }
-    }).then(result => createdData = result.data?.createPost)
+    }).then(result => createdData = result.data?.createDiscussPost)
 
     // Get results and set fields
     if (createdData == null) {
       toast.error(`Failed to create the post`)
     } else if (createdData.status === true) {
       toast.success(createdData.message)
+      setNewPostTitle('')
       setNewPostBody('')
       if (onPostsChanged != null) {
         onPostsChanged()
@@ -169,14 +172,14 @@ export default function ProfileView({
     }
 
     // Query
-    let deletedData: DeletePostResult | undefined
+    let deletedData: DeleteDiscussPostResult | undefined
 
-    await sendDeletePostMutation({
+    await sendDeleteDiscussPostMutation({
       variables: {
         userProfileId: viewerUserProfileId,
         id: postId
       }
-    }).then(result => deletedData = result.data?.deletePost)
+    }).then(result => deletedData = result.data?.deleteDiscussPost)
 
     // Get results and set fields
     if (deletedData == null) {
@@ -391,6 +394,18 @@ export default function ProfileView({
           <div style={{ marginBottom: '1.5em' }}>
             <TextField
               fullWidth
+              label='Title'
+              onChange={(event) => setNewPostTitle(event.target.value)}
+              slotProps={{
+                inputLabel: {
+                  shrink: Boolean(newPostTitle),
+                }
+              }}
+              style={{ marginBottom: '0.75em' }}
+              value={newPostTitle} />
+
+            <TextField
+              fullWidth
               label='Share an update'
               minRows={2}
               multiline
@@ -404,7 +419,8 @@ export default function ProfileView({
               value={newPostBody} />
 
             <Button
-              disabled={posting || newPostBody.trim() === ''}
+              disabled={posting || newPostTitle.trim() === '' ||
+                newPostBody.trim() === ''}
               onClick={onCreatePost}
               size='small'
               variant='contained'>
@@ -421,16 +437,21 @@ export default function ProfileView({
               key={post.id}
               style={{ borderBottom: '1px solid #eeeeee', marginBottom: '1em', paddingBottom: '1em' }}>
               <div style={{ alignItems: 'center', display: 'flex', gap: '0.75em' }}>
-                <Typography
-                  style={{ fontWeight: 600 }}
-                  variant='body2'>
-                  {post.authorName ?? profile.displayName}
-                </Typography>
+                <Link
+                  href={`/discuss/${post.publicId}`}
+                  underline='hover'>
+                  <Typography
+                    style={{ fontWeight: 600 }}
+                    variant='body2'>
+                    {post.title}
+                  </Typography>
+                </Link>
 
                 <Typography
                   style={{ color: 'gray' }}
                   variant='body2'>
-                  {new Date(post.created).toLocaleString()}
+                  {new Date(post.created).toLocaleString()} · {post.commentCount}{' '}
+                  {post.commentCount === 1 ? 'comment' : 'comments'}
                 </Typography>
 
                 {owner === true ?
@@ -444,7 +465,9 @@ export default function ProfileView({
                 }
               </div>
 
-              <Typography variant='body1'>
+              <Typography
+                style={{ whiteSpace: 'pre-wrap' }}
+                variant='body1'>
                 {post.body}
               </Typography>
             </div>

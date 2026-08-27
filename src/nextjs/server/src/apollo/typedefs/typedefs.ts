@@ -157,25 +157,6 @@ export const typeDefs = /* GraphQL */ `
     endorsements: [EndorsementItem]
   }
 
-  # Posts
-
-  type PostItem {
-    id: String!
-    publicId: String!
-    authorProfileId: String!
-    authorName: String
-    projectId: String
-    body: String!
-    created: String!
-  }
-
-  type PostsResults {
-    status: Boolean!
-    message: String
-    posts: [PostItem]
-  }
-
-
   # Discussion
 
   type DiscussPostItem {
@@ -183,6 +164,7 @@ export const typeDefs = /* GraphQL */ `
     publicId: String!
     authorProfileId: String!
     authorName: String
+    projectId: String
     title: String!
     body: String!
     commentCount: Int!
@@ -216,6 +198,7 @@ export const typeDefs = /* GraphQL */ `
     message: String
     comments: [DiscussCommentItem]
   }
+
   # Connections
 
   type IncomingConnectionRequest {
@@ -429,7 +412,7 @@ export const typeDefs = /* GraphQL */ `
     getNetwork(
       userProfileId: String!): ProfilesResults!
 
-    # Profile skills, links, endorsements, posts
+    # Profile skills, links, endorsements
     getSkillsByProfileId(
       profileId: String!): ProfileSkillsResults!
 
@@ -438,12 +421,6 @@ export const typeDefs = /* GraphQL */ `
 
     getEndorsementsByProfileId(
       profileId: String!): EndorsementsResults!
-
-    getPostsByProfileId(
-      profileId: String!): PostsResults!
-
-    getPostsByProjectId(
-      projectId: String!): PostsResults!
 
     # Connections
     getIncomingConnectionRequests(
@@ -455,7 +432,9 @@ export const typeDefs = /* GraphQL */ `
       unreadOnly: Boolean): NotificationsResults!
 
     # Discussion
-    getDiscussPosts: DiscussPostsResults!
+    getDiscussPosts(
+      profileId: String,
+      projectId: String): DiscussPostsResults!
 
     getDiscussPostByPublicId(
       publicId: String!): DiscussPostResults!
@@ -593,16 +572,6 @@ export const typeDefs = /* GraphQL */ `
       skillId: String!,
       comment: String): StatusAndMessage!
 
-    # Posts
-    createPost(
-      userProfileId: String!,
-      body: String!,
-      projectId: String): StatusAndMessage!
-
-    deletePost(
-      userProfileId: String!,
-      id: String!): StatusAndMessage!
-
     # Connections
     sendConnectionRequest(
       userProfileId: String!,
@@ -618,12 +587,12 @@ export const typeDefs = /* GraphQL */ `
       userProfileId: String!,
       peerProfileId: String!): StatusAndMessage!
 
-
     # Discussion
     createDiscussPost(
       userProfileId: String!,
       title: String!,
-      body: String!): StatusAndMessageAndPost!
+      body: String!,
+      projectId: String): StatusAndMessageAndPost!
 
     deleteDiscussPost(
       userProfileId: String!,

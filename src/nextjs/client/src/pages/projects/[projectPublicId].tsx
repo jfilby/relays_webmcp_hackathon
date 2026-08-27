@@ -5,9 +5,9 @@ import { Typography } from '@mui/material'
 import { loadServerPage } from '@/services/page/load-server-page'
 import Layout, { pageBodyWidth } from '@/components/layouts/layout'
 import LoadProjectByPublicId from '@/components/projects/load-by-id'
-import LoadPostsByProjectId from '@/components/projects/load-posts-by-project-id'
+import LoadDiscussPosts from '@/components/discussion/load-discuss-posts'
 import ProjectView from '@/components/projects/project-view'
-import type { PostItem, Project, UserProfile } from '@/types/client-only-types'
+import type { DiscussPostItem, Project, UserProfile } from '@/types/client-only-types'
 import type { GetServerSidePropsContext } from 'next'
 
 interface Props {
@@ -29,7 +29,7 @@ export default function ProjectPage({
   const [notFound, setNotFound] = useState<boolean>(false)
 
   // Posts of the project
-  const [posts, setPosts] = useState<PostItem[] | undefined>(undefined)
+  const [posts, setPosts] = useState<DiscussPostItem[] | undefined>(undefined)
   const [postsRefreshToken, setPostsRefreshToken] = useState<number>(0)
 
   // Signed-in viewer profile id; empty for guests
@@ -90,10 +90,10 @@ export default function ProjectPage({
 
           {/* Posts are keyed by the project's internal id */}
           {project != null ?
-            <LoadPostsByProjectId
+            <LoadDiscussPosts
               projectId={project.id}
-              setPosts={setPosts}
-              refreshToken={postsRefreshToken} />
+              refreshToken={postsRefreshToken}
+              setPosts={setPosts} />
             :
             <></>
           }

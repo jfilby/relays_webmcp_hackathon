@@ -1,10 +1,9 @@
 import { prisma } from '@/db'
 import { ProjectsQueryService } from '@/services/projects/query-service'
-import { ProfilesQueryService } from '@/services/profiles/query-service'
+
 // Services
 const projectsQueryService = new ProjectsQueryService()
-const profilesQueryService = new ProfilesQueryService()
-// GraphQL args are schema-validated before the resolver runs
+
 interface GetProjectByPublicIdArgs {
   publicId: string
   userProfileId: string
@@ -94,19 +93,4 @@ export async function getProjectsByUserProfileId(
 
   // Return
   return results
-}
-
-export async function getPostsByProjectId(
-  parent: unknown,
-  args: unknown,
-  context: unknown,
-  info: unknown) {
-
-  // GraphQL args are schema-validated before the resolver runs
-  const { projectId } = args as unknown as { projectId: string }
-
-  // Query
-  return profilesQueryService.getPostsByProjectId(
-    prisma,
-    projectId)
 }

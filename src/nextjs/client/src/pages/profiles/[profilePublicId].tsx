@@ -8,9 +8,9 @@ import LoadProfileByPublicId from '@/components/profiles/load-by-id'
 import LoadSkillsByProfileId from '@/components/profiles/load-skills'
 import LoadLinksByProfileId from '@/components/profiles/load-links'
 import LoadEndorsementsByProfileId from '@/components/profiles/load-endorsements'
-import LoadPostsByProfileId from '@/components/profiles/load-posts'
+import LoadDiscussPosts from '@/components/discussion/load-discuss-posts'
 import ProfileView from '@/components/profiles/profile-view'
-import type { Endorsement, PostItem, Profile, ProfileLink, ProfileSkill, UserProfile } from '@/types/client-only-types'
+import type { DiscussPostItem, Endorsement, Profile, ProfileLink, ProfileSkill, UserProfile } from '@/types/client-only-types'
 import type { GetServerSidePropsContext } from 'next'
 
 interface Props {
@@ -34,7 +34,7 @@ export default function ProfilePage({
   const [skills, setSkills] = useState<ProfileSkill[]>([])
   const [links, setLinks] = useState<ProfileLink[]>([])
   const [endorsements, setEndorsements] = useState<Endorsement[]>([])
-  const [posts, setPosts] = useState<PostItem[]>([])
+  const [posts, setPosts] = useState<DiscussPostItem[] | undefined>(undefined)
   const [postsReloadToken, setPostsReloadToken] = useState<number>(0)
 
   // Functions
@@ -128,9 +128,9 @@ export default function ProfilePage({
       }
 
       {profile != null ?
-        <LoadPostsByProfileId
+        <LoadDiscussPosts
           profileId={profile.id}
-          reloadToken={postsReloadToken}
+          refreshToken={postsReloadToken}
           setPosts={setPosts} />
         :
         <></>
