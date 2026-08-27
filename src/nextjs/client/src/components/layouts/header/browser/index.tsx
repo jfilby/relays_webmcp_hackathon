@@ -80,9 +80,9 @@ export function HeaderBrowser({
                 signIn()
               }}
               style={{
-                backgroundColor: '#111111',
-                color: '#ffffff',
+                border: '1px solid #111111',
                 borderRadius: 999,
+                color: '#111111',
                 padding: '0.35em 1em',
                 fontSize: '0.9rem',
                 fontWeight: 600
