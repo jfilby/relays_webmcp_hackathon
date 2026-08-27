@@ -1,17 +1,17 @@
 import Head from 'next/head'
 import { loadServerPage } from '@/services/page/load-server-page'
-import type { PageProfile } from '@/types/client-only-types'
+import type { PageProfile, UserProfile } from '@/types/client-only-types'
 import LaunchedLandingPage from '@/components/landing-pages/launched'
 import WaitListLandingPage from '@/components/landing-pages/wait-list'
 import type { GetServerSidePropsContext } from 'next'
 
 interface Props {
-  userProfileId?: string | null
+  userProfile: UserProfile
   profile?: PageProfile | null
 }
 
 export default function LandingPage({
-  userProfileId,
+  userProfile,
   profile
 }: Props) {
 
@@ -26,7 +26,7 @@ export default function LandingPage({
         <WaitListLandingPage />
         :
         <LaunchedLandingPage
-          userProfileId={userProfileId ?? null}
+          userProfile={userProfile}
           profile={profile} />
       }
     </>

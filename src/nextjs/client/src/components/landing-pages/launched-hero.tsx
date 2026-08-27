@@ -1,7 +1,8 @@
-import { 
+import {
   useEffect,
   useState
 } from 'react'
+import type { UserProfile } from '@/types/client-only-types'
 import {
   Alert,
   Button,
@@ -25,7 +26,7 @@ interface Props {
     }
   } | null | undefined
   profile?: LandingProfile | null
-  userProfileId: string | null | undefined
+  userProfile: UserProfile | null
 }
 
 function MockWindow() {
@@ -70,7 +71,7 @@ function MockWindow() {
 export default function LaunchedHero({
   authSession,
   profile,
-  userProfileId
+  userProfile
 }: Props) {
 
   // Consts
@@ -283,10 +284,9 @@ export default function LaunchedHero({
           :
           <></>
         }
-
-        {userProfileId != null ?
+        {userProfile?.id != null ?
           <CreateProfile
-            userProfileId={userProfileId}
+            userProfileId={userProfile.id}
             name={name}
             updates={updates}
             createAction={createAction}

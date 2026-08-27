@@ -2,6 +2,7 @@ import React, { useState } from 'react'
 import { Alert, Button, TextField, Typography } from '@mui/material'
 import { useMutation } from '@apollo/client/react'
 import { signUpForUpdatesMutation } from '@/apollo/sign-ups'
+import type { UserProfile } from '@/types/client-only-types'
 import styles from './landing.module.css'
 
 interface SignUpResult {
@@ -15,13 +16,13 @@ interface Props {
       email?: string | null
     }
   } | null | undefined
-  userProfileId: string | null | undefined
+  userProfile: UserProfile | null
   updatesEnabled: boolean
 }
 
 export default function LaunchedDetails({
   authSession,
-  userProfileId,
+  userProfile,
   updatesEnabled
 }: Props) {
 
@@ -37,7 +38,7 @@ export default function LaunchedDetails({
     ? authSession === undefined
       ? undefined
       : false
-    : userProfileId != null
+    : userProfile?.id != null
 
   // State
   const [email, setEmail] = useState('')
@@ -85,7 +86,7 @@ export default function LaunchedDetails({
     await fetchSignUpForUpdatesMutation({
       variables: {
         email: signedIn === true ? null : email,
-        userProfileId: signedIn === true ? userProfileId : null
+        userProfileId: signedIn === true ? userProfile?.id ?? null : null
       }
     }).then(res => result = res.data?.signUpForUpdates)
 
