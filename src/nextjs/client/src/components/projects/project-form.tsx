@@ -72,7 +72,7 @@ export default function ProjectForm({
         <></>
       }
 
-      <FormControl style={{ marginBottom: '1em', width: '20em' }}>
+      <FormControl style={{ marginBottom: '1em', width: '20em', display: 'flex' }}>
         <TextField
           autoComplete='off'
           fullWidth
@@ -87,7 +87,7 @@ export default function ProjectForm({
           value={values.name} />
       </FormControl>
 
-      <FormControl style={{ marginBottom: '1em', width: '20em' }}>
+      <FormControl style={{ marginBottom: '1em', width: '20em', display: 'flex' }}>
         <TextField
           fullWidth
           label='Tagline'
@@ -100,7 +100,7 @@ export default function ProjectForm({
           value={values.tagline} />
       </FormControl>
 
-      <FormControl style={{ marginBottom: '1em', width: '20em' }}>
+      <FormControl style={{ marginBottom: '1em', width: '20em', display: 'flex' }}>
         <TextField
           fullWidth
           label='Description'
@@ -115,7 +115,7 @@ export default function ProjectForm({
           value={values.description} />
       </FormControl>
 
-      <FormControl style={{ marginBottom: '1em', width: '20em' }}>
+      <FormControl style={{ marginBottom: '1em', width: '20em', display: 'flex' }}>
         <TextField
           fullWidth
           label='Website'
@@ -128,7 +128,7 @@ export default function ProjectForm({
           value={values.website} />
       </FormControl>
 
-      <FormControl style={{ marginBottom: '1em', width: '20em' }}>
+      <FormControl style={{ marginBottom: '1em', width: '20em', display: 'flex' }}>
         <TextField
           fullWidth
           label='Image URL'

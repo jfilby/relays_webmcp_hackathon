@@ -77,7 +77,7 @@ export default function ProfileForm({
         <></>
       }
 
-      <FormControl style={{ marginBottom: '1em', width: '20em' }}>
+      <FormControl style={{ marginBottom: '1em', width: '20em', display: 'flex' }}>
         <TextField
           autoComplete='off'
           fullWidth
@@ -92,7 +92,7 @@ export default function ProfileForm({
           value={values.displayName} />
       </FormControl>
 
-      <FormControl style={{ marginBottom: '1em', width: '20em' }}>
+      <FormControl style={{ marginBottom: '1em', width: '20em', display: 'flex' }}>
         <InputLabel id='profile-type'>Type</InputLabel>
         <Select
           labelId='profile-type'
@@ -109,7 +109,7 @@ export default function ProfileForm({
         </Select>
       </FormControl>
 
-      <FormControl style={{ marginBottom: '1em', width: '20em' }}>
+      <FormControl style={{ marginBottom: '1em', width: '20em', display: 'flex' }}>
         <TextField
           fullWidth
           label='Headline'
@@ -122,7 +122,7 @@ export default function ProfileForm({
           value={values.headline} />
       </FormControl>
 
-      <FormControl style={{ marginBottom: '1em', width: '20em' }}>
+      <FormControl style={{ marginBottom: '1em', width: '20em', display: 'flex' }}>
         <TextField
           fullWidth
           label='Bio'
@@ -137,7 +137,7 @@ export default function ProfileForm({
           value={values.bio} />
       </FormControl>
 
-      <FormControl style={{ marginBottom: '1em', width: '20em' }}>
+      <FormControl style={{ marginBottom: '1em', width: '20em', display: 'flex' }}>
         <TextField
           fullWidth
           label='Location'
@@ -150,7 +150,7 @@ export default function ProfileForm({
           value={values.location} />
       </FormControl>
 
-      <FormControl style={{ marginBottom: '1em', width: '20em' }}>
+      <FormControl style={{ marginBottom: '1em', width: '20em', display: 'flex' }}>
         <TextField
           fullWidth
           label='Website'
