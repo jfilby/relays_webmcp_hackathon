@@ -40,7 +40,18 @@ export default function PageHeader({
 
   return (
     <>
-      <Grid container style={{ background: '#f6f6f6', borderBottom: '1px solid #aaa', paddingLeft: '1em', paddingRight: '1em' }}>
+      <Grid
+        container
+        sx={{
+          position: 'sticky',
+          top: 0,
+          zIndex: 100,
+          background: 'rgba(250, 250, 250, 0.85)',
+          backdropFilter: 'blur(8px)',
+          borderBottom: '1px solid #e4e4e4',
+          paddingLeft: { xs: '1em', sm: '2em' },
+          paddingRight: { xs: '1em', sm: '2em' }
+        }}>
         <header style={{ textAlign: 'center', width: '100%' }}>
 
           {highLevelLink != null ?

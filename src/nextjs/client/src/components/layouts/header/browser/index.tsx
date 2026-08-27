@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { signIn, signOut, useSession } from 'next-auth/react'
-import { Box, Link, Typography } from '@mui/material'
+import { Box, Link } from '@mui/material'
 import { HeaderBrowserLink } from './link'
 
 interface Props {
@@ -23,86 +23,76 @@ export function HeaderBrowser({
   }, [])
 
   return (
-    <Box sx={{
-      marginTop: '0.5em',
-      marginBottom: '0.5em'
-    }}>
-      <div style={{
+    <Box>
+      <Box sx={{
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'space-between',
+        gap: '1.5em',
+        paddingY: '0.7em'
       }}>
-        <div style={{ textAlign: 'left' }}>
-          <Typography
-            style={{ marginTop: '-0.2em' }}
-            variant='h6'>
-            <HeaderBrowserLink
-              name={process.env.NEXT_PUBLIC_APP_NAME}
-              linkName=''
-              highLevelLink={highLevelLink} />
-            &nbsp;
-            &nbsp;
-            <HeaderBrowserLink
-              name='Profiles'
-              linkName='profiles'
-              highLevelLink={highLevelLink} />
-            &nbsp;
-            &nbsp;
-            <HeaderBrowserLink
-              name='Projects'
-              linkName='projects'
-              highLevelLink={highLevelLink} />
-            &nbsp;
-            &nbsp;
-          </Typography>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.4em', textAlign: 'left' }}>
+          <HeaderBrowserLink
+            name={process.env.NEXT_PUBLIC_APP_NAME}
+            linkName=''
+            highLevelLink={highLevelLink}
+            isBrand={true} />
+          <HeaderBrowserLink
+            name='Profiles'
+            linkName='profiles'
+            highLevelLink={highLevelLink} />
+          <HeaderBrowserLink
+            name='Projects'
+            linkName='projects'
+            highLevelLink={highLevelLink} />
         </div>
-        <div style={{ textAlign: 'right' }}>
-          <Typography variant='body1'>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.4em', textAlign: 'right' }}>
+          <HeaderBrowserLink
+            name='About'
+            linkName='about'
+            highLevelLink={highLevelLink} />
+          {session &&
             <HeaderBrowserLink
-              name='About'
-              linkName='about'
+              name='My profile'
+              linkName='profile'
               highLevelLink={highLevelLink} />
-            &nbsp;
-            &nbsp;
-            &nbsp;
-            &nbsp;
-            {session &&
-              <>
-                <HeaderBrowserLink
-                  name='My profile'
-                  linkName='profile'
-                  highLevelLink={highLevelLink} />
-                &nbsp;
-                &nbsp;
-              </>
-            }
-            {session &&
-              <Link
-                href='#'
-                onClick={(e) => {
-                  e.preventDefault()
-                  signOut()
-                }}
-                style={{ color: 'black' }}
-                underline='hover'>
-                Sign out
-              </Link>
-            }
-            {!session &&
-              <Link
-                href='#'
-                onClick={(e) => {
-                  e.preventDefault()
-                  signIn()
-                }}
-                style={{ color: 'black' }}
-                underline='hover'>
-                Sign in
-              </Link>
-            }
-          </Typography>
+          }
+          {session ?
+            <Link
+              href='#'
+              onClick={(e) => {
+                e.preventDefault()
+                signOut()
+              }}
+              style={{
+                color: '#5a5a5a',
+                fontWeight: 500,
+                padding: '0.3em 0.8em'
+              }}
+              underline='none'>
+              Sign out
+            </Link>
+            :
+            <Link
+              href='#'
+              onClick={(e) => {
+                e.preventDefault()
+                signIn()
+              }}
+              style={{
+                backgroundColor: '#111111',
+                color: '#ffffff',
+                borderRadius: 999,
+                padding: '0.35em 1em',
+                fontSize: '0.9rem',
+                fontWeight: 600
+              }}
+              underline='none'>
+              Sign in
+            </Link>
+          }
         </div>
-      </div>
+      </Box>
     </Box>
   )
 }

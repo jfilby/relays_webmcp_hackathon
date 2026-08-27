@@ -42,7 +42,14 @@ export function HeaderMobile({ highLevelLink }: Props) {
 
   return (
     <Box sx={{ flexGrow: 1 }}>
-      <AppBar position='fixed'>
+      <AppBar
+        position='sticky'
+        color='transparent'
+        elevation={0}
+        sx={{
+          borderBottom: '1px solid #e4e4e4',
+          color: '#1a1a1a'
+        }}>
         <Toolbar>
           <IconButton
             edge='start'
@@ -94,7 +101,10 @@ export function HeaderMobile({ highLevelLink }: Props) {
             }
           </Menu>
 
-          <Typography variant='h6' component='div' sx={{ flexGrow: 1 }}>
+          <Typography
+            variant='h6'
+            component='div'
+            sx={{ flexGrow: 1, fontWeight: 700 }}>
             {process.env.NEXT_PUBLIC_APP_NAME}
           </Typography>
 
@@ -111,7 +121,6 @@ export function HeaderMobile({ highLevelLink }: Props) {
               Sign out
             </Button>
           }
-
         </Toolbar>
       </AppBar>
       <br /><br />

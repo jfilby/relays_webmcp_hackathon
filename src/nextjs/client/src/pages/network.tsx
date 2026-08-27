@@ -4,6 +4,7 @@ import { Button, Typography } from '@mui/material'
 import { loadServerPage } from '@/services/page/load-server-page'
 import Layout, { pageBodyWidth } from '@/components/layouts/layout'
 import LoadNetwork from '@/components/profiles/load-network'
+import EmptyState from '@/components/layouts/empty-state'
 import ProfileCard from '@/components/profiles/profile-card'
 import type { Profile, UserProfile } from '@/types/client-only-types'
 import type { GetServerSidePropsContext } from 'next'
@@ -56,7 +57,7 @@ export default function NetworkPage({
 
           {alertSeverity && message ?
             <Typography
-              style={{ color: 'red', marginBottom: '1em' }}
+              style={{ color: '#b91c1c', marginBottom: '1em' }}
               variant='body1'>
               {message}
             </Typography>
@@ -71,9 +72,7 @@ export default function NetworkPage({
             :
             <>
               {notFound === true ?
-                <Typography variant='body1'>
-                  Couldn&apos;t load your network.
-                </Typography>
+                <EmptyState message="Couldn't load your network." />
                 :
                 <>
                   {profiles != null ?
@@ -87,15 +86,13 @@ export default function NetworkPage({
                           ))}
                         </>
                         :
-                        <Typography variant='body1'>
-                          No connections yet.
-                        </Typography>
+                        <EmptyState message="No connections yet. Find profiles to collaborate with." />
                       }
                     </>
                     :
-                    <Typography variant='body1'>
-                      Loading..
-                    </Typography>
+                    <EmptyState
+                      loading={true}
+                      message='Loading your network..' />
                   }
                 </>
               }

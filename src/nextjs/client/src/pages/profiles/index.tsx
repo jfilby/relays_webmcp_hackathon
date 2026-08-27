@@ -13,6 +13,7 @@ import {
 import { loadServerPage } from '@/services/page/load-server-page'
 import Layout, { pageBodyWidth } from '@/components/layouts/layout'
 import LoadProfilesByFilter from '@/components/profiles/load-by-filter'
+import EmptyState from '@/components/layouts/empty-state'
 import ProfileCard from '@/components/profiles/profile-card'
 import type { Profile, UserProfile } from '@/types/client-only-types'
 import type { GetServerSidePropsContext } from 'next'
@@ -113,7 +114,7 @@ export default function ProfilesPage({
 
           {alertSeverity && message ?
             <Typography
-              style={{ color: 'red', marginBottom: '1em' }}
+              style={{ color: '#b91c1c', marginBottom: '1em' }}
               variant='body1'>
               {message}
             </Typography>
@@ -132,20 +133,18 @@ export default function ProfilesPage({
                   ))}
                 </>
                 :
-                <Typography
-                  style={{ marginTop: '2em' }}
-                  variant='body1'>
-                  {searched === true ?
-                    'No profiles found.'
+                <EmptyState
+                  message={searched === true ?
+                    'No profiles found. Try a different search.'
                     :
-                    'No profiles.'
-                  }
-                </Typography>
+                    'No profiles yet.'
+                  } />
               }
             </>
             :
             <></>
           }
+
         </div>
       </Layout>
 
