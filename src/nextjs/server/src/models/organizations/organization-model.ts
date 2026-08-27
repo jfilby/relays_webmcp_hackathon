@@ -12,7 +12,10 @@ export class OrganizationModel {
     name: string,
     status: string,
     website: string | undefined = undefined,
-    description: string | undefined = undefined) {
+    description: string | undefined = undefined,
+    logo: string | undefined = undefined,
+    size: string | undefined = undefined,
+    industry: string | undefined = undefined) {
 
     // Debug
     const fnName = `${this.clName}.create()`
@@ -25,7 +28,10 @@ export class OrganizationModel {
           name: name,
           status: status,
           website: website,
-          description: description
+          description: description,
+          logo: logo,
+          size: size,
+          industry: industry
         }
       })
     } catch (error) {
@@ -100,7 +106,10 @@ export class OrganizationModel {
     name: string | undefined,
     website: string | undefined,
     description: string | undefined,
-    status: string | undefined) {
+    status: string | undefined,
+    logo: string | undefined,
+    size: string | undefined,
+    industry: string | undefined) {
 
     // Debug
     const fnName = `${this.clName}.update()`
@@ -112,7 +121,10 @@ export class OrganizationModel {
           name: name,
           website: website,
           description: description,
-          status: status
+          status: status,
+          logo: logo,
+          size: size,
+          industry: industry
         },
         where: {
           id: id

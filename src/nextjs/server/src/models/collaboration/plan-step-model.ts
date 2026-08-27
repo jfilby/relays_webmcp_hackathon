@@ -1,33 +1,31 @@
 import { PrismaClient } from '@/generated/prisma/client'
 
-export class ConnectionModel {
+export class PlanStepModel {
 
   // Consts
-  clName = 'ConnectionModel'
+  clName = 'PlanStepModel'
 
   // Code
   async create(
     prisma: PrismaClient,
-    fromProfileId: string,
-    toProfileId: string,
+    planId: string,
+    seq: number,
+    title: string,
     status: string,
-    origin: string,
-    message: string | undefined = undefined,
-    acceptedAt: Date | undefined = undefined) {
+    description: string | undefined = undefined) {
 
     // Debug
     const fnName = `${this.clName}.create()`
 
     // Create record
     try {
-      return await prisma.connection.create({
+      return await prisma.planStep.create({
         data: {
-          fromProfileId: fromProfileId,
-          toProfileId: toProfileId,
+          planId: planId,
+          seq: seq,
+          title: title,
           status: status,
-          origin: origin,
-          message: message,
-          acceptedAt: acceptedAt
+          description: description
         }
       })
     } catch (error) {
@@ -45,7 +43,7 @@ export class ConnectionModel {
 
     // Query
     try {
-      return await prisma.connection.findUnique({
+      return await prisma.planStep.findUnique({
         where: {
           id: id
         }
@@ -56,21 +54,21 @@ export class ConnectionModel {
     }
   }
 
-  async getByFromTo(
+  async getByPlanIdAndSeq(
     prisma: PrismaClient,
-    fromProfileId: string,
-    toProfileId: string) {
+    planId: string,
+    seq: number) {
 
     // Debug
-    const fnName = `${this.clName}.getByFromTo()`
+    const fnName = `${this.clName}.getByPlanIdAndSeq()`
 
     // Query
     try {
-      return await prisma.connection.findUnique({
+      return await prisma.planStep.findUnique({
         where: {
-          fromProfileId_toProfileId: {
-            fromProfileId: fromProfileId,
-            toProfileId: toProfileId
+          planId_seq: {
+            planId: planId,
+            seq: seq
           }
         }
       })
@@ -82,8 +80,7 @@ export class ConnectionModel {
 
   async filter(
     prisma: PrismaClient,
-    fromProfileId: string | undefined = undefined,
-    toProfileId: string | undefined = undefined,
+    planId: string | undefined = undefined,
     status: string | undefined = undefined) {
 
     // Debug
@@ -91,10 +88,9 @@ export class ConnectionModel {
 
     // Query
     try {
-      return await prisma.connection.findMany({
+      return await prisma.planStep.findMany({
         where: {
-          fromProfileId: fromProfileId,
-          toProfileId: toProfileId,
+          planId: planId,
           status: status
         }
       })
@@ -107,20 +103,22 @@ export class ConnectionModel {
   async update(
     prisma: PrismaClient,
     id: string,
-    status: string | undefined,
-    message: string | undefined,
-    acceptedAt: Date | undefined) {
+    seq: number | undefined,
+    title: string | undefined,
+    description: string | undefined,
+    status: string | undefined) {
 
     // Debug
     const fnName = `${this.clName}.update()`
 
     // Update record
     try {
-      return await prisma.connection.update({
+      return await prisma.planStep.update({
         data: {
-          status: status,
-          message: message,
-          acceptedAt: acceptedAt
+          seq: seq,
+          title: title,
+          description: description,
+          status: status
         },
         where: {
           id: id
@@ -141,7 +139,7 @@ export class ConnectionModel {
 
     // Delete
     try {
-      return await prisma.connection.delete({
+      return await prisma.planStep.delete({
         where: {
           id: id
         }

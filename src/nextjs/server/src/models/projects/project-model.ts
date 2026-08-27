@@ -14,8 +14,10 @@ export class ProjectModel {
     organizationId: string | undefined = undefined,
     tagline: string | undefined = undefined,
     description: string | undefined = undefined,
-    website: string | undefined = undefined,
-    image: string | undefined = undefined) {
+    image: string | undefined = undefined,
+    techStack: string[] = [],
+    stage: string | undefined = undefined,
+    isOpenToCollaborators: boolean = false) {
 
     // Debug
     const fnName = `${this.clName}.create()`
@@ -28,8 +30,10 @@ export class ProjectModel {
           organizationId: organizationId,
           tagline: tagline,
           description: description,
-          website: website,
           image: image,
+          techStack: techStack,
+          stage: stage,
+          isOpenToCollaborators: isOpenToCollaborators,
           isPromoted: isPromoted,
           status: status
         }
@@ -110,8 +114,10 @@ export class ProjectModel {
     organizationId: string | undefined,
     tagline: string | undefined,
     description: string | undefined,
-    website: string | undefined,
     image: string | undefined,
+    techStack: string[] | undefined,
+    stage: string | undefined,
+    isOpenToCollaborators: boolean | undefined,
     isPromoted: boolean | undefined,
     status: string | undefined) {
 
@@ -125,8 +131,10 @@ export class ProjectModel {
           organizationId: organizationId,
           tagline: tagline,
           description: description,
-          website: website,
           image: image,
+          techStack: techStack,
+          stage: stage,
+          isOpenToCollaborators: isOpenToCollaborators,
           isPromoted: isPromoted,
           status: status
         },

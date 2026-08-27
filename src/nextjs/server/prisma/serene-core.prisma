@@ -92,6 +92,7 @@ model UserProfile {
   ofBatchJobs                   BatchJob[]
   ofEmailListUsers              EmailListUser[]
   ofProfiles                    Profile[]
+  ofNotifications               Notification[]
 
   @@map("user_profile")
   @@schema("public")

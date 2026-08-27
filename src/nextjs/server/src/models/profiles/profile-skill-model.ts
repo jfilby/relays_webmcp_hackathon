@@ -1,33 +1,27 @@
 import { PrismaClient } from '@/generated/prisma/client'
 
-export class ConnectionModel {
+export class ProfileSkillModel {
 
   // Consts
-  clName = 'ConnectionModel'
+  clName = 'ProfileSkillModel'
 
   // Code
   async create(
     prisma: PrismaClient,
-    fromProfileId: string,
-    toProfileId: string,
-    status: string,
-    origin: string,
-    message: string | undefined = undefined,
-    acceptedAt: Date | undefined = undefined) {
+    profileId: string,
+    skillId: string,
+    level: string | undefined = undefined) {
 
     // Debug
     const fnName = `${this.clName}.create()`
 
     // Create record
     try {
-      return await prisma.connection.create({
+      return await prisma.profileSkill.create({
         data: {
-          fromProfileId: fromProfileId,
-          toProfileId: toProfileId,
-          status: status,
-          origin: origin,
-          message: message,
-          acceptedAt: acceptedAt
+          profileId: profileId,
+          skillId: skillId,
+          level: level
         }
       })
     } catch (error) {
@@ -45,7 +39,7 @@ export class ConnectionModel {
 
     // Query
     try {
-      return await prisma.connection.findUnique({
+      return await prisma.profileSkill.findUnique({
         where: {
           id: id
         }
@@ -56,21 +50,21 @@ export class ConnectionModel {
     }
   }
 
-  async getByFromTo(
+  async getByProfileIdAndSkillId(
     prisma: PrismaClient,
-    fromProfileId: string,
-    toProfileId: string) {
+    profileId: string,
+    skillId: string) {
 
     // Debug
-    const fnName = `${this.clName}.getByFromTo()`
+    const fnName = `${this.clName}.getByProfileIdAndSkillId()`
 
     // Query
     try {
-      return await prisma.connection.findUnique({
+      return await prisma.profileSkill.findUnique({
         where: {
-          fromProfileId_toProfileId: {
-            fromProfileId: fromProfileId,
-            toProfileId: toProfileId
+          profileId_skillId: {
+            profileId: profileId,
+            skillId: skillId
           }
         }
       })
@@ -82,20 +76,18 @@ export class ConnectionModel {
 
   async filter(
     prisma: PrismaClient,
-    fromProfileId: string | undefined = undefined,
-    toProfileId: string | undefined = undefined,
-    status: string | undefined = undefined) {
+    profileId: string | undefined = undefined,
+    skillId: string | undefined = undefined) {
 
     // Debug
     const fnName = `${this.clName}.filter()`
 
     // Query
     try {
-      return await prisma.connection.findMany({
+      return await prisma.profileSkill.findMany({
         where: {
-          fromProfileId: fromProfileId,
-          toProfileId: toProfileId,
-          status: status
+          profileId: profileId,
+          skillId: skillId
         }
       })
     } catch (error) {
@@ -107,20 +99,16 @@ export class ConnectionModel {
   async update(
     prisma: PrismaClient,
     id: string,
-    status: string | undefined,
-    message: string | undefined,
-    acceptedAt: Date | undefined) {
+    level: string | undefined) {
 
     // Debug
     const fnName = `${this.clName}.update()`
 
     // Update record
     try {
-      return await prisma.connection.update({
+      return await prisma.profileSkill.update({
         data: {
-          status: status,
-          message: message,
-          acceptedAt: acceptedAt
+          level: level
         },
         where: {
           id: id
@@ -141,7 +129,7 @@ export class ConnectionModel {
 
     // Delete
     try {
-      return await prisma.connection.delete({
+      return await prisma.profileSkill.delete({
         where: {
           id: id
         }

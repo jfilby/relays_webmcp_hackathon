@@ -1,33 +1,29 @@
 import { PrismaClient } from '@/generated/prisma/client'
 
-export class ConnectionModel {
+export class PostModel {
 
   // Consts
-  clName = 'ConnectionModel'
+  clName = 'PostModel'
 
   // Code
   async create(
     prisma: PrismaClient,
-    fromProfileId: string,
-    toProfileId: string,
+    authorProfileId: string,
     status: string,
-    origin: string,
-    message: string | undefined = undefined,
-    acceptedAt: Date | undefined = undefined) {
+    body: string,
+    projectId: string | undefined = undefined) {
 
     // Debug
     const fnName = `${this.clName}.create()`
 
     // Create record
     try {
-      return await prisma.connection.create({
+      return await prisma.post.create({
         data: {
-          fromProfileId: fromProfileId,
-          toProfileId: toProfileId,
+          authorProfileId: authorProfileId,
           status: status,
-          origin: origin,
-          message: message,
-          acceptedAt: acceptedAt
+          body: body,
+          projectId: projectId
         }
       })
     } catch (error) {
@@ -45,7 +41,7 @@ export class ConnectionModel {
 
     // Query
     try {
-      return await prisma.connection.findUnique({
+      return await prisma.post.findUnique({
         where: {
           id: id
         }
@@ -56,34 +52,10 @@ export class ConnectionModel {
     }
   }
 
-  async getByFromTo(
-    prisma: PrismaClient,
-    fromProfileId: string,
-    toProfileId: string) {
-
-    // Debug
-    const fnName = `${this.clName}.getByFromTo()`
-
-    // Query
-    try {
-      return await prisma.connection.findUnique({
-        where: {
-          fromProfileId_toProfileId: {
-            fromProfileId: fromProfileId,
-            toProfileId: toProfileId
-          }
-        }
-      })
-    } catch (error) {
-      console.error(`${fnName}: error: ${error}`)
-      throw 'Prisma error'
-    }
-  }
-
   async filter(
     prisma: PrismaClient,
-    fromProfileId: string | undefined = undefined,
-    toProfileId: string | undefined = undefined,
+    authorProfileId: string | undefined = undefined,
+    projectId: string | undefined = undefined,
     status: string | undefined = undefined) {
 
     // Debug
@@ -91,10 +63,10 @@ export class ConnectionModel {
 
     // Query
     try {
-      return await prisma.connection.findMany({
+      return await prisma.post.findMany({
         where: {
-          fromProfileId: fromProfileId,
-          toProfileId: toProfileId,
+          authorProfileId: authorProfileId,
+          projectId: projectId,
           status: status
         }
       })
@@ -108,19 +80,17 @@ export class ConnectionModel {
     prisma: PrismaClient,
     id: string,
     status: string | undefined,
-    message: string | undefined,
-    acceptedAt: Date | undefined) {
+    body: string | undefined) {
 
     // Debug
     const fnName = `${this.clName}.update()`
 
     // Update record
     try {
-      return await prisma.connection.update({
+      return await prisma.post.update({
         data: {
           status: status,
-          message: message,
-          acceptedAt: acceptedAt
+          body: body
         },
         where: {
           id: id
@@ -141,7 +111,7 @@ export class ConnectionModel {
 
     // Delete
     try {
-      return await prisma.connection.delete({
+      return await prisma.post.delete({
         where: {
           id: id
         }

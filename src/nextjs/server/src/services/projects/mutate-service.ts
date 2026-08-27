@@ -2,11 +2,13 @@ import { PrismaClient } from '@/generated/prisma/client'
 import { BaseDataTypes } from '@/types/base-data-types'
 import { ProjectModel } from '@/models/projects/project-model'
 import { ProjectMemberModel } from '@/models/projects/project-member-model'
+import { ProjectUrlModel } from '@/models/projects/project-url-model'
 import { ProjectsQueryService } from './query-service'
 
 // Models
 const projectModel = new ProjectModel()
 const projectMemberModel = new ProjectMemberModel()
+const projectUrlModel = new ProjectUrlModel()
 
 // Services
 const projectsQueryService = new ProjectsQueryService()
@@ -25,6 +27,9 @@ export class ProjectsMutateService {
 
   // Public projects are readable by anyone (public access 'R')
   publicAccess = 'R'
+
+  // Project URLs: W (website)
+  websiteKind = 'W'
 
   // Code
   async create(
@@ -105,9 +110,16 @@ export class ProjectsMutateService {
         undefined,  // organizationId
         tagline != null && tagline.trim() !== '' ? tagline.trim() : undefined,
         description != null && description.trim() !== '' ? description.trim() : undefined,
-        website != null && website.trim() !== '' ? website.trim() : undefined,
         image != null && image.trim() !== '' ? image.trim() : undefined)
 
+    // Save the website URL as a typed project URL
+    if (website != null && website.trim() !== '') {
+      await projectUrlModel.create(
+        prisma,
+        project.id,
+        this.websiteKind,
+        website.trim())
+    }
     // Make the creator an owner member
     await projectMemberModel.create(
       prisma,
@@ -220,11 +232,38 @@ export class ProjectsMutateService {
         undefined,  // organizationId
         tagline,
         description,
-        website,
         image,
+        undefined,  // techStack
+        undefined,  // stage
+        undefined,  // isOpenToCollaborators
         isPromoted,
         undefined)  // status
 
+    // Sync the website URL into a project URL record
+    if (website != null) {
+      const urls = await
+        projectUrlModel.filter(
+          prisma,
+          id,
+          this.websiteKind)
+
+      if (urls.length > 0) {
+        await
+          projectUrlModel.update(
+            prisma,
+            urls[0].id,
+            this.websiteKind,
+            website,
+            undefined)
+      } else {
+        await
+          projectUrlModel.create(
+            prisma,
+            id,
+            this.websiteKind,
+            website)
+      }
+    }
     // Update the instance (name and public access)
     const instance = await
       prisma.instance.update({

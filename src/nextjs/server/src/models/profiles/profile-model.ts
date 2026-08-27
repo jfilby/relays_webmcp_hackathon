@@ -17,7 +17,10 @@ export class ProfileModel {
     bio: string | undefined = undefined,
     location: string | undefined = undefined,
     website: string | undefined = undefined,
-    avatar: string | undefined = undefined) {
+    avatar: string | undefined = undefined,
+    availabilityStatus: string = 'A',
+    isVerified: boolean = false,
+    verifiedAt: Date | undefined = undefined) {
 
     // Debug
     const fnName = `${this.clName}.create()`
@@ -35,7 +38,10 @@ export class ProfileModel {
           bio: bio,
           location: location,
           website: website,
-          avatar: avatar
+          avatar: avatar,
+          availabilityStatus: availabilityStatus,
+          isVerified: isVerified,
+          verifiedAt: verifiedAt
         }
       })
     } catch (error) {
@@ -101,7 +107,10 @@ export class ProfileModel {
     bio: string | undefined,
     location: string | undefined,
     website: string | undefined,
-    avatar: string | undefined) {
+    avatar: string | undefined,
+    availabilityStatus: string | undefined,
+    isVerified: boolean | undefined,
+    verifiedAt: Date | undefined) {
 
     // Debug
     const fnName = `${this.clName}.update()`
@@ -118,7 +127,10 @@ export class ProfileModel {
           bio: bio,
           location: location,
           website: website,
-          avatar: avatar
+          avatar: avatar,
+          availabilityStatus: availabilityStatus,
+          isVerified: isVerified,
+          verifiedAt: verifiedAt
         },
         where: {
           id: id

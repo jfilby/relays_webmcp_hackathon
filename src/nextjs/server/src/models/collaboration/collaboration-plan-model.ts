@@ -14,7 +14,11 @@ export class CollaborationPlanModel {
     title: string,
     targetProfileId: string | undefined = undefined,
     description: string | undefined = undefined,
-    startBy: Date | undefined = undefined) {
+    startBy: Date | undefined = undefined,
+    rolesNeeded: string[] = [],
+    commitmentLevel: string | undefined = undefined,
+    compensation: string | undefined = undefined,
+    deliverables: string | undefined = undefined) {
 
     // Debug
     const fnName = `${this.clName}.create()`
@@ -29,7 +33,11 @@ export class CollaborationPlanModel {
           status: status,
           title: title,
           description: description,
-          startBy: startBy
+          startBy: startBy,
+          rolesNeeded: rolesNeeded,
+          commitmentLevel: commitmentLevel,
+          compensation: compensation,
+          deliverables: deliverables
         }
       })
     } catch (error) {
@@ -91,7 +99,12 @@ export class CollaborationPlanModel {
     status: string | undefined,
     title: string | undefined,
     description: string | undefined,
-    startBy: Date | undefined) {
+    startBy: Date | undefined,
+    rolesNeeded: string[] | undefined,
+    commitmentLevel: string | undefined,
+    compensation: string | undefined,
+    deliverables: string | undefined,
+    completedAt: Date | undefined) {
 
     // Debug
     const fnName = `${this.clName}.update()`
@@ -104,7 +117,12 @@ export class CollaborationPlanModel {
           status: status,
           title: title,
           description: description,
-          startBy: startBy
+          startBy: startBy,
+          rolesNeeded: rolesNeeded,
+          commitmentLevel: commitmentLevel,
+          compensation: compensation,
+          deliverables: deliverables,
+          completedAt: completedAt
         },
         where: {
           id: id
