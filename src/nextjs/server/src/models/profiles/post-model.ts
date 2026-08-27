@@ -1,4 +1,5 @@
 import { PrismaClient } from '@/generated/prisma/client'
+import { PublicIdService } from '@/services/utils/public-id-service'
 
 export class PostModel {
 
@@ -20,6 +21,7 @@ export class PostModel {
     try {
       return await prisma.post.create({
         data: {
+          publicId: PublicIdService.generate(body),
           authorProfileId: authorProfileId,
           status: status,
           body: body,

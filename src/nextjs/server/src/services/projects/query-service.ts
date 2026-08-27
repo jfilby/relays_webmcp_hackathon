@@ -19,20 +19,21 @@ export class ProjectsQueryService {
   websiteKind = 'W'
 
   // Code
-  // Get a project by id. Private projects are only visible to their owner.
-  async getProjectById(
+  // Get a project by public id. Private projects are only visible to their
+  // owner.
+  async getProjectByPublicId(
     prisma: PrismaClient,
-    id: string,
+    publicId: string,
     viewerUserProfileId: string | undefined) {
 
     // Debug
-    const fnName = `${this.clName}.getProjectById()`
+    const fnName = `${this.clName}.getProjectByPublicId()`
 
     // Query
     const project = await
       prisma.project.findUnique({
         where: {
-          id: id
+          publicId: publicId
         },
         include: {
           ofProjectUrls: true
@@ -373,6 +374,7 @@ export class ProjectsQueryService {
 
     return {
       id: project.id,
+      publicId: project.publicId,
       instanceId: project.instanceId,
       name: instance.name,
       isOwner: isOwner,

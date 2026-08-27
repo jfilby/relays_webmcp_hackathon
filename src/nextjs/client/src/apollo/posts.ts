@@ -42,6 +42,7 @@ export const getPostsByProfileIdQuery = gql`
       message
       posts {
         id
+        publicId
         authorProfileId
         authorName
         projectId
@@ -62,6 +63,7 @@ export const getPostsByProjectIdQuery = gql`
       message
       posts {
         id
+        publicId
         authorProfileId
         authorName
         projectId

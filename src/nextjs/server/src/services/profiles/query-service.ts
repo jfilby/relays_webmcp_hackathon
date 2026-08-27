@@ -12,9 +12,9 @@ export class ProfilesQueryService {
   clName = 'ProfilesQueryService'
 
   // Code
-  async getProfileById(
+  async getProfileByPublicId(
     prisma: PrismaClient,
-    id: string,
+    publicId: string,
     viewerUserProfileId: string | undefined) {
 
     // Debug
@@ -22,9 +22,9 @@ export class ProfilesQueryService {
 
     // Query
     const profile = await
-      profileModel.getById(
+      profileModel.getByPublicId(
         prisma,
-        id)
+        publicId)
 
     // Validate
     if (profile == null) {
@@ -233,6 +233,7 @@ export class ProfilesQueryService {
 
     return {
       id: profile.id,
+      publicId: profile.publicId,
       userProfileId: profile.userProfileId,
       type: profile.type,
       status: profile.status,
@@ -431,9 +432,9 @@ export class ProfilesQueryService {
 
     // Return
     return {
-      status: true,
       posts: posts.map(post => ({
         id: post.id,
+        publicId: post.publicId,
         authorProfileId: post.authorProfileId,
         authorName: author.displayName,
         projectId: post.projectId,
@@ -486,6 +487,7 @@ export class ProfilesQueryService {
       status: true,
       posts: posts.map(post => ({
         id: post.id,
+        publicId: post.publicId,
         authorProfileId: post.authorProfileId,
         authorName: nameByProfileId.get(post.authorProfileId),
         projectId: post.projectId,

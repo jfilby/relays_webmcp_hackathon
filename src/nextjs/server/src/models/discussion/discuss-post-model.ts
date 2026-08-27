@@ -1,4 +1,5 @@
 import { PrismaClient } from '@/generated/prisma/client'
+import { PublicIdService } from '@/services/utils/public-id-service'
 
 export class DiscussPostModel {
 
@@ -20,6 +21,7 @@ export class DiscussPostModel {
     try {
       return await prisma.discussPost.create({
         data: {
+          publicId: PublicIdService.generate(title),
           authorProfileId: authorProfileId,
           status: status,
           title: title,
@@ -44,6 +46,26 @@ export class DiscussPostModel {
       return await prisma.discussPost.findUnique({
         where: {
           id: id
+        }
+      })
+    } catch (error) {
+      console.error(`${fnName}: error: ${error}`)
+      throw 'Prisma error'
+    }
+  }
+
+  async getByPublicId(
+    prisma: PrismaClient,
+    publicId: string) {
+
+    // Debug
+    const fnName = `${this.clName}.getByPublicId()`
+
+    // Query
+    try {
+      return await prisma.discussPost.findUnique({
+        where: {
+          publicId: publicId
         }
       })
     } catch (error) {

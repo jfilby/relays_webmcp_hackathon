@@ -10,6 +10,7 @@ export const getNetworkQuery = gql`
       message
       profiles {
         id
+        publicId
         userProfileId
         type
         status

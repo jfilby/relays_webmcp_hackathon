@@ -4,7 +4,7 @@ import { sereneCoreUserPreferencesMutationResolvers, sereneCoreUsersMutationReso
 
 // Relays queries imports
 import {
-  getProfileById,
+  getProfileByPublicId,
   getProfileByUserProfileId,
   searchProfiles,
   getNetwork,
@@ -14,7 +14,7 @@ import {
   getPostsByProfileId
 } from './queries/profiles'
 import {
-  getProjectById,
+  getProjectByPublicId,
   searchProjects,
   getProjectsByUserProfileId,
   getPostsByProjectId
@@ -27,7 +27,7 @@ import {
 } from './connections'
 import {
   getDiscussPosts,
-  getDiscussPostById,
+  getDiscussPostByPublicId,
   getDiscussCommentsByPostId,
   createDiscussPost,
   deleteDiscussPost,
@@ -107,7 +107,7 @@ const Query = {
   // ---
 
   // Profiles
-  getProfileById,
+  getProfileByPublicId,
   getProfileByUserProfileId,
   searchProfiles,
   getNetwork,
@@ -124,7 +124,7 @@ const Query = {
 
   // Discussion
   getDiscussPosts,
-  getDiscussPostById,
+  getDiscussPostByPublicId,
   getDiscussCommentsByPostId,
 
   // Notifications
@@ -136,7 +136,7 @@ const Query = {
   getPlanStepsByPlanId,
 
   // Projects
-  getProjectById,
+  getProjectByPublicId,
   searchProjects,
   getProjectsByUserProfileId,
 }

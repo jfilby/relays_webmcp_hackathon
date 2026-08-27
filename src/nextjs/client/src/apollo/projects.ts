@@ -4,6 +4,7 @@ import { gql } from '@apollo/client'
 // fragment-like list so queries stay consistent.
 const projectFields = `
         id
+        publicId
         instanceId
         name
         isOwner
@@ -131,12 +132,12 @@ export const deleteProjectMutation = gql`
   }
 `
 
-export const getProjectByIdQuery = gql`
-  query getProjectById(
-          $id: String!,
+export const getProjectByPublicIdQuery = gql`
+  query getProjectByPublicId(
+          $publicId: String!,
           $userProfileId: String) {
-    getProjectById(
-      id: $id,
+    getProjectByPublicId(
+      publicId: $publicId,
       userProfileId: $userProfileId) {
 
       status

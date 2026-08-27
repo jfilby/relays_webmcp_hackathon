@@ -5,7 +5,7 @@ import { Button, IconButton, Paper, TextField, Typography } from '@mui/material'
 import DeleteIcon from '@mui/icons-material/Delete'
 import { loadServerPage } from '@/services/page/load-server-page'
 import Layout, { pageBodyWidth } from '@/components/layouts/layout'
-import LoadDiscussPostById from '@/components/discussion/load-discuss-post-by-id'
+import LoadDiscussPostByPublicId from '@/components/discussion/load-discuss-post-by-id'
 import LoadDiscussCommentsByPostId from '@/components/discussion/load-discuss-comments-by-post-id'
 import SaveDiscussComment from '@/components/discussion/save-discuss-comment'
 import DeleteDiscussPost from '@/components/discussion/delete-discuss-post'
@@ -48,8 +48,8 @@ export default function DiscussPostPage({
 
   // Router
   const router = useRouter()
-  const postId = typeof router.query.postId === 'string' ?
-    router.query.postId :
+  const postPublicId = typeof router.query.postPublicId === 'string' ?
+    router.query.postPublicId :
     undefined
 
   // State
@@ -262,23 +262,30 @@ export default function DiscussPostPage({
         </div>
       </Layout>
 
-      {postId != null ?
+      {postPublicId != null ?
         <>
-          <LoadDiscussPostById
-            postId={postId}
+          <LoadDiscussPostByPublicId
+            publicId={postPublicId}
             setAlertSeverity={setAlertSeverity}
             setMessage={setMessage}
             setNotFound={setNotFound}
             setPost={setPost} />
 
-          <LoadDiscussCommentsByPostId
-            postId={postId}
-            setAlertSeverity={setAlertSeverity}
-            setMessage={setMessage}
-            setComments={setComments}
-            setNotFound={setNotFound} />
+          {/* Comments load once the post itself has loaded, since they are
+              fetched by the post's internal id */}
+          {post != null ?
+            <LoadDiscussCommentsByPostId
+              postId={post.id}
+              setAlertSeverity={setAlertSeverity}
+              setMessage={setMessage}
+              setComments={setComments}
+              setNotFound={setNotFound} />
+            :
+            <></>
+          }
 
-          {signedIn ?
+          {/* The signed-in actions need the post's internal id */}
+          {signedIn && post != null ?
             <>
               <LoadProfileByUserProfileId
                 userProfileId={userProfile.id ?? ''}
@@ -286,7 +293,7 @@ export default function DiscussPostPage({
 
               <SaveDiscussComment
                 body={newCommentBody}
-                postId={postId}
+                postId={post.id}
                 setComments={setComments}
                 onSaved={() => setNewCommentBody('')}
                 saveAction={saveCommentAction}
@@ -298,7 +305,7 @@ export default function DiscussPostPage({
               <DeleteDiscussComment
                 commentId={deleteCommentId}
                 deleteAction={deleteCommentAction}
-                postId={postId}
+                postId={post.id}
                 setAlertSeverity={setAlertSeverity}
                 setComments={setComments}
                 setDeleteAction={setDeleteCommentAction}
@@ -308,7 +315,7 @@ export default function DiscussPostPage({
               {isPostAuthor ?
                 <DeleteDiscussPost
                   deleteAction={deletePostAction}
-                  postId={postId}
+                  postId={post.id}
                   setAlertSeverity={setAlertSeverity}
                   setDeleteAction={setDeletePostAction}
                   setMessage={setMessage}

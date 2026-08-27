@@ -2,6 +2,7 @@ import { PrismaClient } from '@/generated/prisma/client'
 import { BaseDataTypes } from '@/types/base-data-types'
 import { ProfileModel } from '@/models/profiles/profile-model'
 import { EmailListsMutateService } from '@/services/email-lists/mutate-service'
+import { PublicIdService } from '@/services/utils/public-id-service'
 import { ProfilesQueryService } from './query-service'
 
 // Models
@@ -690,6 +691,7 @@ export class ProfilesMutateService {
     const post = await
       prisma.post.create({
         data: {
+          publicId: PublicIdService.generate(body.trim()),
           authorProfileId: profile.id,
           status: BaseDataTypes.activeStatus,
           body: body.trim(),

@@ -1,4 +1,5 @@
 import { PrismaClient } from '@/generated/prisma/client'
+import { PublicIdService } from '@/services/utils/public-id-service'
 
 export class DiscussCommentModel {
 
@@ -20,6 +21,7 @@ export class DiscussCommentModel {
     try {
       return await prisma.discussComment.create({
         data: {
+          publicId: PublicIdService.generate(body),
           postId: postId,
           authorProfileId: authorProfileId,
           status: status,

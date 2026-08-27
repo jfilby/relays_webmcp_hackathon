@@ -33,7 +33,7 @@ export default function ProjectCard({
         }
       }}>
       <Link
-        href={`/projects/${project.id}`}
+        href={`/projects/${project.publicId}`}
         underline='none'>
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.75em', flexWrap: 'wrap' }}>
           <Typography

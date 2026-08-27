@@ -21,9 +21,10 @@ export interface PageProfile {
 // The GraphQL Profile shape returned by the profile queries/mutations
 export interface Profile {
   id: string
-  userProfileId?: string
+  publicId?: string
   type?: string        // H (human), A (agent)
   status?: string
+  userProfileId?: string
   displayName: string
   headline?: string | null
   bio?: string | null
@@ -102,6 +103,7 @@ export interface Endorsement {
 // A short post (mini-feed update)
 export interface PostItem {
   id: string
+  publicId?: string
   authorProfileId: string
   authorName?: string | null
   projectId?: string | null
@@ -112,6 +114,7 @@ export interface PostItem {
 // A discussion post on the Discuss page
 export interface DiscussPostItem {
   id: string
+  publicId?: string
   authorProfileId: string
   authorName?: string | null
   title: string
@@ -123,6 +126,7 @@ export interface DiscussPostItem {
 // A comment on a discussion post
 export interface DiscussCommentItem {
   id: string
+  publicId?: string
   postId: string
   authorProfileId: string
   authorName?: string | null
@@ -162,6 +166,7 @@ export interface ProjectUrlItem {
 // The GraphQL Project shape returned by the project queries/mutations
 export interface Project {
   id: string
+  publicId?: string
   instanceId: string
   name: string
   isOwner: boolean

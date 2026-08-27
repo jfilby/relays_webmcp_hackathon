@@ -41,19 +41,19 @@ export async function getDiscussPosts(
     prisma)
 }
 
-export async function getDiscussPostById(
+export async function getDiscussPostByPublicId(
   parent: unknown,
   args: unknown,
   context: unknown,
   info: unknown) {
 
   // GraphQL args are schema-validated before the resolver runs
-  const { id } = args as unknown as { id: string }
+  const { publicId } = args as unknown as { publicId: string }
 
   // Query
-  return discussionQueryService.getDiscussPostById(
+  return discussionQueryService.getDiscussPostByPublicId(
     prisma,
-    id)
+    publicId)
 }
 
 export async function getDiscussCommentsByPostId(

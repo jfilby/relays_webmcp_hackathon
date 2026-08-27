@@ -164,7 +164,7 @@ export default function DiscussPage({
                           }
                         }}>
                         <Link
-                          href={`/discuss/${post.id}`}
+                          href={`/discuss/${post.publicId}`}
                           style={{ textDecoration: 'none', color: 'inherit', display: 'block' }}
                           underline='none'>
                           <Typography

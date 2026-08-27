@@ -1,6 +1,6 @@
 import { useEffect } from 'react'
 import { useQuery } from '@apollo/client/react'
-import { getProjectByIdQuery } from '@/apollo/projects'
+import { getProjectByPublicIdQuery } from '@/apollo/projects'
 import type { Project } from '@/types/client-only-types'
 
 interface ProjectResults {
@@ -10,7 +10,7 @@ interface ProjectResults {
 }
 
 interface Props {
-  id: string
+  publicId: string
   userProfileId?: string
   setProject: (project: Project | undefined) => void
   setNotFound?: (notFound: boolean) => void
@@ -18,8 +18,8 @@ interface Props {
   setMessage?: (message: string | undefined) => void
 }
 
-export default function LoadProjectById({
-  id,
+export default function LoadProjectByPublicId({
+  publicId,
   userProfileId,
   setProject,
   setNotFound,
@@ -28,9 +28,9 @@ export default function LoadProjectById({
 }: Props) {
 
   // GraphQL
-  const { refetch: fetchGetProjectByIdQuery } =
-    useQuery<{ getProjectById: ProjectResults }>(
-      getProjectByIdQuery, {
+  const { refetch: fetchGetProjectByPublicIdQuery } =
+    useQuery<{ getProjectByPublicId: ProjectResults }>(
+      getProjectByPublicIdQuery, {
         fetchPolicy: 'no-cache',
         skip: true
       })
@@ -40,8 +40,8 @@ export default function LoadProjectById({
 
     // Query
     const { data } = await
-      fetchGetProjectByIdQuery({
-        id: id,
+      fetchGetProjectByPublicIdQuery({
+        publicId: publicId,
         userProfileId: userProfileId
       })
 
@@ -53,7 +53,7 @@ export default function LoadProjectById({
       return
     }
 
-    const results = data.getProjectById
+    const results = data.getProjectByPublicId
 
     if (results.status === true) {
       setProject(results.project ?? undefined)
@@ -83,7 +83,7 @@ export default function LoadProjectById({
     const result = fetchData()
       .catch(console.error)
 
-  }, [id])
+  }, [publicId])
 
   // Render
   return (

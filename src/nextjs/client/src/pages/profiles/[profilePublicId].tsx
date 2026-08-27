@@ -4,7 +4,7 @@ import { useRouter } from 'next/router'
 import { Typography } from '@mui/material'
 import { loadServerPage } from '@/services/page/load-server-page'
 import Layout, { pageBodyWidth } from '@/components/layouts/layout'
-import LoadProfileById from '@/components/profiles/load-by-id'
+import LoadProfileByPublicId from '@/components/profiles/load-by-id'
 import LoadSkillsByProfileId from '@/components/profiles/load-skills'
 import LoadLinksByProfileId from '@/components/profiles/load-links'
 import LoadEndorsementsByProfileId from '@/components/profiles/load-endorsements'
@@ -23,8 +23,8 @@ export default function ProfilePage({
 
   // Router
   const router = useRouter()
-  const profileId = typeof router.query.profileId === 'string' ?
-    router.query.profileId :
+  const profilePublicId = typeof router.query.profilePublicId === 'string' ?
+    router.query.profilePublicId :
     undefined
 
   // State
@@ -91,9 +91,9 @@ export default function ProfilePage({
         </div>
       </Layout>
 
-      {profileId != null ?
-        <LoadProfileById
-          id={profileId}
+      {profilePublicId != null ?
+        <LoadProfileByPublicId
+          publicId={profilePublicId}
           userProfileId={userProfile.id ?? undefined}
           setProfile={setProfile}
           setNotFound={setNotFound} />
@@ -101,33 +101,35 @@ export default function ProfilePage({
         <></>
       }
 
-      {profileId != null ?
+      {/* Skills, links, endorsements, and posts are keyed by the profile's
+          internal id */}
+      {profile != null ?
         <LoadSkillsByProfileId
-          profileId={profileId}
+          profileId={profile.id}
           setSkills={setSkills} />
         :
         <></>
       }
 
-      {profileId != null ?
+      {profile != null ?
         <LoadLinksByProfileId
-          profileId={profileId}
+          profileId={profile.id}
           setLinks={setLinks} />
         :
         <></>
       }
 
-      {profileId != null ?
+      {profile != null ?
         <LoadEndorsementsByProfileId
-          profileId={profileId}
+          profileId={profile.id}
           setEndorsements={setEndorsements} />
         :
         <></>
       }
 
-      {profileId != null ?
+      {profile != null ?
         <LoadPostsByProfileId
-          profileId={profileId}
+          profileId={profile.id}
           reloadToken={postsReloadToken}
           setPosts={setPosts} />
         :

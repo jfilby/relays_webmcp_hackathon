@@ -79,6 +79,7 @@ export const typeDefs = /* GraphQL */ `
 
   type Profile {
     id: String!
+    publicId: String!
     userProfileId: String!
     type: String!
     status: String!
@@ -160,6 +161,7 @@ export const typeDefs = /* GraphQL */ `
 
   type PostItem {
     id: String!
+    publicId: String!
     authorProfileId: String!
     authorName: String
     projectId: String
@@ -178,6 +180,7 @@ export const typeDefs = /* GraphQL */ `
 
   type DiscussPostItem {
     id: String!
+    publicId: String!
     authorProfileId: String!
     authorName: String
     title: String!
@@ -200,6 +203,7 @@ export const typeDefs = /* GraphQL */ `
 
   type DiscussCommentItem {
     id: String!
+    publicId: String!
     postId: String!
     authorProfileId: String!
     authorName: String
@@ -258,6 +262,7 @@ export const typeDefs = /* GraphQL */ `
 
   type Project {
     id: String!
+    publicId: String!
     instanceId: String!
     name: String!
     isOwner: Boolean!
@@ -410,8 +415,8 @@ export const typeDefs = /* GraphQL */ `
       includeStats: Boolean): Instance
 
     # Profiles
-    getProfileById(
-      id: String!,
+    getProfileByPublicId(
+      publicId: String!,
       userProfileId: String): ProfileResults!
 
     getProfileByUserProfileId(
@@ -452,8 +457,8 @@ export const typeDefs = /* GraphQL */ `
     # Discussion
     getDiscussPosts: DiscussPostsResults!
 
-    getDiscussPostById(
-      id: String!): DiscussPostResults!
+    getDiscussPostByPublicId(
+      publicId: String!): DiscussPostResults!
 
     getDiscussCommentsByPostId(
       postId: String!): DiscussCommentsResults!
@@ -470,8 +475,8 @@ export const typeDefs = /* GraphQL */ `
       planId: String!): PlanStepsResults!
 
     # Projects
-    getProjectById(
-      id: String!,
+    getProjectByPublicId(
+      publicId: String!,
       userProfileId: String): ProjectResults!
 
     searchProjects(

@@ -5,8 +5,8 @@ import { ProfilesQueryService } from '@/services/profiles/query-service'
 const projectsQueryService = new ProjectsQueryService()
 const profilesQueryService = new ProfilesQueryService()
 // GraphQL args are schema-validated before the resolver runs
-interface GetProjectByIdArgs {
-  id: string
+interface GetProjectByPublicIdArgs {
+  publicId: string
   userProfileId: string
 }
 
@@ -20,26 +20,26 @@ interface GetProjectsByUserProfileIdArgs {
 }
 
 // Code
-export async function getProjectById(
+export async function getProjectByPublicId(
   parent: unknown,
   args: unknown,
   context: unknown,
   info: unknown) {
 
   // Debug
-  const fnName = `getProjectById()`
+  const fnName = `getProjectByPublicId()`
 
   // GraphQL args are schema-validated before the resolver runs
   const {
-    id,
+    publicId,
     userProfileId
-  } = args as unknown as GetProjectByIdArgs
+  } = args as unknown as GetProjectByPublicIdArgs
 
   // Query
   const results = await
-    projectsQueryService.getProjectById(
+    projectsQueryService.getProjectByPublicId(
       prisma,
-      id,
+      publicId,
       userProfileId)
 
   // Return

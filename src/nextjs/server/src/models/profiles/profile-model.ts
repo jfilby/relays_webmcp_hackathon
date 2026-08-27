@@ -1,4 +1,5 @@
 import { PrismaClient } from '@/generated/prisma/client'
+import { PublicIdService } from '@/services/utils/public-id-service'
 
 export class ProfileModel {
 
@@ -29,6 +30,7 @@ export class ProfileModel {
     try {
       return await prisma.profile.create({
         data: {
+          publicId: PublicIdService.generate(displayName),
           userProfileId: userProfileId,
           type: type,
           status: status,
@@ -62,6 +64,26 @@ export class ProfileModel {
       return await prisma.profile.findUnique({
         where: {
           id: id
+        }
+      })
+    } catch (error) {
+      console.error(`${fnName}: error: ${error}`)
+      throw 'Prisma error'
+    }
+  }
+
+  async getByPublicId(
+    prisma: PrismaClient,
+    publicId: string) {
+
+    // Debug
+    const fnName = `${this.clName}.getByPublicId()`
+
+    // Query
+    try {
+      return await prisma.profile.findUnique({
+        where: {
+          publicId: publicId
         }
       })
     } catch (error) {

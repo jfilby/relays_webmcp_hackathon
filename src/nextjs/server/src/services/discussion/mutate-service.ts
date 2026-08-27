@@ -69,6 +69,7 @@ export class DiscussionMutateService {
       message: `Posted`,
       post: {
         id: post.id,
+        publicId: post.publicId,
         authorProfileId: post.authorProfileId,
         authorName: profile.displayName,
         title: post.title,

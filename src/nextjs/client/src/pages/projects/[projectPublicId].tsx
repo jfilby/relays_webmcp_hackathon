@@ -4,7 +4,7 @@ import { useRouter } from 'next/router'
 import { Typography } from '@mui/material'
 import { loadServerPage } from '@/services/page/load-server-page'
 import Layout, { pageBodyWidth } from '@/components/layouts/layout'
-import LoadProjectById from '@/components/projects/load-by-id'
+import LoadProjectByPublicId from '@/components/projects/load-by-id'
 import LoadPostsByProjectId from '@/components/projects/load-posts-by-project-id'
 import ProjectView from '@/components/projects/project-view'
 import type { PostItem, Project, UserProfile } from '@/types/client-only-types'
@@ -20,8 +20,8 @@ export default function ProjectPage({
 
   // Router
   const router = useRouter()
-  const projectId = typeof router.query.projectId === 'string' ?
-    router.query.projectId :
+  const projectPublicId = typeof router.query.projectPublicId === 'string' ?
+    router.query.projectPublicId :
     undefined
 
   // State
@@ -80,18 +80,23 @@ export default function ProjectPage({
         </div>
       </Layout>
 
-      {projectId != null ?
+      {projectPublicId != null ?
         <>
-          <LoadProjectById
-            id={projectId}
+          <LoadProjectByPublicId
+            publicId={projectPublicId}
             userProfileId={viewerProfileId != '' ? viewerProfileId : undefined}
             setProject={setProject}
             setNotFound={setNotFound} />
 
-          <LoadPostsByProjectId
-            projectId={projectId}
-            setPosts={setPosts}
-            refreshToken={postsRefreshToken} />
+          {/* Posts are keyed by the project's internal id */}
+          {project != null ?
+            <LoadPostsByProjectId
+              projectId={project.id}
+              setPosts={setPosts}
+              refreshToken={postsRefreshToken} />
+            :
+            <></>
+          }
         </>
         :
         <></>

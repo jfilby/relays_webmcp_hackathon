@@ -63,7 +63,7 @@ export default function SaveDiscussPost({
 
       // Go to the new post's page
       if (savedData.post != null) {
-        window.location.href = `/discuss/${savedData.post.id}`
+        window.location.href = `/discuss/${savedData.post.publicId}`
         return
       }
     } else {

@@ -8,6 +8,7 @@ export const getDiscussPostsQuery = gql`
       message
       posts {
         id
+        publicId
         authorProfileId
         authorName
         title
@@ -19,16 +20,17 @@ export const getDiscussPostsQuery = gql`
   }
 `
 
-export const getDiscussPostByIdQuery = gql`
-  query getDiscussPostById(
-          $id: String!) {
-    getDiscussPostById(
-      id: $id) {
+export const getDiscussPostByPublicIdQuery = gql`
+  query getDiscussPostByPublicId(
+          $publicId: String!) {
+    getDiscussPostByPublicId(
+      publicId: $publicId) {
 
       status
       message
       post {
         id
+        publicId
         authorProfileId
         authorName
         title
@@ -50,6 +52,7 @@ export const getDiscussCommentsByPostIdQuery = gql`
       message
       comments {
         id
+        publicId
         postId
         authorProfileId
         authorName
@@ -70,11 +73,12 @@ export const createDiscussPostMutation = gql`
       userProfileId: $userProfileId,
       title: $title,
       body: $body) {
-
       status
       message
+
       post {
         id
+        publicId
       }
     }
   }

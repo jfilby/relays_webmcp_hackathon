@@ -1,6 +1,6 @@
 import { useEffect } from 'react'
 import { useQuery } from '@apollo/client/react'
-import { getProfileByIdQuery } from '@/apollo/profiles'
+import { getProfileByPublicIdQuery } from '@/apollo/profiles'
 import type { Profile } from '@/types/client-only-types'
 
 interface ProfileResults {
@@ -10,7 +10,7 @@ interface ProfileResults {
 }
 
 interface Props {
-  id: string
+  publicId: string
   userProfileId?: string
   setProfile: (profile: Profile | undefined) => void
   setNotFound?: (notFound: boolean) => void
@@ -18,8 +18,8 @@ interface Props {
   setMessage?: (message: string | undefined) => void
 }
 
-export default function LoadProfileById({
-  id,
+export default function LoadProfileByPublicId({
+  publicId,
   userProfileId,
   setProfile,
   setNotFound,
@@ -28,9 +28,9 @@ export default function LoadProfileById({
 }: Props) {
 
   // GraphQL
-  const { refetch: fetchGetProfileByIdQuery } =
-    useQuery<{ getProfileById: ProfileResults }>(
-      getProfileByIdQuery, {
+  const { refetch: fetchGetProfileByPublicIdQuery } =
+    useQuery<{ getProfileByPublicId: ProfileResults }>(
+      getProfileByPublicIdQuery, {
         fetchPolicy: 'no-cache',
         skip: true
       })
@@ -40,8 +40,8 @@ export default function LoadProfileById({
 
     // Query
     const { data } = await
-      fetchGetProfileByIdQuery({
-        id: id,
+      fetchGetProfileByPublicIdQuery({
+        publicId: publicId,
         userProfileId: userProfileId
       })
 
@@ -53,7 +53,7 @@ export default function LoadProfileById({
       return
     }
 
-    const results = data.getProfileById
+    const results = data.getProfileByPublicId
 
     if (results.status === true) {
       setProfile(results.profile ?? undefined)
@@ -83,7 +83,7 @@ export default function LoadProfileById({
     const result = fetchData()
       .catch(console.error)
 
-  }, [id])
+  }, [publicId])
 
   // Render
   return (

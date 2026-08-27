@@ -9,6 +9,7 @@ export class ProjectModel {
   async create(
     prisma: PrismaClient,
     instanceId: string,
+    publicId: string,
     isPromoted: boolean,
     status: string,
     organizationId: string | undefined = undefined,
@@ -26,6 +27,7 @@ export class ProjectModel {
     try {
       return await prisma.project.create({
         data: {
+          publicId: publicId,
           instanceId: instanceId,
           organizationId: organizationId,
           tagline: tagline,
@@ -56,6 +58,26 @@ export class ProjectModel {
       return await prisma.project.findUnique({
         where: {
           id: id
+        }
+      })
+    } catch (error) {
+      console.error(`${fnName}: error: ${error}`)
+      throw 'Prisma error'
+    }
+  }
+
+  async getByPublicId(
+    prisma: PrismaClient,
+    publicId: string) {
+
+    // Debug
+    const fnName = `${this.clName}.getByPublicId()`
+
+    // Query
+    try {
+      return await prisma.project.findUnique({
+        where: {
+          publicId: publicId
         }
       })
     } catch (error) {

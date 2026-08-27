@@ -1,6 +1,7 @@
 import { PrismaClient } from '@/generated/prisma/client'
 import { BaseDataTypes } from '@/types/base-data-types'
 import { ProjectModel } from '@/models/projects/project-model'
+import { PublicIdService } from '@/services/utils/public-id-service'
 import { ProjectMemberModel } from '@/models/projects/project-member-model'
 import { ProjectUrlModel } from '@/models/projects/project-url-model'
 import { ProjectsQueryService } from './query-service'
@@ -120,6 +121,7 @@ export class ProjectsMutateService {
       projectModel.create(
         prisma,
         instance.id,
+        PublicIdService.generate(name),
         isPromoted === true,
         BaseDataTypes.activeStatus,
         undefined,  // organizationId

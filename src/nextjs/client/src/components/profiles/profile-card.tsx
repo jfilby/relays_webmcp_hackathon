@@ -32,7 +32,7 @@ export default function ProfileCard({
         }
       }}>
       <Link
-        href={`/profiles/${profile.id}`}
+        href={`/profiles/${profile.publicId}`}
         underline='none'>
         <div style={{ display: 'flex', alignItems: 'center', gap: '1em' }}>
           <Avatar

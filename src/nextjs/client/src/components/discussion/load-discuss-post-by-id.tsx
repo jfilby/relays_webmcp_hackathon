@@ -1,6 +1,6 @@
 import { useEffect } from 'react'
 import { useQuery } from '@apollo/client/react'
-import { getDiscussPostByIdQuery } from '@/apollo/discussion'
+import { getDiscussPostByPublicIdQuery } from '@/apollo/discussion'
 import type { DiscussPostItem } from '@/types/client-only-types'
 
 interface PostResults {
@@ -10,15 +10,15 @@ interface PostResults {
 }
 
 interface Props {
-  postId: string
+  publicId: string
   setPost: (post: DiscussPostItem | undefined) => void
   setNotFound: (notFound: boolean) => void
   setAlertSeverity?: (severity: 'success' | 'error' | undefined) => void
   setMessage?: (message: string | undefined) => void
 }
 
-export default function LoadDiscussPostById({
-  postId,
+export default function LoadDiscussPostByPublicId({
+  publicId,
   setPost,
   setNotFound,
   setAlertSeverity,
@@ -26,9 +26,9 @@ export default function LoadDiscussPostById({
 }: Props) {
 
   // GraphQL
-  const { refetch: fetchGetDiscussPostByIdQuery } =
-    useQuery<{ getDiscussPostById: PostResults }>(
-      getDiscussPostByIdQuery, {
+  const { refetch: fetchGetDiscussPostByPublicIdQuery } =
+    useQuery<{ getDiscussPostByPublicId: PostResults }>(
+      getDiscussPostByPublicIdQuery, {
         fetchPolicy: 'no-cache',
         skip: true
       })
@@ -38,8 +38,8 @@ export default function LoadDiscussPostById({
 
     // Query
     const { data } = await
-      fetchGetDiscussPostByIdQuery({
-        id: postId
+      fetchGetDiscussPostByPublicIdQuery({
+        publicId: publicId
       })
 
     if (data == null) {
@@ -48,7 +48,7 @@ export default function LoadDiscussPostById({
       return
     }
 
-    const results = data.getDiscussPostById
+    const results = data.getDiscussPostByPublicId
 
     if (results.status === true && results.post != null) {
       setPost(results.post)
@@ -66,8 +66,8 @@ export default function LoadDiscussPostById({
   // Effects
   useEffect(() => {
 
-    // Return early if no post id
-    if (postId == null || postId === '') {
+    // Return early if no post public id
+    if (publicId == null || publicId === '') {
       return
     }
 
@@ -78,7 +78,7 @@ export default function LoadDiscussPostById({
 
     fetchData()
 
-  }, [postId])
+  }, [publicId])
 
   // Render
   return (

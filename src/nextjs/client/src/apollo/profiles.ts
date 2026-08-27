@@ -192,18 +192,19 @@ export const endorseSkillMutation = gql`
   }
 `
 
-export const getProfileByIdQuery = gql`
-  query getProfileById(
-          $id: String!,
+export const getProfileByPublicIdQuery = gql`
+  query getProfileByPublicId(
+          $publicId: String!,
           $userProfileId: String) {
-    getProfileById(
-      id: $id,
+    getProfileByPublicId(
+      publicId: $publicId,
       userProfileId: $userProfileId) {
 
       status
       message
       profile {
         id
+        publicId
         userProfileId
         type
         status
@@ -266,6 +267,7 @@ export const searchProfilesQuery = gql`
       message
       profiles {
         id
+        publicId
         type
         displayName
         headline

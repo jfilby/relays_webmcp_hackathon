@@ -80,6 +80,7 @@ export class DiscussionQueryService {
       status: true,
       posts: posts.map(post => ({
         id: post.id,
+        publicId: post.publicId,
         authorProfileId: post.authorProfileId,
         authorName: authorNames.get(post.authorProfileId) ?? null,
         title: post.title,
@@ -90,19 +91,20 @@ export class DiscussionQueryService {
     }
   }
 
-  // Get one discussion post by id, with its author's display name.
-  async getDiscussPostById(
+  // Get one discussion post by public id, with its author's display name.
+  async getDiscussPostByPublicId(
     prisma: PrismaClient,
-    id: string) {
+    publicId: string) {
 
     // Debug
-    const fnName = `${this.clName}.getDiscussPostById()`
+    const fnName = `${this.clName}.getDiscussPostByPublicId()`
 
     // Query
     const post = await
-      discussPostModel.getById(
+      discussPostModel.getByPublicId(
         prisma,
-        id)
+        publicId)
+
 
     if (post == null || post.status !== BaseDataTypes.activeStatus) {
       return {
@@ -133,6 +135,7 @@ export class DiscussionQueryService {
       status: true,
       post: {
         id: post.id,
+        publicId: post.publicId,
         authorProfileId: post.authorProfileId,
         authorName: author?.displayName ?? null,
         title: post.title,
@@ -193,6 +196,7 @@ export class DiscussionQueryService {
       status: true,
       comments: comments.map(comment => ({
         id: comment.id,
+        publicId: comment.publicId,
         postId: comment.postId,
         authorProfileId: comment.authorProfileId,
         authorName: authorNames.get(comment.authorProfileId) ?? null,
