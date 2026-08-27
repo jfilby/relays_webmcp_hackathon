@@ -3,9 +3,10 @@ import { useState } from 'react'
 import { Alert, Button, Typography } from '@mui/material'
 import { loadServerPage } from '@/services/page/load-server-page'
 import Layout, { pageBodyWidth } from '@/components/layouts/layout'
-import LoadProfileByUserProfileId from '@/components/profiles/load-by-user-profile-id'
 import ProfileView from '@/components/profiles/profile-view'
-import type { Profile, UserProfile } from '@/types/client-only-types'
+import LoadProfileByUserProfileId from '@/components/profiles/load-by-user-profile-id'
+import LoadDiscussPosts from '@/components/discussion/load-discuss-posts'
+import type { DiscussPostItem, Profile, UserProfile } from '@/types/client-only-types'
 import type { GetServerSidePropsContext } from 'next'
 
 interface Props {
@@ -19,6 +20,16 @@ export default function MyProfilePage({
   // State
   const [profile, setProfile] = useState<Profile | undefined>(undefined)
   const [notFound, setNotFound] = useState<boolean>(false)
+
+  // Posts of the profile
+  const [posts, setPosts] = useState<DiscussPostItem[] | undefined>(undefined)
+  const [postsReloadToken, setPostsReloadToken] = useState<number>(0)
+
+  // Functions
+  function onPostsChanged() {
+
+    setPostsReloadToken(token => token + 1)
+  }
 
   // Render
   return (
@@ -34,7 +45,9 @@ export default function MyProfilePage({
           {profile != null ?
             <ProfileView
               profile={profile}
-              owner={true} />
+              owner={true}
+              posts={posts}
+              onPostsChanged={onPostsChanged} />
             :
             <></>
           }
@@ -72,11 +85,20 @@ export default function MyProfilePage({
           }
         </div>
       </Layout>
-
       <LoadProfileByUserProfileId
         userProfileId={userProfile.id}
         setProfile={setProfile}
         setNotFound={setNotFound} />
+
+      {/* Posts are keyed by the profile's internal id */}
+      {profile != null ?
+        <LoadDiscussPosts
+          profileId={profile.id}
+          refreshToken={postsReloadToken}
+          setPosts={setPosts} />
+        :
+        <></>
+      }
     </>
   )
 }

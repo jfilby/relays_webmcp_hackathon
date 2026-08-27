@@ -47,10 +47,8 @@ export default function LoadDiscussPosts({
     // Query
     const { data } = await
       fetchGetDiscussPostsQuery({
-        variables: {
-          profileId: profileId,
-          projectId: projectId
-        }
+        profileId: profileId,
+        projectId: projectId
       })
 
     if (data == null) {
