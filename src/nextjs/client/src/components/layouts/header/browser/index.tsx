@@ -51,10 +51,6 @@ export function HeaderBrowser({
             highLevelLink={highLevelLink} />
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.4em', textAlign: 'right' }}>
-          <HeaderBrowserLink
-            name='About'
-            linkName='about'
-            highLevelLink={highLevelLink} />
           {session &&
             <>
               <HeaderBrowserLink
@@ -67,6 +63,10 @@ export function HeaderBrowser({
                 highLevelLink={highLevelLink} />
             </>
           }
+          <HeaderBrowserLink
+            name='About'
+            linkName='about'
+            highLevelLink={highLevelLink} />
           {session ?
             <Link
               href='#'
