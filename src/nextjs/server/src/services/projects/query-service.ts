@@ -180,6 +180,7 @@ export class ProjectsQueryService {
 
     // Return
     return {
+      status: true,
       projects: memberships.map(membership =>
         this.toGraphQL(
           membership.project,
