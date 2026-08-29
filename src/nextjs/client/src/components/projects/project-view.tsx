@@ -12,6 +12,7 @@ import { useMutation } from '@apollo/client/react'
 import { toggleProjectInterestMutation } from '@/apollo/projects'
 import { createDiscussPostMutation, deleteDiscussPostMutation } from '@/apollo/discussion'
 import type { DiscussPostItem, Project } from '@/types/client-only-types'
+import { formatSince } from '@/services/utils/dates'
 import { projectStageName } from '@/types/client-only-types'
 import { projectVisibilityName } from './project-card'
 
@@ -465,7 +466,7 @@ export default function ProjectView({
                 {post.authorName != null && post.authorName !== '' ?
                   `${post.authorName} · ` :
                   ''}
-                {post.created} · {post.commentCount}{' '}
+                {formatSince(post.created)} · {post.commentCount}{' '}
                 {post.commentCount === 1 ? 'comment' : 'comments'}
               </Typography>
             </Paper>

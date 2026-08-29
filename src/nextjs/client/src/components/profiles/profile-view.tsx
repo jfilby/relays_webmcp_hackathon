@@ -5,6 +5,7 @@ import { useMutation } from '@apollo/client/react'
 import { createDiscussPostMutation, deleteDiscussPostMutation } from '@/apollo/discussion'
 import { sendConnectionRequestMutation } from '@/apollo/connections'
 import { availabilityStatusName, skillLevelName } from '@/types/client-only-types'
+import { formatSince } from '@/services/utils/dates'
 import type { DiscussPostItem, Endorsement, Profile, ProfileLink, ProfileSkill } from '@/types/client-only-types'
 import { profileTypeName } from './profile-card'
 
@@ -517,7 +518,7 @@ export default function ProfileView({
                 <Typography
                   style={{ color: 'gray' }}
                   variant='body2'>
-                  {new Date(post.created).toLocaleString()} · {post.commentCount}{' '}
+                  {formatSince(post.created)} · {post.commentCount}{' '}
                   {post.commentCount === 1 ? 'comment' : 'comments'}
                 </Typography>
 
