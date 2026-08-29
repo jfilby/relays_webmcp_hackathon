@@ -7,29 +7,11 @@ import LoadDiscussPosts from '@/components/discussion/load-discuss-posts'
 import SaveDiscussPost from '@/components/discussion/save-discuss-post'
 import EmptyState from '@/components/layouts/empty-state'
 import type { DiscussPostItem, UserProfile } from '@/types/client-only-types'
+import { formatSince } from '@/services/utils/dates'
 import type { GetServerSidePropsContext } from 'next'
 
 interface Props {
   userProfile: UserProfile
-}
-
-function formatDate(value: string | undefined | null): string {
-
-  if (value == null || value === '') {
-    return ''
-  }
-
-  const date = new Date(value)
-
-  if (isNaN(date.getTime())) {
-    return ''
-  }
-
-  return date.toLocaleDateString(undefined, {
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric'
-  })
 }
 
 export default function DiscussPage({
@@ -197,7 +179,7 @@ export default function DiscussPage({
                             {post.authorName != null && post.authorName !== '' ?
                               `${post.authorName} · ` :
                               ''}
-                            {formatDate(post.created)} · {post.commentCount}{' '}
+                            {formatSince(post.created)} · {post.commentCount}{' '}
                             {post.commentCount === 1 ? 'comment' : 'comments'}
                           </Typography>
                         </Link>

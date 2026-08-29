@@ -11,6 +11,7 @@ import type {
   UserProfile
 } from '@/types/client-only-types'
 import { maxCommentsLevel } from '@/types/discussion-types'
+import { formatSince } from '@/services/utils/dates'
 import Layout, { pageBodyWidth } from '@/components/layouts/layout'
 import LoadDiscussPostByPublicId from '@/components/discussion/load-discuss-post-by-id'
 import LoadDiscussCommentsByPostId from '@/components/discussion/load-discuss-comments-by-post-id'
@@ -22,25 +23,6 @@ import type { GetServerSidePropsContext } from 'next'
 
 interface Props {
   userProfile: UserProfile
-}
-
-function formatDate(value: string | undefined | null): string {
-
-  if (value == null || value === '') {
-    return ''
-  }
-
-  const date = new Date(value)
-
-  if (isNaN(date.getTime())) {
-    return ''
-  }
-
-  return date.toLocaleDateString(undefined, {
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric'
-  })
 }
 
 // A comment plus its nested replies
@@ -173,7 +155,7 @@ export default function DiscussPostPage({
                 comment.authorName :
                 'Unknown'}
               {' · '}
-              {formatDate(comment.created)}
+              {formatSince(comment.created)}
             </Typography>
 
             <Typography
@@ -288,7 +270,7 @@ export default function DiscussPostPage({
                   {post.authorName != null && post.authorName !== '' ?
                     `${post.authorName} · ` :
                     ''}
-                  {formatDate(post.created)} · {post.commentCount}{' '}
+                  {formatSince(post.created)} · {post.commentCount}{' '}
                   {post.commentCount === 1 ? 'comment' : 'comments'}
                 </Typography>
               </div>
