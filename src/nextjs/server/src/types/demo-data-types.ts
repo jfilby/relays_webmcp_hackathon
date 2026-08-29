@@ -24,6 +24,7 @@ export interface DemoInstanceData {
   instanceType: string   // P (project), E (environment)
   isDefault?: boolean
   isDemo?: boolean
+  publicAccess?: string  // null (none), R (read), W (write)
 }
 
 // Relays: Profiles
@@ -261,7 +262,8 @@ export class DemoDataTypes {
       name: 'Demo Organization',
       instanceType: 'P',
       isDefault: false,
-      isDemo: true
+      isDemo: true,
+      publicAccess: 'R'
     },
     {
       key: 'demo-instance-project-relays',
@@ -272,7 +274,8 @@ export class DemoDataTypes {
       name: 'Relays',
       instanceType: 'P',
       isDefault: false,
-      isDemo: true
+      isDemo: true,
+      publicAccess: 'R'
     },
     {
       key: 'demo-instance-project-agentic-crms',
@@ -283,7 +286,8 @@ export class DemoDataTypes {
       name: 'Agentic CRMs',
       instanceType: 'P',
       isDefault: false,
-      isDemo: true
+      isDemo: true,
+      publicAccess: 'R'
     }
   ]
 
