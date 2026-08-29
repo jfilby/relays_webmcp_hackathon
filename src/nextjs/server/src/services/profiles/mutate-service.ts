@@ -10,6 +10,7 @@ import { EndorsementModel } from '@/models/profiles/endorsement-model'
 import { EmailListsMutateService } from '@/services/email-lists/mutate-service'
 import { PublicIdService } from '@/services/utils/public-id-service'
 import { ProfilesQueryService } from './query-service'
+import { EmbeddingService } from '@/services/search/embedding-service'
 
 // Models
 const userProfileModel = new UserProfileModel()
@@ -22,6 +23,7 @@ const endorsementModel = new EndorsementModel()
 // Services
 const emailListsMutateService = new EmailListsMutateService()
 const profilesQueryService = new ProfilesQueryService()
+const embeddingService = new EmbeddingService()
 
 // Class
 export class ProfilesMutateService {
@@ -137,6 +139,10 @@ export class ProfilesMutateService {
         prisma,
         userProfileId)
     }
+
+    // Sync the search embedding (best effort: on failure the embedding is
+    // cleared and search degrades to the other techniques)
+    await embeddingService.syncProfileEmbedding(prisma, profile)
 
     // Return
     return {
@@ -255,6 +261,10 @@ export class ProfilesMutateService {
         availabilityStatus,
         undefined,  // isVerified
         undefined)  // verifiedAt
+
+    // Sync the search embedding (best effort: on failure the embedding is
+    // cleared and search degrades to the other techniques)
+    await embeddingService.syncProfileEmbedding(prisma, profile)
 
     // Return
     return {

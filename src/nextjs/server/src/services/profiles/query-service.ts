@@ -1,4 +1,4 @@
-import { PrismaClient } from '@/generated/prisma/client'
+import { Prisma, PrismaClient } from '@/generated/prisma/client'
 import type { Profile } from '@/generated/prisma/client'
 import { ProfileModel } from '@/models/profiles/profile-model'
 import { SkillModel } from '@/models/profiles/skill-model'
@@ -6,6 +6,7 @@ import { ProfileSkillModel } from '@/models/profiles/profile-skill-model'
 import { ProfileLinkModel } from '@/models/profiles/profile-link-model'
 import { EndorsementModel } from '@/models/profiles/endorsement-model'
 import { ConnectionModel } from '@/models/profiles/connection-model'
+import { SearchService } from '@/services/search/search-service'
 
 // Models
 const profileModel = new ProfileModel()
@@ -14,10 +15,10 @@ const profileSkillModel = new ProfileSkillModel()
 const profileLinkModel = new ProfileLinkModel()
 const endorsementModel = new EndorsementModel()
 const connectionModel = new ConnectionModel()
+const searchService = new SearchService()
 
 // Class
 export class ProfilesQueryService {
-
   // Consts
   clName = 'ProfilesQueryService'
 
@@ -97,9 +98,13 @@ export class ProfilesQueryService {
     }
   }
 
-  // Search public profiles. An empty search returns all public profiles;
-  // a search term matches display name, headline or location; a type filters
-  // to humans (H) or agents (A).
+  // Search public profiles. An empty search browses all public profiles
+  // without ranking; otherwise the results come from hybrid search
+  // (pgvector semantic + full-text + trigram, combined with technique
+  // weights). A type filter limits to humans (H) or agents (A).
+  //
+  // The tsvector/trigram expressions below must stay in sync with the
+  // matching indexes in prisma/search-setup.sql.
   async searchProfiles(
     prisma: PrismaClient,
     search: string | undefined,
@@ -116,19 +121,63 @@ export class ProfilesQueryService {
       }
     }
 
-    // Query
-    const profiles = await
-      profileModel.filter(
+    // Browse all when there is nothing to rank
+    if (search == null || search.trim() === '') {
+      const profiles = await
+        profileModel.filter(
+          prisma,
+          true,  // isPublic
+          'A',   // status
+          type)
+
+      // Return
+      return {
+        status: true,
+        profiles: profiles.map(profile => this.toGraphQL(profile))
+      }
+    }
+
+    // Hybrid search
+    const hits = await
+      searchService.hybridSearch(
         prisma,
-        true,  // isPublic
-        'A',   // status
-        type,
-        search)
+        search,
+        {
+          fromSql: `public."profile" p`,
+          idColumn: `p.id`,
+          tsvectorExpressions: [
+            SearchService.toTsvectorSql([
+              `p.display_name`,
+              `p.headline`,
+              `p.bio`,
+              `p.location`
+            ])
+          ],
+          trigramFieldsSql: [
+            `p.display_name`,
+            `p.headline`,
+            `p.location`
+          ],
+          embeddingColumn: `p.embedding`,
+          filterSql: type != null ?
+            Prisma.sql`p.status = 'A' AND p.is_public = true AND p.type = ${type}` :
+            Prisma.sql`p.status = 'A' AND p.is_public = true`
+        })
+
+    // Load the records and restore the ranking order
+    const profilesById = new Map(
+      (await profileModel.getByIds(
+        prisma,
+        hits.map(hit => hit.id)))
+        .map(profile => [profile.id, profile]))
 
     // Return
     return {
       status: true,
-      profiles: profiles.map(profile => this.toGraphQL(profile))
+      profiles: hits
+        .map(hit => profilesById.get(hit.id))
+        .filter(profile => profile != null)
+        .map(profile => this.toGraphQL(profile!))
     }
   }
 

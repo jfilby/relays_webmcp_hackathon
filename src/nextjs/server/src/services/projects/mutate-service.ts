@@ -14,6 +14,7 @@ import { ProjectInterestModel } from '@/models/projects/project-interest-model'
 
 // Services
 import { ProjectsQueryService } from './query-service'
+import { EmbeddingService } from '@/services/search/embedding-service'
 
 // Models
 const userProfileModel = new UserProfileModel()
@@ -26,6 +27,7 @@ const projectInterestModel = new ProjectInterestModel()
 
 // Services
 const projectsQueryService = new ProjectsQueryService()
+const embeddingService = new EmbeddingService()
 
 // Class
 export class ProjectsMutateService {
@@ -157,6 +159,10 @@ export class ProjectsMutateService {
       profile.id,
       this.ownerRole,
       BaseDataTypes.activeStatus)
+
+    // Sync the search embedding (best effort: on failure the embedding is
+    // cleared and search degrades to the other techniques)
+    await embeddingService.syncProjectEmbedding(prisma, project, name)
 
     // Return
     return {
@@ -328,6 +334,13 @@ export class ProjectsMutateService {
           undefined,
         undefined,  // key
         name ?? undefined)
+
+    // Sync the search embedding (best effort: on failure the embedding is
+    // cleared and search degrades to the other techniques)
+    await embeddingService.syncProjectEmbedding(
+      prisma,
+      project,
+      name ?? existingInstance.name)
 
     // Return
     return {

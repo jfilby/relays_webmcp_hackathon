@@ -1,4 +1,4 @@
-import { PrismaClient } from '@/generated/prisma/client'
+import { Prisma, PrismaClient } from '@/generated/prisma/client'
 
 export class ProjectModel {
 
@@ -106,7 +106,8 @@ export class ProjectModel {
     try {
       return await prisma.project.findMany({
         include: {
-          instance: withIncludes
+          instance: withIncludes,
+          ofProjectUrls: withIncludes
         },
         where: {
           id: {
@@ -140,12 +141,12 @@ export class ProjectModel {
     }
   }
 
+  // Filter projects.
   async filter(
     prisma: PrismaClient,
     status: string | undefined = undefined,
     isPromoted: boolean | undefined = undefined,
     organizationId: string | undefined = undefined,
-    search: string | undefined = undefined,
     isPublic: boolean | undefined = undefined) {
 
     // Debug
@@ -172,37 +173,31 @@ export class ProjectModel {
               publicAccess: { not: null }
             } :
             undefined,
-          OR: search != null && search.trim() !== '' ?
-            [
-              {
-                tagline: {
-                  contains: search.trim(),
-                  mode: 'insensitive'
-                }
-              },
-              {
-                description: {
-                  contains: search.trim(),
-                  mode: 'insensitive'
-                }
-              },
-              {
-                instance: {
-                  name: {
-                    contains: search.trim(),
-                    mode: 'insensitive'
-                  }
-                }
-              },
-              {
-                techStack: {
-                  has: search.trim()
-                }
-              }
-            ] :
-            undefined
         }
       })
+    } catch (error) {
+      console.error(`${fnName}: error: ${error}`)
+      throw 'Prisma error'
+    }
+  }
+
+  // Store the search embedding (pgvector). An undefined embedding clears the
+  // column. The vector column is managed outside the Prisma schema, so this
+  // is raw SQL.
+  async updateEmbedding(
+    prisma: PrismaClient,
+    id: string,
+    embedding: number[] | undefined) {
+
+    // Debug
+    const fnName = `${this.clName}.updateEmbedding()`
+
+    // Query
+    try {
+      await prisma.$executeRaw(
+        Prisma.sql`UPDATE public."project"
+          SET embedding = ${embedding != null ? `[${embedding.join(',')}]` : null}::vector
+          WHERE id = ${id}`)
     } catch (error) {
       console.error(`${fnName}: error: ${error}`)
       throw 'Prisma error'

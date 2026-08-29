@@ -1,5 +1,5 @@
 import { PrismaClient } from '@/generated/prisma/client'
-import type { Prisma } from '@/generated/prisma/client'
+import { Prisma } from '@/generated/prisma/client'
 import { PublicIdService } from '@/services/utils/public-id-service'
 
 export class ProfileModel {
@@ -185,14 +185,12 @@ export class ProfileModel {
     }
   }
 
-  // Filter profiles. An undefined search matches everything; a search term
-  // matches display name, headline or location, case-insensitively.
+  // Filter profiles.
   async filter(
     prisma: PrismaClient,
     isPublic: boolean | undefined = undefined,
     status: string | undefined = undefined,
-    type: string | undefined = undefined,
-    search: string | undefined = undefined) {
+    type: string | undefined = undefined) {
 
     // Debug
     const fnName = `${this.clName}.filter()`
@@ -212,14 +210,6 @@ export class ProfileModel {
       where.type = type
     }
 
-    if (search != null && search.trim() !== '') {
-      where.OR = [
-        { displayName: { contains: search.trim(), mode: 'insensitive' } },
-        { headline: { contains: search.trim(), mode: 'insensitive' } },
-        { location: { contains: search.trim(), mode: 'insensitive' } }
-      ]
-    }
-
     // Query
     try {
       return await prisma.profile.findMany({
@@ -228,6 +218,29 @@ export class ProfileModel {
           displayName: 'asc'
         }
       })
+    } catch (error) {
+      console.error(`${fnName}: error: ${error}`)
+      throw 'Prisma error'
+  }
+  }
+
+  // Store the search embedding (pgvector). An undefined embedding clears the
+  // column. The vector column is managed outside the Prisma schema, so this
+  // is raw SQL.
+  async updateEmbedding(
+    prisma: PrismaClient,
+    id: string,
+    embedding: number[] | undefined) {
+
+    // Debug
+    const fnName = `${this.clName}.updateEmbedding()`
+
+    // Query
+    try {
+      await prisma.$executeRaw(
+        Prisma.sql`UPDATE public."profile"
+          SET embedding = ${embedding != null ? `[${embedding.join(',')}]` : null}::vector
+          WHERE id = ${id}`)
     } catch (error) {
       console.error(`${fnName}: error: ${error}`)
       throw 'Prisma error'
