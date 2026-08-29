@@ -159,7 +159,8 @@ export class ProjectsQueryService {
           project.instance,
           false,
           project.ofProjectUrls,
-          countsByProjectId[project.id]))
+          countsByProjectId[project.id],
+          undefined))
     }
   }
 
@@ -213,14 +214,14 @@ export class ProjectsQueryService {
 
     // Return
     return {
-      status: true,
       projects: memberships.map(membership =>
         this.toGraphQL(
           membership.project,
           membership.project.instance,
           true,
           membership.project.ofProjectUrls,
-          countsByProjectId[membership.project.id]))
+          countsByProjectId[membership.project.id],
+          undefined))
     }
   }
 
@@ -253,7 +254,7 @@ export class ProjectsQueryService {
 
       // Return
       return Object.fromEntries(
-        grouped.map(group => [group.projectId, group._count._all]))
+        grouped.map(group => [group.projectId, group._count.projectId]))
     } catch (error) {
       console.error(`${fnName}: error: ${error}`)
       throw 'Prisma error'
