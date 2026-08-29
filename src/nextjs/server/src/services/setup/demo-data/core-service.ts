@@ -65,7 +65,7 @@ export class CoreDemoDataSetupService {
         data.isDemo ?? false,
         data.isDefault ?? false,
         data.status,
-        null,  // publicAccess
+        data.publicAccess ?? null,
         data.instanceKey,
         data.name)
     }
