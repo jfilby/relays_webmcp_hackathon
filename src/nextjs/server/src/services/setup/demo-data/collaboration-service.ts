@@ -65,6 +65,7 @@ export class CollaborationDemoDataSetupService {
             id: plan.id
           },
           data: {
+            createdByProfileId: createdByProfile.id,
             targetProfileId: targetProfileId,
             status: data.status,
             title: data.title,

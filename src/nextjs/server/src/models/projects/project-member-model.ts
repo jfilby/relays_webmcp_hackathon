@@ -145,4 +145,75 @@ export class ProjectMemberModel {
       throw 'Prisma error'
     }
   }
+
+  async upsert(
+    prisma: PrismaClient,
+    id: string | undefined,
+    projectId: string,
+    profileId: string,
+    role: string,
+    status: string) {
+
+    // Debug
+    const fnName = `${this.clName}.upsert()`
+
+    // If id isn't specified, but the unique keys are, try to get the record
+    if (id == null &&
+        projectId != null &&
+        profileId != null) {
+
+      const projectMember = await
+        this.getByProjectAndProfile(
+          prisma,
+          projectId,
+          profileId)
+
+      if (projectMember != null) {
+        id = projectMember.id
+      }
+    }
+
+    // Upsert
+    if (id == null) {
+
+      // Validate for create (mainly for type validation of the create call)
+      if (projectId == null) {
+        console.error(`${fnName}: id is null and projectId is null`)
+        throw 'Prisma error'
+      }
+
+      if (profileId == null) {
+        console.error(`${fnName}: id is null and profileId is null`)
+        throw 'Prisma error'
+      }
+
+      if (role == null) {
+        console.error(`${fnName}: id is null and role is null`)
+        throw 'Prisma error'
+      }
+
+      if (status == null) {
+        console.error(`${fnName}: id is null and status is null`)
+        throw 'Prisma error'
+      }
+
+      // Create
+      return await
+        this.create(
+          prisma,
+          projectId,
+          profileId,
+          role,
+          status)
+    } else {
+
+      // Update
+      return await
+        this.update(
+          prisma,
+          id,
+          role,
+          status)
+    }
+  }
 }

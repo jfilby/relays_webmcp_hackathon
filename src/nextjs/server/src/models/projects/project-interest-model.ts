@@ -113,4 +113,61 @@ export class ProjectInterestModel {
       throw 'Prisma error'
     }
   }
+
+  async upsert(
+    prisma: PrismaClient,
+    id: string | undefined,
+    profileId: string,
+    projectId: string) {
+
+    // Debug
+    const fnName = `${this.clName}.upsert()`
+
+    // If id isn't specified, but the unique keys are, try to get the record
+    if (id == null &&
+        profileId != null &&
+        projectId != null) {
+
+      const projectInterest = await
+        this.getByProfileIdAndProjectId(
+          prisma,
+          profileId,
+          projectId)
+
+      if (projectInterest != null) {
+        return projectInterest
+      }
+    }
+
+    // Upsert
+    if (id == null) {
+
+      // Validate for create (mainly for type validation of the create call)
+      if (profileId == null) {
+        console.error(`${fnName}: id is null and profileId is null`)
+        throw 'Prisma error'
+      }
+
+      if (projectId == null) {
+        console.error(`${fnName}: id is null and projectId is null`)
+        throw 'Prisma error'
+      }
+
+      // Create
+      return await
+        this.create(
+          prisma,
+          profileId,
+          projectId)
+    } else {
+
+      // Update
+      // ProjectInterest has no mutable fields beyond its unique keys, so
+      // return the existing record
+      return await
+        this.getById(
+          prisma,
+          id)
+    }
+  }
 }

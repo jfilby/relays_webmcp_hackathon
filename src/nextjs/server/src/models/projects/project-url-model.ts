@@ -74,6 +74,28 @@ export class ProjectUrlModel {
     }
   }
 
+  async getByProjectAndUrl(
+    prisma: PrismaClient,
+    projectId: string,
+    url: string) {
+
+    // Debug
+    const fnName = `${this.clName}.getByProjectAndUrl()`
+
+    // Query
+    try {
+      return await prisma.projectUrl.findFirst({
+        where: {
+          projectId: projectId,
+          url: url
+        }
+      })
+    } catch (error) {
+      console.error(`${fnName}: error: ${error}`)
+      throw 'Prisma error'
+    }
+  }
+
   async update(
     prisma: PrismaClient,
     id: string,
@@ -119,6 +141,73 @@ export class ProjectUrlModel {
     } catch (error) {
       console.error(`${fnName}: error: ${error}`)
       throw 'Prisma error'
+    }
+  }
+
+  async upsert(
+    prisma: PrismaClient,
+    id: string | undefined,
+    projectId: string,
+    kind: string,
+    url: string,
+    label: string | undefined = undefined) {
+
+    // Debug
+    const fnName = `${this.clName}.upsert()`
+
+    // If id isn't specified, but the unique keys are, try to get the record
+    if (id == null &&
+        projectId != null &&
+        url != null) {
+
+      const projectUrl = await
+        this.getByProjectAndUrl(
+          prisma,
+          projectId,
+          url)
+
+      if (projectUrl != null) {
+        id = projectUrl.id
+      }
+    }
+
+    // Upsert
+    if (id == null) {
+
+      // Validate for create (mainly for type validation of the create call)
+      if (projectId == null) {
+        console.error(`${fnName}: id is null and projectId is null`)
+        throw 'Prisma error'
+      }
+
+      if (kind == null) {
+        console.error(`${fnName}: id is null and kind is null`)
+        throw 'Prisma error'
+      }
+
+      if (url == null) {
+        console.error(`${fnName}: id is null and url is null`)
+        throw 'Prisma error'
+      }
+
+      // Create
+      return await
+        this.create(
+          prisma,
+          projectId,
+          kind,
+          url,
+          label)
+    } else {
+
+      // Update
+      return await
+        this.update(
+          prisma,
+          id,
+          kind,
+          url,
+          label)
     }
   }
 }

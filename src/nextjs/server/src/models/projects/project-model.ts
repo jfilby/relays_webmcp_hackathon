@@ -189,4 +189,89 @@ export class ProjectModel {
       throw 'Prisma error'
     }
   }
+
+  async upsert(
+    prisma: PrismaClient,
+    id: string | undefined,
+    publicId: string,
+    instanceId: string,
+    isPromoted: boolean,
+    status: string,
+    organizationId: string | undefined = undefined,
+    tagline: string | undefined = undefined,
+    description: string | undefined = undefined,
+    image: string | undefined = undefined,
+    techStack: string[] = [],
+    stage: string | undefined = undefined,
+    isOpenToCollaborators: boolean = false) {
+
+    // Debug
+    const fnName = `${this.clName}.upsert()`
+
+    // If id isn't specified, but the unique keys are, try to get the record
+    if (id == null &&
+        publicId != null) {
+
+      const project = await
+        this.getByPublicId(
+          prisma,
+          publicId)
+
+      if (project != null) {
+        id = project.id
+      }
+    }
+
+    // Upsert
+    if (id == null) {
+
+      // Validate for create (mainly for type validation of the create call)
+      if (publicId == null) {
+        console.error(`${fnName}: id is null and publicId is null`)
+        throw 'Prisma error'
+      }
+
+      if (instanceId == null) {
+        console.error(`${fnName}: id is null and instanceId is null`)
+        throw 'Prisma error'
+      }
+
+      if (status == null) {
+        console.error(`${fnName}: id is null and status is null`)
+        throw 'Prisma error'
+      }
+
+      // Create
+      return await
+        this.create(
+          prisma,
+          instanceId,
+          publicId,
+          isPromoted,
+          status,
+          organizationId,
+          tagline,
+          description,
+          image,
+          techStack,
+          stage,
+          isOpenToCollaborators)
+    } else {
+
+      // Update
+      return await
+        this.update(
+          prisma,
+          id,
+          organizationId,
+          tagline,
+          description,
+          image,
+          techStack,
+          stage,
+          isOpenToCollaborators,
+          isPromoted,
+          status)
+    }
+  }
 }

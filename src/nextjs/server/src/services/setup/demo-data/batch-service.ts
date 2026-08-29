@@ -66,6 +66,8 @@ export class BatchDemoDataSetupService {
             id: existing.id
           },
           data: {
+            instanceId: instanceId,
+            userProfileId: userProfileId,
             runInATransaction: data.runInATransaction,
             status: data.status,
             statusReason: data.statusReason,
