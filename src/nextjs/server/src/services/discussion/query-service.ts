@@ -1,11 +1,13 @@
 import { PrismaClient } from '@/generated/prisma/client'
 import { DiscussPostModel } from '@/models/discussion/discuss-post-model'
 import { DiscussCommentModel } from '@/models/discussion/discuss-comment-model'
+import { ProfileModel } from '@/models/profiles/profile-model'
 import { BaseDataTypes } from '@/types/base-data-types'
 
 // Models
 const discussPostModel = new DiscussPostModel()
 const discussCommentModel = new DiscussCommentModel()
+const profileModel = new ProfileModel()
 
 // Class
 export class DiscussionQueryService {
@@ -42,18 +44,10 @@ export class DiscussionQueryService {
 
     // Load comment counts for every post in one query
     const commentCounts = await
-      prisma.discussComment.groupBy({
-        by: ['postId'],
-        where: {
-          postId: {
-            in: posts.map(post => post.id)
-          },
-          status: BaseDataTypes.activeStatus
-        },
-        _count: {
-          _all: true
-        }
-      })
+      discussCommentModel.countByPostIds(
+        prisma,
+        posts.map(post => post.id),
+        BaseDataTypes.activeStatus)
 
     const commentCountMap = new Map<string, number>()
 
@@ -68,13 +62,9 @@ export class DiscussionQueryService {
       [...new Set(posts.map(post => post.authorProfileId))]
 
     const authors = await
-      prisma.profile.findMany({
-        where: {
-          id: {
-            in: authorProfileIds
-          }
-        }
-      })
+      profileModel.getByIds(
+        prisma,
+        authorProfileIds)
 
     const authorNames = new Map<string, string>(
       authors.map(author => [author.id, author.displayName]))
@@ -120,20 +110,16 @@ export class DiscussionQueryService {
 
     // Load the author's display name
     const author = await
-      prisma.profile.findUnique({
-        where: {
-          id: post.authorProfileId
-        }
-      })
+      profileModel.getById(
+        prisma,
+        post.authorProfileId)
 
     // Load the comment count
     const commentCount = await
-      prisma.discussComment.count({
-        where: {
-          postId: post.id,
-          status: BaseDataTypes.activeStatus
-        }
-      })
+      discussCommentModel.countByPostId(
+        prisma,
+        post.id,
+        BaseDataTypes.activeStatus)
 
     // Return
     return {
@@ -163,15 +149,10 @@ export class DiscussionQueryService {
 
     // Query
     const comments = await
-      prisma.discussComment.findMany({
-        where: {
-          postId: postId,
-          status: BaseDataTypes.activeStatus
-        },
-        orderBy: {
-          created: 'asc'
-        }
-      })
+      discussCommentModel.filterByPostIdAndStatus(
+        prisma,
+        postId,
+        BaseDataTypes.activeStatus)
 
     // No comments, no authors to fetch
     if (comments.length === 0) {
@@ -186,13 +167,9 @@ export class DiscussionQueryService {
       [...new Set(comments.map(comment => comment.authorProfileId))]
 
     const authors = await
-      prisma.profile.findMany({
-        where: {
-          id: {
-            in: authorProfileIds
-          }
-        }
-      })
+      profileModel.getByIds(
+        prisma,
+        authorProfileIds)
 
     const authorNames = new Map<string, string>(
       authors.map(author => [author.id, author.displayName]))

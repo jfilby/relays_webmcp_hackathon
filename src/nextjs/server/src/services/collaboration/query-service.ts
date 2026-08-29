@@ -1,5 +1,15 @@
 import { PrismaClient } from '@/generated/prisma/client'
-import type { Prisma, CollaborationPlan } from '@/generated/prisma/client'
+import type { CollaborationPlan } from '@/generated/prisma/client'
+import { CollaborationPlanModel } from '@/models/collaboration/collaboration-plan-model'
+import { PlanStepModel } from '@/models/collaboration/plan-step-model'
+import { ProfileModel } from '@/models/profiles/profile-model'
+import { ProjectModel } from '@/models/projects/project-model'
+
+// Models
+const collaborationPlanModel = new CollaborationPlanModel()
+const planStepModel = new PlanStepModel()
+const profileModel = new ProfileModel()
+const projectModel = new ProjectModel()
 
 // Class
 export class CollaborationQueryService {
@@ -18,11 +28,9 @@ export class CollaborationQueryService {
 
     // Query
     const plan = await
-      prisma.collaborationPlan.findUnique({
-        where: {
-          id: id
-        }
-      })
+      collaborationPlanModel.getById(
+        prisma,
+        id)
 
     // Validate
     if (plan == null) {
@@ -55,22 +63,15 @@ export class CollaborationQueryService {
     // Debug
     const fnName = `${this.clName}.searchCollaborationPlans()`
 
-    // Build the filter
-    const where: Prisma.CollaborationPlanWhereInput = {}
-
-    if (projectId != null) {
-      where.projectId = projectId
-    }
+    // Resolve the viewer's profile, if given; the viewer sees plans they
+    // created or are targeted by
+    let profileId: string | undefined = undefined
 
     if (userProfileId != null) {
-      // Resolve the viewer's profile once; the viewer sees plans they created
-      // or are targeted by
       const profile = await
-        prisma.profile.findUnique({
-          where: {
-            userProfileId: userProfileId
-          }
-        })
+        profileModel.getByUserProfileId(
+          prisma,
+          userProfileId)
 
       if (profile == null) {
         return {
@@ -79,20 +80,15 @@ export class CollaborationQueryService {
         }
       }
 
-      where.OR = [
-        { createdByProfileId: profile.id },
-        { targetProfileId: profile.id }
-      ]
+      profileId = profile.id
     }
 
     // Query
     const plans = await
-      prisma.collaborationPlan.findMany({
-        where: where,
-        orderBy: {
-          created: 'desc'
-        }
-      })
+      collaborationPlanModel.filter(
+        prisma,
+        projectId,
+        profileId)
 
     // Return
     return {
@@ -113,14 +109,9 @@ export class CollaborationQueryService {
 
     // Query
     const steps = await
-      prisma.planStep.findMany({
-        where: {
-          planId: planId
-        },
-        orderBy: {
-          seq: 'asc'
-        }
-      })
+      planStepModel.filter(
+        prisma,
+        planId)
 
     // Return
     return {
@@ -162,21 +153,15 @@ export class CollaborationQueryService {
 
     // Fetch the related records for display
     const projects = await
-      prisma.project.findMany({
-        where: {
-          id: { in: projectIds }
-        },
-        include: {
-          instance: true
-        }
-      })
+      projectModel.filterByIds(
+        prisma,
+        projectIds,
+        true)
 
     const profiles = await
-      prisma.profile.findMany({
-        where: {
-          id: { in: profileIds }
-        }
-      })
+      profileModel.getByIds(
+        prisma,
+        profileIds)
 
     const projectNameByProjectId = new Map(
       projects.map(project => [project.id, project.instance.name]))

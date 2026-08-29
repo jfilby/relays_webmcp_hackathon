@@ -111,4 +111,60 @@ export class EmailListUserModel {
       throw 'Prisma error'
     }
   }
+
+  async upsertByUserProfileId(
+    prisma: PrismaClient,
+    emailListId: string,
+    userProfileId: string) {
+
+    // Debug
+    const fnName = `${this.clName}.upsertByUserProfileId()`
+
+    // If the record already exists, return it (no mutable fields beyond the
+    // unique keys)
+    const emailListUser = await
+      this.getByUserProfileId(
+        prisma,
+        emailListId,
+        userProfileId)
+
+    if (emailListUser != null) {
+      return emailListUser
+    }
+
+    // Create
+    return await
+      this.createByUserProfileId(
+        prisma,
+        emailListId,
+        userProfileId)
+  }
+
+  async upsertByEmail(
+    prisma: PrismaClient,
+    emailListId: string,
+    email: string) {
+
+    // Debug
+    const fnName = `${this.clName}.upsertByEmail()`
+
+    // If the record already exists, return it (no mutable fields beyond the
+    // unique keys)
+    const emailListUser = await
+      this.getByEmail(
+        prisma,
+        emailListId,
+        email)
+
+    if (emailListUser != null) {
+      return emailListUser
+    }
+
+    // Create
+    return await
+      this.createByEmail(
+        prisma,
+        emailListId,
+        email)
+  }
 }

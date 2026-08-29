@@ -3,9 +3,17 @@ import { DemoDataTypes } from '@/types/demo-data-types'
 import { CoreDemoDataSetupService } from './core-service'
 import { ProfilesDemoDataSetupService } from './profiles-service'
 
+// Models
+import { OrganizationMemberModel } from '@/models/organizations/organization-member-model'
+import { OrganizationModel } from '@/models/organizations/organization-model'
+
 // Services
 const coreDemoDataService = new CoreDemoDataSetupService()
 const profilesDemoDataService = new ProfilesDemoDataSetupService()
+
+// Models
+const organizationModel = new OrganizationModel()
+const organizationMemberModel = new OrganizationMemberModel()
 
 // Class
 // Upserts demo organizations and their members.
@@ -27,30 +35,17 @@ export class OrganizationsDemoDataSetupService {
         prisma,
         data.instanceKey)
 
-      const organization = await prisma.organization.upsert({
-        where: {
-          instanceId: instance.id
-        },
-        create: {
-          instanceId: instance.id,
-          name: data.name,
-          website: data.website,
-          description: data.description,
-          logo: data.logo,
-          size: data.size,
-          industry: data.industry,
-          status: data.status
-        },
-        update: {
-          name: data.name,
-          website: data.website,
-          description: data.description,
-          logo: data.logo,
-          size: data.size,
-          industry: data.industry,
-          status: data.status
-        }
-      })
+      const organization = await organizationModel.upsert(
+        prisma,
+        undefined,
+        instance.id,
+        data.name,
+        data.website,
+        data.description,
+        data.logo,
+        data.size,
+        data.industry,
+        data.status)
 
       // Upsert members
       const members = DemoDataTypes.organizationMembers.filter(m =>
@@ -61,24 +56,13 @@ export class OrganizationsDemoDataSetupService {
           prisma,
           member.profileKey)
 
-        await prisma.organizationMember.upsert({
-          where: {
-            organizationId_profileId: {
-              organizationId: organization.id,
-              profileId: profile.id
-            }
-          },
-          create: {
-            organizationId: organization.id,
-            profileId: profile.id,
-            role: member.role,
-            status: member.status
-          },
-          update: {
-            role: member.role,
-            status: member.status
-          }
-        })
+        await organizationMemberModel.upsert(
+          prisma,
+          undefined,
+          organization.id,
+          profile.id,
+          member.role,
+          member.status)
       }
     }
   }

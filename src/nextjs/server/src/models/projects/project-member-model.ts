@@ -80,7 +80,9 @@ export class ProjectMemberModel {
     prisma: PrismaClient,
     projectId: string | undefined = undefined,
     profileId: string | undefined = undefined,
-    status: string | undefined = undefined) {
+    status: string | undefined = undefined,
+    role: string | undefined = undefined,
+    withProjectIncludes: boolean = false) {
 
     // Debug
     const fnName = `${this.clName}.filter()`
@@ -88,10 +90,19 @@ export class ProjectMemberModel {
     // Query
     try {
       return await prisma.projectMember.findMany({
+        include: {
+          project: {
+            include: {
+              instance: withProjectIncludes,
+              ofProjectUrls: withProjectIncludes
+            }
+          }
+        },
         where: {
           projectId: projectId,
           profileId: profileId,
-          status: status
+          status: status,
+          role: role
         }
       })
     } catch (error) {
@@ -138,6 +149,26 @@ export class ProjectMemberModel {
       return await prisma.projectMember.delete({
         where: {
           id: id
+        }
+      })
+    } catch (error) {
+      console.error(`${fnName}: error: ${error}`)
+      throw 'Prisma error'
+    }
+  }
+
+  async deleteByProjectId(
+    prisma: PrismaClient,
+    projectId: string) {
+
+    // Debug
+    const fnName = `${this.clName}.deleteByProjectId()`
+
+    // Delete records
+    try {
+      return await prisma.projectMember.deleteMany({
+        where: {
+          projectId: projectId
         }
       })
     } catch (error) {

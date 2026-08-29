@@ -1,9 +1,19 @@
 import { PrismaClient } from '@/generated/prisma/client'
-import type { Prisma, Profile } from '@/generated/prisma/client'
+import type { Profile } from '@/generated/prisma/client'
 import { ProfileModel } from '@/models/profiles/profile-model'
+import { SkillModel } from '@/models/profiles/skill-model'
+import { ProfileSkillModel } from '@/models/profiles/profile-skill-model'
+import { ProfileLinkModel } from '@/models/profiles/profile-link-model'
+import { EndorsementModel } from '@/models/profiles/endorsement-model'
+import { ConnectionModel } from '@/models/profiles/connection-model'
 
 // Models
 const profileModel = new ProfileModel()
+const skillModel = new SkillModel()
+const profileSkillModel = new ProfileSkillModel()
+const profileLinkModel = new ProfileLinkModel()
+const endorsementModel = new EndorsementModel()
+const connectionModel = new ConnectionModel()
 
 // Class
 export class ProfilesQueryService {
@@ -106,32 +116,14 @@ export class ProfilesQueryService {
       }
     }
 
-    // Build the query
-    const where: Prisma.ProfileWhereInput = {
-      isPublic: true,
-      status: 'A'
-    }
-
-    if (search != null && search.trim() !== '') {
-      where.OR = [
-        { displayName: { contains: search.trim(), mode: 'insensitive' } },
-        { headline: { contains: search.trim(), mode: 'insensitive' } },
-        { location: { contains: search.trim(), mode: 'insensitive' } }
-      ]
-    }
-
-    if (type != null) {
-      where.type = type
-    }
-
     // Query
     const profiles = await
-      prisma.profile.findMany({
-        where: where,
-        orderBy: {
-          displayName: 'asc'
-        }
-      })
+      profileModel.filter(
+        prisma,
+        true,  // isPublic
+        'A',   // status
+        type,
+        search)
 
     // Return
     return {
@@ -164,16 +156,32 @@ export class ProfilesQueryService {
     }
 
     // Fetch active connections in either direction
-    const connections = await
-      prisma.connection.findMany({
-        where: {
-          status: 'A',
-          OR: [
-            { fromProfileId: profile.id },
-            { toProfileId: profile.id }
-          ]
-        }
-      })
+    const outgoingConnections = await
+      connectionModel.filter(
+        prisma,
+        profile.id,
+        undefined,
+        'A')
+
+    const incomingConnections = await
+      connectionModel.filter(
+        prisma,
+        undefined,
+        profile.id,
+        'A')
+
+    // Merge, de-duplicating connections that appear in both directions
+    const seenConnectionIds = new Set<string>()
+    const connections = [
+      ...outgoingConnections,
+      ...incomingConnections
+    ].filter(connection => {
+      if (seenConnectionIds.has(connection.id)) {
+        return false
+      }
+      seenConnectionIds.add(connection.id)
+      return true
+    })
 
     // The peers are the other end of each connection
     const peerIds = connections
@@ -192,11 +200,9 @@ export class ProfilesQueryService {
 
     // Fetch the connected profiles
     const peers = await
-      prisma.profile.findMany({
-        where: {
-          id: { in: peerIds }
-        }
-      })
+      profileModel.getByIds(
+        prisma,
+        peerIds)
 
     // Return
     return {
@@ -258,16 +264,11 @@ export class ProfilesQueryService {
     prisma: PrismaClient,
     profileId: string) {
 
-    // Debug
-    const fnName = `${this.clName}.getSkillsByProfileId()`
-
     // Fetch the profile skill links
     const profileSkills = await
-      prisma.profileSkill.findMany({
-        where: {
-          profileId: profileId
-        }
-      })
+      profileSkillModel.filter(
+        prisma,
+        profileId)
 
     // No skills, nothing else to fetch
     if (profileSkills.length === 0) {
@@ -279,11 +280,9 @@ export class ProfilesQueryService {
 
     // Fetch the skill catalog entries for display
     const skills = await
-      prisma.skill.findMany({
-        where: {
-          id: { in: profileSkills.map(profileSkill => profileSkill.skillId) }
-        }
-      })
+      skillModel.getByIds(
+        prisma,
+        profileSkills.map(profileSkill => profileSkill.skillId))
 
     const nameBySkillId = new Map(skills.map(skill => [skill.id, skill.name]))
 
@@ -306,19 +305,10 @@ export class ProfilesQueryService {
     prisma: PrismaClient,
     profileId: string) {
 
-    // Debug
-    const fnName = `${this.clName}.getLinksByProfileId()`
-
-    // Query
     const links = await
-      prisma.profileLink.findMany({
-        where: {
-          profileId: profileId
-        },
-        orderBy: {
-          created: 'asc'
-        }
-      })
+      profileLinkModel.getByProfileId(
+        prisma,
+        profileId)
 
     // Return
     return {
@@ -337,19 +327,10 @@ export class ProfilesQueryService {
     prisma: PrismaClient,
     profileId: string) {
 
-    // Debug
-    const fnName = `${this.clName}.getEndorsementsByProfileId()`
-
-    // Query
     const endorsements = await
-      prisma.endorsement.findMany({
-        where: {
-          toProfileId: profileId
-        },
-        orderBy: {
-          created: 'desc'
-        }
-      })
+      endorsementModel.getByToProfileId(
+        prisma,
+        profileId)
 
     // No endorsements, nothing to enrich
     if (endorsements.length === 0) {
@@ -361,18 +342,14 @@ export class ProfilesQueryService {
 
     // Fetch givers and skills for display
     const profiles = await
-      prisma.profile.findMany({
-        where: {
-          id: { in: endorsements.map(endorsement => endorsement.fromProfileId) }
-        }
-      })
+      profileModel.getByIds(
+        prisma,
+        endorsements.map(endorsement => endorsement.fromProfileId))
 
     const skills = await
-      prisma.skill.findMany({
-        where: {
-          id: { in: endorsements.map(endorsement => endorsement.skillId) }
-        }
-      })
+      skillModel.getByIds(
+        prisma,
+        endorsements.map(endorsement => endorsement.skillId))
 
     const nameByProfileId = new Map(profiles.map(profile => [profile.id, profile.displayName]))
     const nameBySkillId = new Map(skills.map(skill => [skill.id, skill.name]))

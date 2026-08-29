@@ -1,15 +1,28 @@
 import { PrismaClient } from '@/generated/prisma/client'
 import { BaseDataTypes } from '@/types/base-data-types'
+
+// Serene Core imports
+import { UserProfileModel, InstanceModel } from 'serene-core-server'
+
+// Models
 import { ProjectModel } from '@/models/projects/project-model'
 import { PublicIdService } from '@/services/utils/public-id-service'
 import { ProjectMemberModel } from '@/models/projects/project-member-model'
 import { ProjectUrlModel } from '@/models/projects/project-url-model'
+import { ProfileModel } from '@/models/profiles/profile-model'
+import { ProjectInterestModel } from '@/models/projects/project-interest-model'
+
+// Services
 import { ProjectsQueryService } from './query-service'
 
 // Models
+const userProfileModel = new UserProfileModel()
+const instanceModel = new InstanceModel()
+const profileModel = new ProfileModel()
 const projectModel = new ProjectModel()
 const projectMemberModel = new ProjectMemberModel()
 const projectUrlModel = new ProjectUrlModel()
+const projectInterestModel = new ProjectInterestModel()
 
 // Services
 const projectsQueryService = new ProjectsQueryService()
@@ -73,11 +86,9 @@ export class ProjectsMutateService {
 
     // Validate the user profile exists
     const userProfile = await
-      prisma.userProfile.findUnique({
-        where: {
-          id: userProfileId
-        }
-      })
+      userProfileModel.getById(
+        prisma,
+        userProfileId)
 
     if (userProfile == null) {
       return {
@@ -88,11 +99,9 @@ export class ProjectsMutateService {
 
     // The owning profile (memberships link a profile, not a user profile)
     const profile = await
-      prisma.profile.findUnique({
-        where: {
-          userProfileId: userProfileId
-        }
-      })
+      profileModel.getByUserProfileId(
+        prisma,
+        userProfileId)
 
     if (profile == null) {
       return {
@@ -103,18 +112,19 @@ export class ProjectsMutateService {
 
     // Create the project instance (defaults are applied in code)
     const instance = await
-      prisma.instance.create({
-        data: {
-          userProfileId: userProfileId,
-          status: BaseDataTypes.activeStatus,
-          key: this.generateKey(name),
-          name: name,
-          instanceType: this.projectInstanceType,
-          isDefault: false,
-          isDemo: false,
-          publicAccess: isPublic === true ? this.publicAccess : null
-        }
-      })
+      instanceModel.create(
+        prisma,
+        null,  // publicId
+        null,  // parentId
+        userProfileId,
+        this.projectInstanceType,
+        null,  // projectType
+        false,  // isDemo
+        false,  // isDefault
+        BaseDataTypes.activeStatus,
+        isPublic === true ? this.publicAccess : null,
+        this.generateKey(name),
+        name)
 
     // Create the project
     const project = await
@@ -202,11 +212,9 @@ export class ProjectsMutateService {
 
     // Load the instance
     const existingInstance = await
-      prisma.instance.findUnique({
-        where: {
-          id: existing.instanceId
-        }
-      })
+      instanceModel.getById(
+        prisma,
+        existing.instanceId)
 
     if (existingInstance == null) {
       return {
@@ -304,17 +312,22 @@ export class ProjectsMutateService {
     }
     // Update the instance (name and public access)
     const instance = await
-      prisma.instance.update({
-        where: {
-          id: existingInstance.id
-        },
-        data: {
-          name: name ?? existingInstance.name,
-          publicAccess: isPublic != null ?
-            (isPublic === true ? this.publicAccess : null) :
-            existingInstance.publicAccess
-        }
-      })
+      instanceModel.update(
+        prisma,
+        existingInstance.id,
+        undefined,  // publicId
+        undefined,  // parentId
+        undefined,  // userProfileId
+        undefined,  // instanceType
+        undefined,  // projectType
+        undefined,  // isDemo
+        undefined,  // isDefault
+        undefined,  // status
+        isPublic != null ?
+          (isPublic === true ? this.publicAccess : null) :
+          undefined,
+        undefined,  // key
+        name ?? undefined)
 
     // Return
     return {
@@ -336,14 +349,10 @@ export class ProjectsMutateService {
 
     // Load the project and its instance for visibility checks
     const project = await
-      prisma.project.findUnique({
-        where: {
-          id: projectId
-        },
-        include: {
-          instance: true
-        }
-      })
+      projectModel.getById(
+        prisma,
+        projectId,
+        true)  // withIncludes (instance)
 
     if (project == null) {
       return {
@@ -367,11 +376,9 @@ export class ProjectsMutateService {
 
     // Resolve the profile expressing interest
     const profile = await
-      prisma.profile.findUnique({
-        where: {
-          userProfileId: userProfileId
-        }
-      })
+      profileModel.getByUserProfileId(
+        prisma,
+        userProfileId)
 
     if (profile == null) {
       return {
@@ -382,30 +389,22 @@ export class ProjectsMutateService {
 
     // Toggle
     const existingInterest = await
-      prisma.projectInterest.findUnique({
-        where: {
-          profileId_projectId: {
-            profileId: profile.id,
-            projectId: projectId
-          }
-        }
-      })
+      projectInterestModel.getByProfileIdAndProjectId(
+        prisma,
+        profile.id,
+        projectId)
 
     if (existingInterest != null) {
       await
-        prisma.projectInterest.delete({
-          where: {
-            id: existingInterest.id
-          }
-        })
+        projectInterestModel.deleteById(
+          prisma,
+          existingInterest.id)
     } else {
       await
-        prisma.projectInterest.create({
-          data: {
-            profileId: profile.id,
-            projectId: projectId
-          }
-        })
+        projectInterestModel.create(
+          prisma,
+          profile.id,
+          projectId)
     }
 
     // Return
@@ -454,21 +453,17 @@ export class ProjectsMutateService {
     // referencing the project or instance (e.g. collaboration plans) will
     // fail the delete, which is reported back.
     try {
-      await prisma.projectMember.deleteMany({
-        where: {
-          projectId: id
-        }
-      })
+      await projectMemberModel.deleteByProjectId(
+        prisma,
+        id)
 
       await projectModel.deleteById(
         prisma,
         id)
 
-      await prisma.instance.delete({
-        where: {
-          id: existing.instanceId
-        }
-      })
+      await instanceModel.deleteById(
+        prisma,
+        existing.instanceId)
     } catch (error) {
       console.error(`${fnName}: error: ${error}`)
       return {

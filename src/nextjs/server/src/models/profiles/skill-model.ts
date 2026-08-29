@@ -50,6 +50,28 @@ export class SkillModel {
     }
   }
 
+  async getByIds(
+    prisma: PrismaClient,
+    ids: string[]) {
+
+    // Debug
+    const fnName = `${this.clName}.getByIds()`
+
+    // Query
+    try {
+      return await prisma.skill.findMany({
+        where: {
+          id: {
+            in: ids
+          }
+        }
+      })
+    } catch (error) {
+      console.error(`${fnName}: error: ${error}`)
+      throw 'Prisma error'
+    }
+  }
+
   async getByName(
     prisma: PrismaClient,
     name: string) {
@@ -68,6 +90,36 @@ export class SkillModel {
       return await prisma.skill.findUnique({
         where: {
           name: name
+        }
+      })
+    } catch (error) {
+      console.error(`${fnName}: error: ${error}`)
+      throw 'Prisma error'
+    }
+  }
+
+  // Find a skill by exact name, matched case-insensitively
+  async getByExactName(
+    prisma: PrismaClient,
+    name: string) {
+
+    // Debug
+    const fnName = `${this.clName}.getByExactName()`
+
+    // Validate
+    if (name == null) {
+      console.error(`${fnName}: name == null`)
+      throw 'Validation error'
+    }
+
+    // Query
+    try {
+      return await prisma.skill.findFirst({
+        where: {
+          name: {
+            equals: name,
+            mode: 'insensitive'
+          }
         }
       })
     } catch (error) {
@@ -143,6 +195,65 @@ export class SkillModel {
     } catch (error) {
       console.error(`${fnName}: error: ${error}`)
       throw 'Prisma error'
+    }
+  }
+
+  async upsert(
+    prisma: PrismaClient,
+    id: string | undefined,
+    name: string | undefined,
+    category: string | undefined,
+    status: string | undefined) {
+
+    // Debug
+    const fnName = `${this.clName}.upsert()`
+
+    // If id isn't specified, but the unique keys are, try to get the record
+    if (id == null &&
+        name != null) {
+
+      const skill = await
+        this.getByName(
+          prisma,
+          name)
+
+      if (skill != null) {
+        id = skill.id
+      }
+    }
+
+    // Upsert
+    if (id == null) {
+
+      // Validate for create (mainly for type validation of the create call)
+      if (name == null) {
+        console.error(`${fnName}: id is null and name is null`)
+        throw 'Prisma error'
+      }
+
+      // Validate for create (mainly for type validation of the create call)
+      if (status == null) {
+        console.error(`${fnName}: id is null and status is null`)
+        throw 'Prisma error'
+      }
+
+      // Create
+      return await
+        this.create(
+          prisma,
+          name,
+          status,
+          category)
+    } else {
+
+      // Update
+      return await
+        this.update(
+          prisma,
+          id,
+          name,
+          category,
+          status)
     }
   }
 }

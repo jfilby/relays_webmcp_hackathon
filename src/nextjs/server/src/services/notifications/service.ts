@@ -1,4 +1,8 @@
 import { PrismaClient } from '@/generated/prisma/client'
+import { NotificationModel } from '@/models/notifications/notification-model'
+
+// Models
+const notificationModel = new NotificationModel()
 
 // Class
 export class NotificationsService {
@@ -29,14 +33,12 @@ export class NotificationsService {
     // Create the notification
     try {
       await
-        prisma.notification.create({
-          data: {
-            userProfileId: userProfileId,
-            type: type,
-            refModel: refModel,
-            refId: refId
-          }
-        })
+        notificationModel.create(
+          prisma,
+          userProfileId,
+          type,
+          refModel,
+          refId)
     } catch (error) {
       console.error(`${fnName}: error: ${error}`)
     }
@@ -53,15 +55,12 @@ export class NotificationsService {
 
     // Query
     const notifications = await
-      prisma.notification.findMany({
-        where: {
-          userProfileId: userProfileId,
-          readAt: unreadOnly === true ? { equals: null } : undefined
-        },
-        orderBy: {
-          created: 'desc'
-        }
-      })
+      notificationModel.filter(
+        prisma,
+        userProfileId,
+        undefined,
+        unreadOnly,
+        true)
 
     // Return
     return {
@@ -88,11 +87,9 @@ export class NotificationsService {
 
     // Load the notification to verify ownership
     const notification = await
-      prisma.notification.findUnique({
-        where: {
-          id: notificationId
-        }
-      })
+      notificationModel.getById(
+        prisma,
+        notificationId)
 
     if (notification == null ||
         notification.userProfileId !== userProfileId) {
@@ -104,14 +101,10 @@ export class NotificationsService {
 
     // Update
     await
-      prisma.notification.update({
-        where: {
-          id: notification.id
-        },
-        data: {
-          readAt: new Date()
-        }
-      })
+      notificationModel.markAsRead(
+        prisma,
+        notification.id,
+        new Date())
 
     // Return
     return {

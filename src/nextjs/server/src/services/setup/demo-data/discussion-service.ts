@@ -3,9 +3,17 @@ import { DemoDataTypes } from '@/types/demo-data-types'
 import { ProfilesDemoDataSetupService } from './profiles-service'
 import { ProjectsDemoDataSetupService } from './projects-service'
 
+// Models
+import { DiscussCommentModel } from '@/models/discussion/discuss-comment-model'
+import { DiscussPostModel } from '@/models/discussion/discuss-post-model'
+
 // Services
 const profilesDemoDataService = new ProfilesDemoDataSetupService()
 const projectsDemoDataService = new ProjectsDemoDataSetupService()
+
+// Models
+const discussPostModel = new DiscussPostModel()
+const discussCommentModel = new DiscussCommentModel()
 
 // Class
 // Upserts demo discussion posts and comments.
@@ -32,24 +40,15 @@ export class DiscussionDemoDataSetupService {
           data.projectKey)).id :
         null
 
-      const post = await prisma.discussPost.upsert({
-        where: {
-          publicId: data.publicId
-        },
-        create: {
-          authorProfileId: authorProfile.id,
-          publicId: data.publicId,
-          projectId: projectId,
-          title: data.title,
-          body: data.body,
-          status: data.status
-        },
-        update: {
-          title: data.title,
-          body: data.body,
-          status: data.status
-        }
-      })
+      const post = await discussPostModel.upsert(
+        prisma,
+        undefined,
+        data.publicId,
+        authorProfile.id,
+        projectId,
+        data.title,
+        data.body,
+        data.status)
 
       for (const commentData of data.comments ?? []) {
         const commentAuthor =
@@ -60,23 +59,15 @@ export class DiscussionDemoDataSetupService {
           await this.getCommentIdByPublicId(prisma, commentData.parentPublicId) :
           null
 
-        await prisma.discussComment.upsert({
-          where: {
-            publicId: commentData.publicId
-          },
-          create: {
-            publicId: commentData.publicId,
-            postId: post.id,
-            authorProfileId: commentAuthor.id,
-            body: commentData.body,
-            status: commentData.status,
-            parentCommentId: parentCommentId
-          },
-          update: {
-            body: commentData.body,
-            status: commentData.status
-          }
-        })
+        await discussCommentModel.upsert(
+          prisma,
+          undefined,
+          commentData.publicId,
+          post.id,
+          commentAuthor.id,
+          commentData.body,
+          commentData.status,
+          parentCommentId)
       }
     }
   }
@@ -87,14 +78,9 @@ export class DiscussionDemoDataSetupService {
     prisma: PrismaClient,
     publicId: string) {
 
-    const comment = await prisma.discussComment.findUnique({
-      where: {
-        publicId: publicId
-      },
-      select: {
-        id: true
-      }
-    })
+    const comment = await discussCommentModel.getByPublicId(
+      prisma,
+      publicId)
 
     if (comment == null) {
       throw `${this.clName}: demo discuss comment not found: ${publicId}`

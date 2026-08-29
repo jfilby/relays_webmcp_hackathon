@@ -2,8 +2,16 @@ import { PrismaClient } from '@/generated/prisma/client'
 import { DemoDataTypes } from '@/types/demo-data-types'
 import { CoreDemoDataSetupService } from './core-service'
 
+// Models
+import { EmailListModel } from '@/models/email-lists/email-list-model'
+import { EmailListUserModel } from '@/models/email-lists/email-list-user-model'
+
 // Services
 const coreDemoDataService = new CoreDemoDataSetupService()
+
+// Models
+const emailListModel = new EmailListModel()
+const emailListUserModel = new EmailListUserModel()
 
 // Class
 // Upserts demo email lists and their subscribers.
@@ -21,18 +29,11 @@ export class EmailListsDemoDataSetupService {
 
     // Upsert email lists
     for (const data of DemoDataTypes.emailLists) {
-      const emailList = await prisma.emailList.upsert({
-        where: {
-          name: data.name
-        },
-        create: {
-          name: data.name,
-          status: data.status
-        },
-        update: {
-          status: data.status
-        }
-      })
+      const emailList = await emailListModel.upsert(
+        prisma,
+        undefined,
+        data.name,
+        data.status)
 
       // Upsert subscribers
       for (const userData of data.users ?? []) {
@@ -41,33 +42,15 @@ export class EmailListsDemoDataSetupService {
             prisma,
             userData.userProfileKey)
 
-          await prisma.emailListUser.upsert({
-            where: {
-              emailListId_userProfileId: {
-                emailListId: emailList.id,
-                userProfileId: userProfile.id
-              }
-            },
-            create: {
-              emailListId: emailList.id,
-              userProfileId: userProfile.id
-            },
-            update: {}
-          })
+          await emailListUserModel.upsertByUserProfileId(
+            prisma,
+            emailList.id,
+            userProfile.id)
         } else if (userData.email != null) {
-          await prisma.emailListUser.upsert({
-            where: {
-              emailListId_email: {
-                emailListId: emailList.id,
-                email: userData.email
-              }
-            },
-            create: {
-              emailListId: emailList.id,
-              email: userData.email
-            },
-            update: {}
-          })
+          await emailListUserModel.upsertByEmail(
+            prisma,
+            emailList.id,
+            userData.email)
         }
       }
     }

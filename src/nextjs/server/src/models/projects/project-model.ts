@@ -12,7 +12,7 @@ export class ProjectModel {
     publicId: string,
     isPromoted: boolean,
     status: string,
-    organizationId: string | undefined = undefined,
+    organizationId: string | null | undefined = undefined,
     tagline: string | undefined = undefined,
     description: string | undefined = undefined,
     image: string | undefined = undefined,
@@ -48,7 +48,8 @@ export class ProjectModel {
 
   async getById(
     prisma: PrismaClient,
-    id: string) {
+    id: string,
+    withIncludes: boolean = false) {
 
     // Debug
     const fnName = `${this.clName}.getById()`
@@ -56,6 +57,9 @@ export class ProjectModel {
     // Query
     try {
       return await prisma.project.findUnique({
+        include: {
+          instance: withIncludes
+        },
         where: {
           id: id
         }
@@ -68,7 +72,8 @@ export class ProjectModel {
 
   async getByPublicId(
     prisma: PrismaClient,
-    publicId: string) {
+    publicId: string,
+    withIncludes: boolean = false) {
 
     // Debug
     const fnName = `${this.clName}.getByPublicId()`
@@ -76,8 +81,37 @@ export class ProjectModel {
     // Query
     try {
       return await prisma.project.findUnique({
+        include: {
+          ofProjectUrls: withIncludes
+        },
         where: {
           publicId: publicId
+        }
+      })
+    } catch (error) {
+      console.error(`${fnName}: error: ${error}`)
+      throw 'Prisma error'
+    }
+  }
+
+  async filterByIds(
+    prisma: PrismaClient,
+    ids: string[],
+    withIncludes: boolean = false) {
+
+    // Debug
+    const fnName = `${this.clName}.filterByIds()`
+
+    // Query
+    try {
+      return await prisma.project.findMany({
+        include: {
+          instance: withIncludes
+        },
+        where: {
+          id: {
+            in: ids
+          }
         }
       })
     } catch (error) {
@@ -110,7 +144,9 @@ export class ProjectModel {
     prisma: PrismaClient,
     status: string | undefined = undefined,
     isPromoted: boolean | undefined = undefined,
-    organizationId: string | undefined = undefined) {
+    organizationId: string | undefined = undefined,
+    search: string | undefined = undefined,
+    isPublic: boolean | undefined = undefined) {
 
     // Debug
     const fnName = `${this.clName}.filter()`
@@ -118,10 +154,53 @@ export class ProjectModel {
     // Query
     try {
       return await prisma.project.findMany({
+        include: {
+          instance: true,
+          ofProjectUrls: true
+        },
+        orderBy: {
+          instance: {
+            name: 'asc'
+          }
+        },
         where: {
           status: status,
           isPromoted: isPromoted,
-          organizationId: organizationId
+          organizationId: organizationId,
+          instance: isPublic === true ?
+            {
+              publicAccess: { not: null }
+            } :
+            undefined,
+          OR: search != null && search.trim() !== '' ?
+            [
+              {
+                tagline: {
+                  contains: search.trim(),
+                  mode: 'insensitive'
+                }
+              },
+              {
+                description: {
+                  contains: search.trim(),
+                  mode: 'insensitive'
+                }
+              },
+              {
+                instance: {
+                  name: {
+                    contains: search.trim(),
+                    mode: 'insensitive'
+                  }
+                }
+              },
+              {
+                techStack: {
+                  has: search.trim()
+                }
+              }
+            ] :
+            undefined
         }
       })
     } catch (error) {
@@ -133,7 +212,7 @@ export class ProjectModel {
   async update(
     prisma: PrismaClient,
     id: string,
-    organizationId: string | undefined,
+    organizationId: string | null | undefined,
     tagline: string | undefined,
     description: string | undefined,
     image: string | undefined,
@@ -197,7 +276,7 @@ export class ProjectModel {
     instanceId: string,
     isPromoted: boolean,
     status: string,
-    organizationId: string | undefined = undefined,
+    organizationId: string | null | undefined = undefined,
     tagline: string | undefined = undefined,
     description: string | undefined = undefined,
     image: string | undefined = undefined,

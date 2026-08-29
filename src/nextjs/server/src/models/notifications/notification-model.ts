@@ -1,4 +1,4 @@
-import { PrismaClient } from '@/generated/prisma/client'
+import { Prisma, PrismaClient } from '@/generated/prisma/client'
 
 export class NotificationModel {
 
@@ -11,7 +11,8 @@ export class NotificationModel {
     userProfileId: string,
     type: string,
     refModel: string | undefined = undefined,
-    refId: string | undefined = undefined) {
+    refId: string | undefined = undefined,
+    readAt: Date | null | undefined = undefined) {
 
     // Debug
     const fnName = `${this.clName}.create()`
@@ -23,7 +24,8 @@ export class NotificationModel {
           userProfileId: userProfileId,
           type: type,
           refModel: refModel,
-          refId: refId
+          refId: refId,
+          readAt: readAt
         }
       })
     } catch (error) {
@@ -56,10 +58,23 @@ export class NotificationModel {
     prisma: PrismaClient,
     userProfileId: string | undefined = undefined,
     type: string | undefined = undefined,
-    readAtIsNull: boolean | undefined = undefined) {
+    readAtIsNull: boolean | undefined = undefined,
+    sortDesc: boolean = false) {
 
     // Debug
     const fnName = `${this.clName}.filter()`
+
+    // Order by
+    var orderBy: Prisma.NotificationOrderByWithRelationInput[] = []
+
+    if (sortDesc === true) {
+
+      orderBy = [
+        {
+          created: 'desc'
+        }
+      ]
+    }
 
     // Query
     try {
@@ -68,18 +83,18 @@ export class NotificationModel {
           userProfileId: userProfileId,
           type: type,
           readAt: readAtIsNull === true ? { equals: null } : undefined
-        }
+        },
+        orderBy: orderBy
       })
     } catch (error) {
       console.error(`${fnName}: error: ${error}`)
       throw 'Prisma error'
     }
   }
-
   async markAsRead(
     prisma: PrismaClient,
     id: string,
-    readAt: Date) {
+    readAt: Date | null) {
 
     // Debug
     const fnName = `${this.clName}.markAsRead()`
@@ -112,6 +127,30 @@ export class NotificationModel {
       return await prisma.notification.delete({
         where: {
           id: id
+        }
+      })
+    } catch (error) {
+      console.error(`${fnName}: error: ${error}`)
+      throw 'Prisma error'
+    }
+  }
+
+  async getByUserProfileIdAndTypeAndNullRef(
+    prisma: PrismaClient,
+    userProfileId: string,
+    type: string) {
+
+    // Debug
+    const fnName = `${this.clName}.getByUserProfileIdAndTypeAndNullRef()`
+
+    // Query
+    try {
+      return await prisma.notification.findFirst({
+        where: {
+          userProfileId: userProfileId,
+          type: type,
+          refModel: null,
+          refId: null
         }
       })
     } catch (error) {

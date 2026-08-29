@@ -11,14 +11,14 @@ export class BatchJobModel {
     instanceId: string | null,
     runInATransaction: boolean,
     status: string,
-    statusReason: string | null,
-    progressPct: number,
-    message: string | null,
+    statusReason: string | null | undefined,
+    progressPct: number | undefined,
+    message: string | null | undefined,
     jobType: string,
-    refModel: string | null,
-    refId: string | null,
-    parameters: any | null,
-    userProfileId: string) {
+    refModel: string | null | undefined,
+    refId: string | null | undefined,
+    parameters: any | null | undefined,
+    userProfileId: string | undefined = undefined) {
 
     // Debug
     const fnName = `${this.clName}.create()`
@@ -41,11 +41,11 @@ export class BatchJobModel {
           refModel: refModel,
           refId: refId,
           parameters: parameters,
-          userProfile: {
+          userProfile: userProfileId != null ? {
             connect: {
               id: userProfileId
             }
-          }
+          } : undefined
         }
       })
     } catch (error) {
@@ -515,6 +515,30 @@ export class BatchJobModel {
           refId,
           parameters,
           userProfileId)
+    }
+  }
+
+  async getByJobTypeAndRefModelAndRefId(
+    prisma: any,
+    jobType: string,
+    refModel: string | null | undefined,
+    refId: string | null | undefined) {
+
+    // Debug
+    const fnName = `${this.clName}.getByJobTypeAndRefModelAndRefId()`
+
+    // Query
+    try {
+      return await prisma.batchJob.findFirst({
+        where: {
+          jobType: jobType,
+          refModel: refModel ?? null,
+          refId: refId ?? null
+        }
+      })
+    } catch (error) {
+      console.error(`${fnName}: error: ${error}`)
+      throw 'Prisma error'
     }
   }
 }

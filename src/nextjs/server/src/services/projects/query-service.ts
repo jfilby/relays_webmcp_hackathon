@@ -1,12 +1,21 @@
 import { PrismaClient } from '@/generated/prisma/client'
 import type { Instance, Project, ProjectUrl } from '@/generated/prisma/client'
-import type { Prisma } from '@/generated/prisma/client'
-import { ProjectModel } from '@/models/projects/project-model'
-import { ProjectMemberModel } from '@/models/projects/project-member-model'
+
+// Serene Core imports
+import { InstanceModel } from 'serene-core-server'
 
 // Models
+import { ProjectModel } from '@/models/projects/project-model'
+import { ProjectMemberModel } from '@/models/projects/project-member-model'
+import { ProfileModel } from '@/models/profiles/profile-model'
+import { ProjectInterestModel } from '@/models/projects/project-interest-model'
+
+// Model instances
+const instanceModel = new InstanceModel()
+const profileModel = new ProfileModel()
 const projectModel = new ProjectModel()
 const projectMemberModel = new ProjectMemberModel()
+const projectInterestModel = new ProjectInterestModel()
 
 // Class
 export class ProjectsQueryService {
@@ -31,14 +40,10 @@ export class ProjectsQueryService {
 
     // Query
     const project = await
-      prisma.project.findUnique({
-        where: {
-          publicId: publicId
-        },
-        include: {
-          ofProjectUrls: true
-        }
-      })
+      projectModel.getByPublicId(
+        prisma,
+        publicId,
+        true)  // withIncludes (ofProjectUrls)
 
     // Validate
     if (project == null) {
@@ -49,11 +54,9 @@ export class ProjectsQueryService {
     }
 
     const instance = await
-      prisma.instance.findUnique({
-        where: {
-          id: project.instanceId
-        }
-      })
+      instanceModel.getById(
+        prisma,
+        project.instanceId)
 
     if (instance == null) {
       return {
@@ -107,42 +110,15 @@ export class ProjectsQueryService {
     // Debug
     const fnName = `${this.clName}.searchProjects()`
 
-    // Build the query
-    const where: Prisma.ProjectWhereInput = {
-      status: 'A',
-      instance: {
-        publicAccess: { not: null }
-      }
-    }
-
-    if (isPromoted === true) {
-      where.isPromoted = true
-    }
-
-    if (search != null && search.trim() !== '') {
-      const term = search.trim()
-      where.OR = [
-        { tagline: { contains: term, mode: 'insensitive' } },
-        { description: { contains: term, mode: 'insensitive' } },
-        { instance: { name: { contains: term, mode: 'insensitive' } } },
-        { techStack: { has: term } }
-      ]
-    }
-
     // Query
     const projects = await
-      prisma.project.findMany({
-        where: where,
-        include: {
-          instance: true,
-          ofProjectUrls: true
-        },
-        orderBy: {
-          instance: {
-            name: 'asc'
-          }
-        }
-      })
+      projectModel.filter(
+        prisma,
+        'A',  // status
+        isPromoted,
+        undefined,  // organizationId
+        search,
+        true)  // isPublic (instance public access set)
 
     // Batch the interest counts for the result set
     const countsByProjectId = await
@@ -174,11 +150,9 @@ export class ProjectsQueryService {
 
     // Query
     const profile = await
-      prisma.profile.findUnique({
-        where: {
-          userProfileId: userProfileId
-        }
-      })
+      profileModel.getByUserProfileId(
+        prisma,
+        userProfileId)
 
     // No profile, no projects
     if (profile == null) {
@@ -190,21 +164,13 @@ export class ProjectsQueryService {
 
     // Fetch the memberships
     const memberships = await
-      prisma.projectMember.findMany({
-        where: {
-          profileId: profile.id,
-          role: 'O',
-          status: 'A'
-        },
-        include: {
-          project: {
-            include: {
-              instance: true,
-              ofProjectUrls: true
-            }
-          }
-        }
-      })
+      projectMemberModel.filter(
+        prisma,
+        undefined,  // projectId
+        profile.id,
+        'A',  // status
+        'O',  // role
+        true)  // withProjectIncludes
 
     // Batch the interest counts for the result set
     const countsByProjectId = await
@@ -240,25 +206,14 @@ export class ProjectsQueryService {
     }
 
     // Group the interest rows by project
-    try {
-      const grouped = await
-        prisma.projectInterest.groupBy({
-          by: ['projectId'],
-          where: {
-            projectId: { in: projectIds }
-          },
-          _count: {
-            projectId: true
-          }
-        })
+    const grouped = await
+      projectInterestModel.groupByCountByProjectIds(
+        prisma,
+        projectIds)
 
-      // Return
-      return Object.fromEntries(
-        grouped.map(group => [group.projectId, group._count.projectId]))
-    } catch (error) {
-      console.error(`${fnName}: error: ${error}`)
-      throw 'Prisma error'
-    }
+    // Return
+    return Object.fromEntries(
+      grouped.map(group => [group.projectId, group._count.projectId]))
   }
 
   // Interest details for one project: the total count plus whether the given
@@ -272,46 +227,26 @@ export class ProjectsQueryService {
     const fnName = `${this.clName}.getInterestInfo()`
 
     // The total count
-    let interestCount = 0
-
-    try {
-      interestCount = await
-        prisma.projectInterest.count({
-          where: {
-            projectId: projectId
-          }
-        })
-    } catch (error) {
-      console.error(`${fnName}: error: ${error}`)
-      throw 'Prisma error'
-    }
+    const interestCount = await
+      projectInterestModel.countByProjectId(
+        prisma,
+        projectId)
 
     // Has the viewer registered interest? (Resolve their profile first)
     let viewerIsInterested = false
 
     if (viewerUserProfileId != null && viewerUserProfileId !== '') {
-      try {
-        const viewerProfile = await
-          prisma.profile.findUnique({
-            where: {
-              userProfileId: viewerUserProfileId
-            }
-          })
+      const viewerProfile = await
+        profileModel.getByUserProfileId(
+          prisma,
+          viewerUserProfileId)
 
-        if (viewerProfile != null) {
-          viewerIsInterested = await
-            prisma.projectInterest.findUnique({
-              where: {
-                profileId_projectId: {
-                  profileId: viewerProfile.id,
-                  projectId: projectId
-                }
-              }
-            }) != null
-        }
-      } catch (error) {
-        console.error(`${fnName}: error: ${error}`)
-        throw 'Prisma error'
+      if (viewerProfile != null) {
+        viewerIsInterested = await
+          projectInterestModel.getByProfileIdAndProjectId(
+            prisma,
+            viewerProfile.id,
+            projectId) != null
       }
     }
 
@@ -338,11 +273,9 @@ export class ProjectsQueryService {
 
     // The owning profile (memberships link a profile, not a user profile)
     const profile = await
-      prisma.profile.findUnique({
-        where: {
-          userProfileId: userProfileId
-        }
-      })
+      profileModel.getByUserProfileId(
+        prisma,
+        userProfileId)
 
     if (profile == null) {
       return false

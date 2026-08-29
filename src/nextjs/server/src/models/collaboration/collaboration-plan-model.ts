@@ -1,4 +1,5 @@
 import { PrismaClient } from '@/generated/prisma/client'
+import type { Prisma } from '@/generated/prisma/client'
 
 export class CollaborationPlanModel {
 
@@ -12,9 +13,9 @@ export class CollaborationPlanModel {
     projectId: string,
     status: string,
     title: string,
-    targetProfileId: string | undefined = undefined,
+    targetProfileId: string | null | undefined = undefined,
     description: string | undefined = undefined,
-    startBy: Date | undefined = undefined,
+    startBy: Date | null | undefined = undefined,
     rolesNeeded: string[] = [],
     commitmentLevel: string | undefined = undefined,
     compensation: string | undefined = undefined,
@@ -66,24 +67,42 @@ export class CollaborationPlanModel {
     }
   }
 
+  // List plans. `profileId` matches plans the profile created or is targeted
+  // by; the other filters are exact matches.
   async filter(
     prisma: PrismaClient,
     projectId: string | undefined = undefined,
-    targetProfileId: string | undefined = undefined,
-    status: string | undefined = undefined,
-    createdByProfileId: string | undefined = undefined) {
+    profileId: string | undefined = undefined,
+    status: string | undefined = undefined) {
 
     // Debug
     const fnName = `${this.clName}.filter()`
 
+    // Build the filter
+    const where: Prisma.CollaborationPlanWhereInput = {}
+
+    if (projectId != null) {
+      where.projectId = projectId
+    }
+
+    if (status != null) {
+      where.status = status
+    }
+
+    if (profileId != null) {
+      // The viewer sees plans they created or are targeted by
+      where.OR = [
+        { createdByProfileId: profileId },
+        { targetProfileId: profileId }
+      ]
+    }
+
     // Query
     try {
       return await prisma.collaborationPlan.findMany({
-        where: {
-          projectId: projectId,
-          targetProfileId: targetProfileId,
-          status: status,
-          createdByProfileId: createdByProfileId
+        where: where,
+        orderBy: {
+          created: 'desc'
         }
       })
     } catch (error) {
@@ -95,16 +114,17 @@ export class CollaborationPlanModel {
   async update(
     prisma: PrismaClient,
     id: string,
-    targetProfileId: string | undefined,
+    targetProfileId: string | null | undefined,
     status: string | undefined,
     title: string | undefined,
-    description: string | undefined,
-    startBy: Date | undefined,
+    description: string | null | undefined,
+    startBy: Date | null | undefined,
     rolesNeeded: string[] | undefined,
-    commitmentLevel: string | undefined,
-    compensation: string | undefined,
-    deliverables: string | undefined,
-    completedAt: Date | undefined) {
+    commitmentLevel: string | null | undefined,
+    compensation: string | null | undefined,
+    deliverables: string | null | undefined,
+    completedAt: Date | null | undefined,
+    createdByProfileId: string | undefined = undefined) {
 
     // Debug
     const fnName = `${this.clName}.update()`
@@ -122,6 +142,7 @@ export class CollaborationPlanModel {
           commitmentLevel: commitmentLevel,
           compensation: compensation,
           deliverables: deliverables,
+          createdByProfileId: createdByProfileId,
           completedAt: completedAt
         },
         where: {
@@ -171,6 +192,28 @@ export class CollaborationPlanModel {
       return await prisma.collaborationPlan.delete({
         where: {
           id: id
+        }
+      })
+    } catch (error) {
+      console.error(`${fnName}: error: ${error}`)
+      throw 'Prisma error'
+    }
+  }
+
+  async getByProjectIdAndTitle(
+    prisma: PrismaClient,
+    projectId: string,
+    title: string) {
+
+    // Debug
+    const fnName = `${this.clName}.getByProjectIdAndTitle()`
+
+    // Query
+    try {
+      return await prisma.collaborationPlan.findFirst({
+        where: {
+          projectId: projectId,
+          title: title
         }
       })
     } catch (error) {

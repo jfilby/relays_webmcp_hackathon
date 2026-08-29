@@ -3,12 +3,14 @@ import { BaseDataTypes } from '@/types/base-data-types'
 import { maxCommentsLevel } from '@/types/discussion-types'
 import { DiscussPostModel } from '@/models/discussion/discuss-post-model'
 import { DiscussCommentModel } from '@/models/discussion/discuss-comment-model'
+import { ProjectModel } from '@/models/projects/project-model'
 import { ProfileModel } from '@/models/profiles/profile-model'
 
 // Models
 const discussPostModel = new DiscussPostModel()
 const discussCommentModel = new DiscussCommentModel()
 const profileModel = new ProfileModel()
+const projectModel = new ProjectModel()
 
 // Class
 export class DiscussionMutateService {
@@ -59,11 +61,9 @@ export class DiscussionMutateService {
     // Validate the project, if one is attached
     if (projectId != null) {
       const project = await
-        prisma.project.findUnique({
-          where: {
-            id: projectId
-          }
-        })
+        projectModel.getById(
+          prisma,
+          projectId)
 
       if (project == null) {
         return {
@@ -312,15 +312,9 @@ export class DiscussionMutateService {
 
     while (frontierIds.length > 0) {
       const children = await
-        prisma.discussComment.findMany({
-          where: {
-            parentCommentId: {
-              in: frontierIds
-            }
-          }
-        })
-
-      frontierIds.length = 0
+        discussCommentModel.filterByParentCommentIds(
+          prisma,
+          frontierIds)
 
       for (const child of children) {
         idsToDelete.push(child.id)

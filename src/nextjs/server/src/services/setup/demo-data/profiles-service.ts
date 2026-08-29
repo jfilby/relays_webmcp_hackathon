@@ -1,12 +1,27 @@
 import { PrismaClient } from '@/generated/prisma/client'
 import {
-  DemoDataTypes,
-  DemoProfileData
+  DemoDataTypes
 } from '@/types/demo-data-types'
 import { CoreDemoDataSetupService } from './core-service'
 
+// Models
+import { ConnectionModel } from '@/models/profiles/connection-model'
+import { EndorsementModel } from '@/models/profiles/endorsement-model'
+import { ProfileLinkModel } from '@/models/profiles/profile-link-model'
+import { ProfileModel } from '@/models/profiles/profile-model'
+import { ProfileSkillModel } from '@/models/profiles/profile-skill-model'
+import { SkillModel } from '@/models/profiles/skill-model'
+
 // Services
 const coreDemoDataService = new CoreDemoDataSetupService()
+
+// Models
+const profileModel = new ProfileModel()
+const skillModel = new SkillModel()
+const profileLinkModel = new ProfileLinkModel()
+const profileSkillModel = new ProfileSkillModel()
+const endorsementModel = new EndorsementModel()
+const connectionModel = new ConnectionModel()
 
 // Class
 // Upserts demo profiles and the networking data that hangs off them: skills,
@@ -25,20 +40,12 @@ export class ProfilesDemoDataSetupService {
 
     // Upsert skills (needed by profile skills and endorsements)
     for (const data of DemoDataTypes.skills) {
-      await prisma.skill.upsert({
-        where: {
-          name: data.name
-        },
-        create: {
-          name: data.name,
-          category: data.category,
-          status: data.status
-        },
-        update: {
-          category: data.category,
-          status: data.status
-        }
-      })
+      await skillModel.upsert(
+        prisma,
+        undefined,
+        data.name,
+        data.category,
+        data.status)
     }
 
     // Upsert profiles
@@ -47,36 +54,34 @@ export class ProfilesDemoDataSetupService {
         prisma,
         data.userProfileKey)
 
-      const profile = await prisma.profile.upsert({
-        where: {
-          publicId: data.publicId
-        },
-        create: this.toCreate(data, userProfile.id),
-        update: this.toUpdate(data)
-      })
+      const profile = await profileModel.upsert(
+        prisma,
+        undefined,
+        data.publicId,
+        userProfile.id,
+        data.type,
+        data.status,
+        data.displayName,
+        data.isPublic ?? true,
+        data.headline,
+        data.bio,
+        data.location,
+        data.website,
+        data.avatar,
+        data.availabilityStatus ?? 'A',
+        data.isVerified ?? false,
+        data.verifiedAt != null ? new Date(data.verifiedAt) : null)
 
       // Upsert links
       for (const link of data.links ?? []) {
-        await prisma.profileLink.upsert({
-          where: {
-            profileId_url: {
-              profileId: profile.id,
-              url: link.url
-            }
-          },
-          create: {
-            profileId: profile.id,
-            kind: link.kind,
-            url: link.url,
-            handle: link.handle,
-            isVerified: link.isVerified ?? false
-          },
-          update: {
-            kind: link.kind,
-            handle: link.handle,
-            isVerified: link.isVerified ?? false
-          }
-        })
+        await profileLinkModel.upsert(
+          prisma,
+          undefined,
+          profile.id,
+          link.kind,
+          link.url,
+          link.handle,
+          link.isVerified ?? false)
       }
     }
 
@@ -85,22 +90,12 @@ export class ProfilesDemoDataSetupService {
       const profile = await this.getProfileByKey(prisma, data.profileKey)
       const skill = await this.getSkillByKey(prisma, data.skillKey)
 
-      await prisma.profileSkill.upsert({
-        where: {
-          profileId_skillId: {
-            profileId: profile.id,
-            skillId: skill.id
-          }
-        },
-        create: {
-          profileId: profile.id,
-          skillId: skill.id,
-          level: data.level
-        },
-        update: {
-          level: data.level
-        }
-      })
+      await profileSkillModel.upsert(
+        prisma,
+        undefined,
+        profile.id,
+        skill.id,
+        data.level)
     }
 
     // Upsert endorsements
@@ -111,24 +106,13 @@ export class ProfilesDemoDataSetupService {
       const toProfile = await this.getProfileByKey(prisma, data.toProfileKey)
       const skill = await this.getSkillByKey(prisma, data.skillKey)
 
-      await prisma.endorsement.upsert({
-        where: {
-          toProfileId_skillId_fromProfileId: {
-            toProfileId: toProfile.id,
-            skillId: skill.id,
-            fromProfileId: fromProfile.id
-          }
-        },
-        create: {
-          fromProfileId: fromProfile.id,
-          toProfileId: toProfile.id,
-          skillId: skill.id,
-          comment: data.comment
-        },
-        update: {
-          comment: data.comment
-        }
-      })
+      await endorsementModel.upsert(
+        prisma,
+        undefined,
+        fromProfile.id,
+        toProfile.id,
+        skill.id,
+        data.comment)
     }
 
     // Upsert connections
@@ -138,27 +122,15 @@ export class ProfilesDemoDataSetupService {
         data.fromProfileKey)
       const toProfile = await this.getProfileByKey(prisma, data.toProfileKey)
 
-      await prisma.connection.upsert({
-        where: {
-          fromProfileId_toProfileId: {
-            fromProfileId: fromProfile.id,
-            toProfileId: toProfile.id
-          }
-        },
-        create: {
-          fromProfileId: fromProfile.id,
-          toProfileId: toProfile.id,
-          status: data.status,
-          origin: data.origin,
-          message: data.message,
-          acceptedAt: data.accepted === true ? new Date() : null
-        },
-        update: {
-          status: data.status,
-          origin: data.origin,
-          message: data.message
-        }
-      })
+      await connectionModel.upsert(
+        prisma,
+        undefined,
+        fromProfile.id,
+        toProfile.id,
+        data.status,
+        data.origin,
+        data.message,
+        data.accepted === true ? new Date() : null)
     }
   }
 
@@ -174,11 +146,9 @@ export class ProfilesDemoDataSetupService {
       throw `${this.clName}: no demo profile data for key: ${key}`
     }
 
-    const profile = await prisma.profile.findUnique({
-      where: {
-        publicId: data.publicId
-      }
-    })
+    const profile = await profileModel.getByPublicId(
+      prisma,
+      data.publicId)
 
     if (profile == null) {
       throw `${this.clName}: demo profile not found: ${data.publicId}`
@@ -197,56 +167,14 @@ export class ProfilesDemoDataSetupService {
       throw `${this.clName}: no demo skill data for key: ${key}`
     }
 
-    const skill = await prisma.skill.findUnique({
-      where: {
-        name: data.name
-      }
-    })
+    const skill = await skillModel.getByName(
+      prisma,
+      data.name)
 
     if (skill == null) {
       throw `${this.clName}: demo skill not found: ${data.name}`
     }
 
     return skill
-  }
-
-  private toCreate(
-    data: DemoProfileData,
-    userProfileId: string) {
-
-    return {
-      publicId: data.publicId,
-      userProfileId: userProfileId,
-      type: data.type,
-      status: data.status,
-      displayName: data.displayName,
-      headline: data.headline,
-      bio: data.bio,
-      location: data.location,
-      website: data.website,
-      avatar: data.avatar,
-      isPublic: data.isPublic ?? true,
-      availabilityStatus: data.availabilityStatus ?? 'A',
-      isVerified: data.isVerified ?? false,
-      verifiedAt: data.verifiedAt != null ? new Date(data.verifiedAt) : null
-    }
-  }
-
-  private toUpdate(data: DemoProfileData) {
-
-    return {
-      type: data.type,
-      status: data.status,
-      displayName: data.displayName,
-      headline: data.headline,
-      bio: data.bio,
-      location: data.location,
-      website: data.website,
-      avatar: data.avatar,
-      isPublic: data.isPublic ?? true,
-      availabilityStatus: data.availabilityStatus ?? 'A',
-      isVerified: data.isVerified ?? false,
-      verifiedAt: data.verifiedAt != null ? new Date(data.verifiedAt) : null
-    }
   }
 }

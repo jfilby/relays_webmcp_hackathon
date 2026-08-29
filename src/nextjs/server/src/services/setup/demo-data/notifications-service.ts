@@ -2,8 +2,14 @@ import { PrismaClient } from '@/generated/prisma/client'
 import { DemoDataTypes } from '@/types/demo-data-types'
 import { CoreDemoDataSetupService } from './core-service'
 
+// Models
+import { NotificationModel } from '@/models/notifications/notification-model'
+
 // Services
 const coreDemoDataService = new CoreDemoDataSetupService()
+
+// Models
+const notificationModel = new NotificationModel()
 
 // Class
 // Upserts demo notifications. Notification has no unique constraint, so
@@ -26,32 +32,24 @@ export class NotificationsDemoDataSetupService {
         prisma,
         data.userProfileKey)
 
-      const existing = await prisma.notification.findFirst({
-        where: {
-          userProfileId: userProfile.id,
-          type: data.type,
-          refModel: null,
-          refId: null
-        }
-      })
+      const existing = await notificationModel.getByUserProfileIdAndTypeAndNullRef(
+        prisma,
+        userProfile.id,
+        data.type)
 
       if (existing == null) {
-        await prisma.notification.create({
-          data: {
-            userProfileId: userProfile.id,
-            type: data.type,
-            readAt: data.read === true ? new Date() : null
-          }
-        })
+        await notificationModel.create(
+          prisma,
+          userProfile.id,
+          data.type,
+          undefined,  // refModel
+          undefined,  // refId
+          data.read === true ? new Date() : null)
       } else {
-        await prisma.notification.update({
-          where: {
-            id: existing.id
-          },
-          data: {
-            readAt: data.read === true ? new Date() : null
-          }
-        })
+        await notificationModel.markAsRead(
+          prisma,
+          existing.id,
+          data.read === true ? new Date() : null)
       }
     }
   }

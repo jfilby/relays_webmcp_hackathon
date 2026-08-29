@@ -3,9 +3,17 @@ import { DemoDataTypes } from '@/types/demo-data-types'
 import { ProfilesDemoDataSetupService } from './profiles-service'
 import { ProjectsDemoDataSetupService } from './projects-service'
 
+// Models
+import { CollaborationPlanModel } from '@/models/collaboration/collaboration-plan-model'
+import { PlanStepModel } from '@/models/collaboration/plan-step-model'
+
 // Services
 const profilesDemoDataService = new ProfilesDemoDataSetupService()
 const projectsDemoDataService = new ProjectsDemoDataSetupService()
+
+// Models
+const collaborationPlanModel = new CollaborationPlanModel()
+const planStepModel = new PlanStepModel()
 
 // Class
 // Upserts demo collaboration plans and their steps. CollaborationPlan has no
@@ -35,72 +43,54 @@ export class CollaborationDemoDataSetupService {
           prisma,
           data.targetProfileKey)).id :
         null
+      const startBy = data.startBy != null ? new Date(data.startBy) : null
 
-      var plan = await prisma.collaborationPlan.findFirst({
-        where: {
-          projectId: project.id,
-          title: data.title
-        }
-      })
+      var plan = await collaborationPlanModel.getByProjectIdAndTitle(
+        prisma,
+        project.id,
+        data.title)
 
       if (plan == null) {
-        plan = await prisma.collaborationPlan.create({
-          data: {
-            createdByProfileId: createdByProfile.id,
-            projectId: project.id,
-            targetProfileId: targetProfileId,
-            status: data.status,
-            title: data.title,
-            description: data.description,
-            rolesNeeded: data.rolesNeeded ?? [],
-            commitmentLevel: data.commitmentLevel,
-            compensation: data.compensation,
-            deliverables: data.deliverables,
-            startBy: data.startBy != null ? new Date(data.startBy) : null
-          }
-        })
+        plan = await collaborationPlanModel.create(
+          prisma,
+          createdByProfile.id,
+          project.id,
+          data.status,
+          data.title,
+          targetProfileId ?? undefined,
+          data.description,
+          startBy,
+          data.rolesNeeded ?? [],
+          data.commitmentLevel,
+          data.compensation,
+          data.deliverables)
       } else {
-        plan = await prisma.collaborationPlan.update({
-          where: {
-            id: plan.id
-          },
-          data: {
-            createdByProfileId: createdByProfile.id,
-            targetProfileId: targetProfileId,
-            status: data.status,
-            title: data.title,
-            description: data.description,
-            rolesNeeded: data.rolesNeeded ?? [],
-            commitmentLevel: data.commitmentLevel,
-            compensation: data.compensation,
-            deliverables: data.deliverables,
-            startBy: data.startBy != null ? new Date(data.startBy) : null
-          }
-        })
+        plan = await collaborationPlanModel.update(
+          prisma,
+          plan.id,
+          targetProfileId,
+          data.status,
+          data.title,
+          data.description,
+          startBy,
+          data.rolesNeeded ?? [],
+          data.commitmentLevel,
+          data.compensation,
+          data.deliverables,
+          undefined,  // completedAt
+          createdByProfile.id)
       }
 
       // Upsert steps
       for (const step of data.steps ?? []) {
-        await prisma.planStep.upsert({
-          where: {
-            planId_seq: {
-              planId: plan.id,
-              seq: step.seq
-            }
-          },
-          create: {
-            planId: plan.id,
-            seq: step.seq,
-            title: step.title,
-            description: step.description,
-            status: step.status
-          },
-          update: {
-            title: step.title,
-            description: step.description,
-            status: step.status
-          }
-        })
+        await planStepModel.upsert(
+          prisma,
+          undefined,
+          plan.id,
+          step.seq,
+          step.title,
+          step.description,
+          step.status)
       }
     }
   }

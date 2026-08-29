@@ -114,6 +114,52 @@ export class ProjectInterestModel {
     }
   }
 
+  async countByProjectId(
+    prisma: PrismaClient,
+    projectId: string) {
+
+    // Debug
+    const fnName = `${this.clName}.countByProjectId()`
+
+    // Count records
+    try {
+      return await prisma.projectInterest.count({
+        where: {
+          projectId: projectId
+        }
+      })
+    } catch (error) {
+      console.error(`${fnName}: error: ${error}`)
+      throw 'Prisma error'
+    }
+  }
+
+  async groupByCountByProjectIds(
+    prisma: PrismaClient,
+    projectIds: string[]) {
+
+    // Debug
+    const fnName = `${this.clName}.groupByCountByProjectIds()`
+
+    // Group records
+    try {
+      return await prisma.projectInterest.groupBy({
+        by: ['projectId'],
+        where: {
+          projectId: {
+            in: projectIds
+          }
+        },
+        _count: {
+          projectId: true
+        }
+      })
+    } catch (error) {
+      console.error(`${fnName}: error: ${error}`)
+      throw 'Prisma error'
+    }
+  }
+
   async upsert(
     prisma: PrismaClient,
     id: string | undefined,

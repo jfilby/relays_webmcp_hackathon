@@ -1,11 +1,25 @@
 import { PrismaClient } from '@/generated/prisma/client'
-import { DemoDataTypes, DemoProjectData } from '@/types/demo-data-types'
+import { DemoDataTypes } from '@/types/demo-data-types'
 import { CoreDemoDataSetupService } from './core-service'
 import { ProfilesDemoDataSetupService } from './profiles-service'
+
+// Models
+import { OrganizationModel } from '@/models/organizations/organization-model'
+import { ProjectInterestModel } from '@/models/projects/project-interest-model'
+import { ProjectMemberModel } from '@/models/projects/project-member-model'
+import { ProjectModel } from '@/models/projects/project-model'
+import { ProjectUrlModel } from '@/models/projects/project-url-model'
 
 // Services
 const coreDemoDataService = new CoreDemoDataSetupService()
 const profilesDemoDataService = new ProfilesDemoDataSetupService()
+
+// Models
+const projectModel = new ProjectModel()
+const projectMemberModel = new ProjectMemberModel()
+const projectUrlModel = new ProjectUrlModel()
+const projectInterestModel = new ProjectInterestModel()
+const organizationModel = new OrganizationModel()
 
 // Class
 // Upserts demo projects and their members, URLs and interests.
@@ -31,34 +45,30 @@ export class ProjectsDemoDataSetupService {
         await this.getOrganizationIdByKey(prisma, data.organizationKey) :
         null
 
-      const project = await prisma.project.upsert({
-        where: {
-          publicId: data.publicId
-        },
-        create: this.toCreate(data, instance.id, organizationId),
-        update: this.toUpdate(data, organizationId)
-      })
+      const project = await projectModel.upsert(
+        prisma,
+        undefined,
+        data.publicId,
+        instance.id,
+        data.isPromoted ?? false,
+        data.status,
+        organizationId,
+        data.tagline,
+        data.description,
+        data.image,
+        data.techStack ?? [],
+        data.stage,
+        data.isOpenToCollaborators ?? false)
 
       // Upsert URLs
       for (const url of data.urls ?? []) {
-        await prisma.projectUrl.upsert({
-          where: {
-            projectId_url: {
-              projectId: project.id,
-              url: url.url
-            }
-          },
-          create: {
-            projectId: project.id,
-            kind: url.kind,
-            url: url.url,
-            label: url.label
-          },
-          update: {
-            kind: url.kind,
-            label: url.label
-          }
-        })
+        await projectUrlModel.upsert(
+          prisma,
+          undefined,
+          project.id,
+          url.kind,
+          url.url,
+          url.label)
       }
     }
 
@@ -69,24 +79,13 @@ export class ProjectsDemoDataSetupService {
         prisma,
         data.profileKey)
 
-      await prisma.projectMember.upsert({
-        where: {
-          projectId_profileId: {
-            projectId: project.id,
-            profileId: profile.id
-          }
-        },
-        create: {
-          projectId: project.id,
-          profileId: profile.id,
-          role: data.role,
-          status: data.status
-        },
-        update: {
-          role: data.role,
-          status: data.status
-        }
-      })
+      await projectMemberModel.upsert(
+        prisma,
+        undefined,
+        project.id,
+        profile.id,
+        data.role,
+        data.status)
     }
 
     // Upsert interests
@@ -96,19 +95,11 @@ export class ProjectsDemoDataSetupService {
         data.profileKey)
       const project = await this.getProjectByKey(prisma, data.projectKey)
 
-      await prisma.projectInterest.upsert({
-        where: {
-          profileId_projectId: {
-            profileId: profile.id,
-            projectId: project.id
-          }
-        },
-        create: {
-          profileId: profile.id,
-          projectId: project.id
-        },
-        update: {}
-      })
+      await projectInterestModel.upsert(
+        prisma,
+        undefined,
+        profile.id,
+        project.id)
     }
   }
 
@@ -124,11 +115,9 @@ export class ProjectsDemoDataSetupService {
       throw `${this.clName}: no demo project data for key: ${key}`
     }
 
-    const project = await prisma.project.findUnique({
-      where: {
-        publicId: data.publicId
-      }
-    })
+    const project = await projectModel.getByPublicId(
+      prisma,
+      data.publicId)
 
     if (project == null) {
       throw `${this.clName}: demo project not found: ${data.publicId}`
@@ -147,56 +136,14 @@ export class ProjectsDemoDataSetupService {
       throw `${this.clName}: no demo organization data for key: ${key}`
     }
 
-    const organization = await prisma.organization.findFirst({
-      where: {
-        name: data.name
-      },
-      select: {
-        id: true
-      }
-    })
+    const organization = await organizationModel.getByName(
+      prisma,
+      data.name)
 
     if (organization == null) {
       throw `${this.clName}: demo organization not found: ${data.name}`
     }
 
     return organization.id
-  }
-
-  private toCreate(
-    data: DemoProjectData,
-    instanceId: string,
-    organizationId: string | null) {
-
-    return {
-      publicId: data.publicId,
-      instanceId: instanceId,
-      organizationId: organizationId,
-      tagline: data.tagline,
-      description: data.description,
-      image: data.image,
-      techStack: data.techStack ?? [],
-      stage: data.stage,
-      isOpenToCollaborators: data.isOpenToCollaborators ?? false,
-      isPromoted: data.isPromoted ?? false,
-      status: data.status
-    }
-  }
-
-  private toUpdate(
-    data: DemoProjectData,
-    organizationId: string | null) {
-
-    return {
-      organizationId: organizationId,
-      tagline: data.tagline,
-      description: data.description,
-      image: data.image,
-      techStack: data.techStack ?? [],
-      stage: data.stage,
-      isOpenToCollaborators: data.isOpenToCollaborators ?? false,
-      isPromoted: data.isPromoted ?? false,
-      status: data.status
-    }
   }
 }

@@ -139,4 +139,62 @@ export class ProfileSkillModel {
       throw 'Prisma error'
     }
   }
+
+  async upsert(
+    prisma: PrismaClient,
+    id: string | undefined,
+    profileId: string | undefined,
+    skillId: string | undefined,
+    level: string | undefined) {
+
+    // Debug
+    const fnName = `${this.clName}.upsert()`
+
+    // If id isn't specified, but the unique keys are, try to get the record
+    if (id == null &&
+        profileId != null &&
+        skillId != null) {
+
+      const profileSkill = await
+        this.getByProfileIdAndSkillId(
+          prisma,
+          profileId,
+          skillId)
+
+      if (profileSkill != null) {
+        id = profileSkill.id
+      }
+    }
+
+    // Upsert
+    if (id == null) {
+
+      // Validate for create (mainly for type validation of the create call)
+      if (profileId == null) {
+        console.error(`${fnName}: id is null and profileId is null`)
+        throw 'Prisma error'
+      }
+
+      if (skillId == null) {
+        console.error(`${fnName}: id is null and skillId is null`)
+        throw 'Prisma error'
+      }
+
+      // Create
+      return await
+        this.create(
+          prisma,
+          profileId,
+          skillId,
+          level)
+    } else {
+
+      // Update
+      return await
+        this.update(
+          prisma,
+          id,
+          level)
+    }
+  }
 }

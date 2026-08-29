@@ -1,12 +1,23 @@
 import { PrismaClient } from '@/generated/prisma/client'
 import { BaseDataTypes } from '@/types/base-data-types'
+// Serene Core imports
+import { UserProfileModel } from 'serene-core-server'
 import { ProfileModel } from '@/models/profiles/profile-model'
+import { SkillModel } from '@/models/profiles/skill-model'
+import { ProfileSkillModel } from '@/models/profiles/profile-skill-model'
+import { ProfileLinkModel } from '@/models/profiles/profile-link-model'
+import { EndorsementModel } from '@/models/profiles/endorsement-model'
 import { EmailListsMutateService } from '@/services/email-lists/mutate-service'
 import { PublicIdService } from '@/services/utils/public-id-service'
 import { ProfilesQueryService } from './query-service'
 
 // Models
+const userProfileModel = new UserProfileModel()
 const profileModel = new ProfileModel()
+const skillModel = new SkillModel()
+const profileSkillModel = new ProfileSkillModel()
+const profileLinkModel = new ProfileLinkModel()
+const endorsementModel = new EndorsementModel()
 
 // Services
 const emailListsMutateService = new EmailListsMutateService()
@@ -61,11 +72,9 @@ export class ProfilesMutateService {
 
     // Validate the user profile exists
     const userProfile = await
-      prisma.userProfile.findUnique({
-        where: {
-          id: userProfileId
-        }
-      })
+      userProfileModel.getById(
+        prisma,
+        userProfileId)
 
     if (userProfile == null) {
       return {
@@ -325,42 +334,27 @@ export class ProfilesMutateService {
 
     // Find or create the catalog entry (names are matched case-insensitively)
     let skill = await
-      prisma.skill.findFirst({
-        where: {
-          name: {
-            equals: skillName.trim(),
-            mode: 'insensitive'
-          }
-        }
-      })
+      skillModel.getByExactName(
+        prisma,
+        skillName.trim())
 
     if (skill == null) {
-      try {
-        skill = await
-          prisma.skill.create({
-            data: {
-              name: skillName.trim(),
-              status: BaseDataTypes.activeStatus
-            }
-          })
-      } catch (error) {
-        console.error(`${fnName}: error: ${error}`)
-        throw 'Prisma error'
-      }
+      skill = await
+        skillModel.create(
+          prisma,
+          skillName.trim(),
+          BaseDataTypes.activeStatus)
     }
 
     // Link the skill to the profile
     try {
       await
-        prisma.profileSkill.create({
-          data: {
-            profileId: profile.id,
-            skillId: skill.id,
-            level: level
-          }
-        })
+        profileSkillModel.create(
+          prisma,
+          profile.id,
+          skill.id,
+          level)
     } catch (error) {
-      console.error(`${fnName}: error: ${error}`)
       return {
         status: false,
         message: `You already have this skill on your profile`
@@ -390,11 +384,9 @@ export class ProfilesMutateService {
 
     // Load the profile skill to verify ownership
     const profileSkill = await
-      prisma.profileSkill.findUnique({
-        where: {
-          id: profileSkillId
-        }
-      })
+      profileSkillModel.getById(
+        prisma,
+        profileSkillId)
 
     if (profileSkill == null) {
       return {
@@ -418,11 +410,9 @@ export class ProfilesMutateService {
 
     // Delete
     await
-      prisma.profileSkill.delete({
-        where: {
-          id: profileSkillId
-        }
-      })
+      profileSkillModel.deleteById(
+        prisma,
+        profileSkillId)
 
     // Return
     return {
@@ -474,16 +464,13 @@ export class ProfilesMutateService {
     // Create the link
     try {
       await
-        prisma.profileLink.create({
-          data: {
-            profileId: profile.id,
-            kind: kind,
-            url: url.trim(),
-            handle: handle != null && handle.trim() !== '' ? handle.trim() : undefined
-          }
-        })
+        profileLinkModel.create(
+          prisma,
+          profile.id,
+          kind,
+          url.trim(),
+          handle != null && handle.trim() !== '' ? handle.trim() : undefined)
     } catch (error) {
-      console.error(`${fnName}: error: ${error}`)
       return {
         status: false,
         message: `This link is already on your profile`
@@ -508,11 +495,9 @@ export class ProfilesMutateService {
 
     // Load the link to verify ownership
     const link = await
-      prisma.profileLink.findUnique({
-        where: {
-          id: id
-        }
-      })
+      profileLinkModel.getById(
+        prisma,
+        id)
 
     if (link == null) {
       return {
@@ -536,11 +521,9 @@ export class ProfilesMutateService {
 
     // Delete
     await
-      prisma.profileLink.delete({
-        where: {
-          id: link.id
-        }
-      })
+      profileLinkModel.deleteById(
+        prisma,
+        link.id)
 
     // Return
     return {
@@ -582,11 +565,9 @@ export class ProfilesMutateService {
     }
 
     const toProfile = await
-      prisma.profile.findUnique({
-        where: {
-          id: toProfileId
-        }
-      })
+      profileModel.getById(
+        prisma,
+        toProfileId)
 
     if (toProfile == null) {
       return {
@@ -597,14 +578,10 @@ export class ProfilesMutateService {
 
     // Only claimed skills can be endorsed
     const profileSkill = await
-      prisma.profileSkill.findUnique({
-        where: {
-          profileId_skillId: {
-            profileId: toProfileId,
-            skillId: skillId
-          }
-        }
-      })
+      profileSkillModel.getByProfileIdAndSkillId(
+        prisma,
+        toProfileId,
+        skillId)
 
     if (profileSkill == null) {
       return {
@@ -616,16 +593,13 @@ export class ProfilesMutateService {
     // Create the endorsement
     try {
       await
-        prisma.endorsement.create({
-          data: {
-            fromProfileId: fromProfile.id,
-            toProfileId: toProfileId,
-            skillId: skillId,
-            comment: comment != null && comment.trim() !== '' ? comment.trim() : undefined
-          }
-        })
+        endorsementModel.create(
+          prisma,
+          fromProfile.id,
+          toProfileId,
+          skillId,
+          comment != null && comment.trim() !== '' ? comment.trim() : undefined)
     } catch (error) {
-      console.error(`${fnName}: error: ${error}`)
       return {
         status: false,
         message: `You already endorsed this skill for this profile`

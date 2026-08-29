@@ -59,6 +59,103 @@ export class DiscussCommentModel {
     }
   }
 
+  async countByPostId(
+    prisma: PrismaClient,
+    postId: string,
+    status: string) {
+
+    // Debug
+    const fnName = `${this.clName}.countByPostId()`
+
+    // Query
+    try {
+      return await prisma.discussComment.count({
+        where: {
+          postId: postId,
+          status: status
+        }
+      })
+    } catch (error) {
+      console.error(`${fnName}: error: ${error}`)
+      throw 'Prisma error'
+    }
+  }
+
+  async countByPostIds(
+    prisma: PrismaClient,
+    postIds: string[],
+    status: string) {
+
+    // Debug
+    const fnName = `${this.clName}.countByPostIds()`
+
+    // Query
+    try {
+      return await prisma.discussComment.groupBy({
+        by: ['postId'],
+        where: {
+          postId: {
+            in: postIds
+          },
+          status: status
+        },
+        _count: {
+          _all: true
+        }
+      })
+    } catch (error) {
+      console.error(`${fnName}: error: ${error}`)
+      throw 'Prisma error'
+    }
+  }
+
+  async filterByPostIdAndStatus(
+    prisma: PrismaClient,
+    postId: string,
+    status: string) {
+
+    // Debug
+    const fnName = `${this.clName}.filterByPostIdAndStatus()`
+
+    // Query
+    try {
+      return await prisma.discussComment.findMany({
+        where: {
+          postId: postId,
+          status: status
+        },
+        orderBy: {
+          created: 'asc'
+        }
+      })
+    } catch (error) {
+      console.error(`${fnName}: error: ${error}`)
+      throw 'Prisma error'
+    }
+  }
+
+  async filterByParentCommentIds(
+    prisma: PrismaClient,
+    parentCommentIds: string[]) {
+
+    // Debug
+    const fnName = `${this.clName}.filterByParentCommentIds()`
+
+    // Query
+    try {
+      return await prisma.discussComment.findMany({
+        where: {
+          parentCommentId: {
+            in: parentCommentIds
+          }
+        }
+      })
+    } catch (error) {
+      console.error(`${fnName}: error: ${error}`)
+      throw 'Prisma error'
+    }
+  }
+
   async getById(
     prisma: PrismaClient,
     id: string) {
@@ -118,6 +215,136 @@ export class DiscussCommentModel {
     } catch (error) {
       console.error(`${fnName}: error: ${error}`)
       throw 'Prisma error'
+    }
+  }
+
+  async getByPublicId(
+    prisma: PrismaClient,
+    publicId: string) {
+
+    // Debug
+    const fnName = `${this.clName}.getByPublicId()`
+
+    // Query
+    try {
+      return await prisma.discussComment.findUnique({
+        where: {
+          publicId: publicId
+        }
+      })
+    } catch (error) {
+      console.error(`${fnName}: error: ${error}`)
+      throw 'Prisma error'
+    }
+  }
+
+  async update(
+    prisma: PrismaClient,
+    id: string,
+    body: string | undefined,
+    status: string | undefined) {
+
+    // Debug
+    const fnName = `${this.clName}.update()`
+
+    // Update record
+    try {
+      return await prisma.discussComment.update({
+        data: {
+          body: body,
+          status: status
+        },
+        where: {
+          id: id
+        }
+      })
+    } catch (error) {
+      console.error(`${fnName}: error: ${error}`)
+      throw 'Prisma error'
+    }
+  }
+
+  async upsert(
+    prisma: PrismaClient,
+    id: string | undefined,
+    publicId: string | undefined,
+    postId: string | undefined,
+    authorProfileId: string | undefined,
+    body: string | undefined,
+    status: string | undefined,
+    parentCommentId: string | null | undefined) {
+
+    // Debug
+    const fnName = `${this.clName}.upsert()`
+
+    // If id isn't specified, but the unique keys are, try to get the record
+    if (id == null &&
+        publicId != null) {
+
+      const discussComment = await
+        this.getByPublicId(
+          prisma,
+          publicId)
+
+      if (discussComment != null) {
+        id = discussComment.id
+      }
+    }
+
+    // Upsert
+    if (id == null) {
+
+      // Validate for create (mainly for type validation of the create call)
+      if (publicId == null) {
+        console.error(`${fnName}: id is null and publicId is null`)
+        throw 'Prisma error'
+      }
+
+      if (postId == null) {
+        console.error(`${fnName}: id is null and postId is null`)
+        throw 'Prisma error'
+      }
+
+      if (authorProfileId == null) {
+        console.error(`${fnName}: id is null and authorProfileId is null`)
+        throw 'Prisma error'
+      }
+
+      if (body == null) {
+        console.error(`${fnName}: id is null and body is null`)
+        throw 'Prisma error'
+      }
+
+      if (status == null) {
+        console.error(`${fnName}: id is null and status is null`)
+        throw 'Prisma error'
+      }
+
+      // Create. Note: an explicit publicId is used (create() generates one)
+      try {
+        return await prisma.discussComment.create({
+          data: {
+            publicId: publicId,
+            postId: postId,
+            authorProfileId: authorProfileId,
+            body: body,
+            status: status,
+            parentCommentId: parentCommentId
+          }
+        })
+      } catch (error) {
+        console.error(`${fnName}: error: ${error}`)
+        throw 'Prisma error'
+      }
+    } else {
+
+      // Update
+      return await
+        this.update(
+          prisma,
+          id,
+          body,
+          status)
     }
   }
 }

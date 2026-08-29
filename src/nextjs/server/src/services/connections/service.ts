@@ -1,5 +1,11 @@
-import { PrismaClient } from '@/generated/prisma/client'
+import { PrismaClient, Profile } from '@/generated/prisma/client'
+import { ConnectionModel } from '@/models/profiles/connection-model'
+import { ProfileModel } from '@/models/profiles/profile-model'
 import { NotificationsService } from '@/services/notifications/service'
+
+// Models
+const connectionModel = new ConnectionModel()
+const profileModel = new ProfileModel()
 
 // Services
 const notificationsService = new NotificationsService()
@@ -32,11 +38,9 @@ export class ConnectionsService {
 
     // Resolve the sender's profile
     const fromProfile = await
-      prisma.profile.findUnique({
-        where: {
-          userProfileId: fromUserProfileId
-        }
-      })
+      profileModel.getByUserProfileId(
+        prisma,
+        fromUserProfileId)
 
     if (fromProfile == null) {
       return {
@@ -54,11 +58,9 @@ export class ConnectionsService {
     }
 
     const toProfile = await
-      prisma.profile.findUnique({
-        where: {
-          id: toProfileId
-        }
-      })
+      profileModel.getById(
+        prisma,
+        toProfileId)
 
     if (toProfile == null || toProfile.isPublic === false) {
       return {
@@ -70,14 +72,10 @@ export class ConnectionsService {
     // An existing edge in either direction blocks a new request. A reverse
     // pending request is accepted instead of duplicated.
     const existingForward = await
-      prisma.connection.findUnique({
-        where: {
-          fromProfileId_toProfileId: {
-            fromProfileId: fromProfile.id,
-            toProfileId: toProfileId
-          }
-        }
-      })
+      connectionModel.getByFromTo(
+        prisma,
+        fromProfile.id,
+        toProfileId)
 
     if (existingForward != null &&
         existingForward.status !== this.rejectedStatus) {
@@ -91,14 +89,10 @@ export class ConnectionsService {
     }
 
     const existingReverse = await
-      prisma.connection.findUnique({
-        where: {
-          fromProfileId_toProfileId: {
-            fromProfileId: toProfileId,
-            toProfileId: fromProfile.id
-          }
-        }
-      })
+      connectionModel.getByFromTo(
+        prisma,
+        toProfileId,
+        fromProfile.id)
 
     if (existingReverse != null &&
         existingReverse.status !== this.rejectedStatus) {
@@ -110,36 +104,25 @@ export class ConnectionsService {
             `You're already connected`
       }
     }
-
     // Create (or recreate after rejection) the pending edge
-    try {
-      if (existingForward != null && existingForward.status === this.rejectedStatus) {
-        await
-          prisma.connection.update({
-            where: {
-              id: existingForward.id
-            },
-            data: {
-              status: this.pendingStatus,
-              message: message != null && message.trim() !== '' ? message.trim() : null,
-              origin: this.defaultOrigin
-            }
-          })
-      } else {
-        await
-          prisma.connection.create({
-            data: {
-              fromProfileId: fromProfile.id,
-              toProfileId: toProfileId,
-              status: this.pendingStatus,
-              origin: this.defaultOrigin,
-              message: message != null && message.trim() !== '' ? message.trim() : undefined
-            }
-          })
-      }
-    } catch (error) {
-      console.error(`${fnName}: error: ${error}`)
-      throw 'Prisma error'
+    if (existingForward != null && existingForward.status === this.rejectedStatus) {
+      await
+        connectionModel.update(
+          prisma,
+          existingForward.id,
+          this.pendingStatus,
+          message != null && message.trim() !== '' ? message.trim() : null,
+          undefined,
+          this.defaultOrigin)
+    } else {
+      await
+        connectionModel.create(
+          prisma,
+          fromProfile.id,
+          toProfileId,
+          this.pendingStatus,
+          this.defaultOrigin,
+          message != null && message.trim() !== '' ? message.trim() : undefined)
     }
 
     // Notify the recipient
@@ -177,11 +160,9 @@ export class ConnectionsService {
 
     // Load the connection; only its target can respond
     const connection = await
-      prisma.connection.findUnique({
-        where: {
-          id: connectionId
-        }
-      })
+      connectionModel.getById(
+        prisma,
+        connectionId)
 
     if (connection == null || connection.status !== this.pendingStatus) {
       return {
@@ -191,11 +172,9 @@ export class ConnectionsService {
     }
 
     const myProfile = await
-      prisma.profile.findUnique({
-        where: {
-          userProfileId: userProfileId
-        }
-      })
+      profileModel.getByUserProfileId(
+        prisma,
+        userProfileId)
 
     if (myProfile == null ||
         connection.toProfileId !== myProfile.id) {
@@ -207,24 +186,19 @@ export class ConnectionsService {
 
     // Update the connection
     await
-      prisma.connection.update({
-        where: {
-          id: connection.id
-        },
-        data: {
-          status: response,
-          acceptedAt: response === this.activeStatus ? new Date() : null
-        }
-      })
+      connectionModel.update(
+        prisma,
+        connection.id,
+        response,
+        undefined,
+        response === this.activeStatus ? new Date() : null)
 
     // Notify the requester on acceptance
     if (response === this.activeStatus) {
       const requester = await
-        prisma.profile.findUnique({
-          where: {
-            id: connection.fromProfileId
-          }
-        })
+        profileModel.getById(
+          prisma,
+          connection.fromProfileId)
 
       if (requester != null) {
         await notificationsService.notify(
@@ -257,11 +231,9 @@ export class ConnectionsService {
 
     // Resolve the viewer's profile
     const profile = await
-      prisma.profile.findUnique({
-        where: {
-          userProfileId: userProfileId
-        }
-      })
+      profileModel.getByUserProfileId(
+        prisma,
+        userProfileId)
 
     if (profile == null) {
       return {
@@ -272,24 +244,16 @@ export class ConnectionsService {
 
     // The active edge may exist in either direction
     const forward = await
-      prisma.connection.findUnique({
-        where: {
-          fromProfileId_toProfileId: {
-            fromProfileId: profile.id,
-            toProfileId: peerProfileId
-          }
-        }
-      })
+      connectionModel.getByFromTo(
+        prisma,
+        profile.id,
+        peerProfileId)
 
     const reverse = await
-      prisma.connection.findUnique({
-        where: {
-          fromProfileId_toProfileId: {
-            fromProfileId: peerProfileId,
-            toProfileId: profile.id
-          }
-        }
-      })
+      connectionModel.getByFromTo(
+        prisma,
+        peerProfileId,
+        profile.id)
 
     const edge =
       (forward != null && forward.status === this.activeStatus ? forward : undefined) ??
@@ -304,11 +268,9 @@ export class ConnectionsService {
 
     // Delete
     await
-      prisma.connection.delete({
-        where: {
-          id: edge.id
-        }
-      })
+      connectionModel.deleteById(
+        prisma,
+        edge.id)
 
     // Return
     return {
@@ -328,11 +290,9 @@ export class ConnectionsService {
 
     // Resolve the viewer's profile
     const profile = await
-      prisma.profile.findUnique({
-        where: {
-          userProfileId: userProfileId
-        }
-      })
+      profileModel.getByUserProfileId(
+        prisma,
+        userProfileId)
 
     // No profile, no requests
     if (profile == null) {
@@ -344,15 +304,10 @@ export class ConnectionsService {
 
     // Fetch the pending edges targeting the profile
     const connections = await
-      prisma.connection.findMany({
-        where: {
-          toProfileId: profile.id,
-          status: this.pendingStatus
-        },
-        orderBy: {
-          created: 'desc'
-        }
-      })
+      connectionModel.getByToProfileIdAndStatus(
+        prisma,
+        profile.id,
+        this.pendingStatus)
 
     // No requests, no senders to fetch
     if (connections.length === 0) {
@@ -363,21 +318,27 @@ export class ConnectionsService {
     }
 
     // Fetch the senders for display
-    const senders = await
-      prisma.profile.findMany({
-        where: {
-          id: { in: connections.map(connection => connection.fromProfileId) }
-        }
-      })
+    const sendersById: Record<string, Profile> = {}
 
-    const sendersById = new Map(senders.map(sender => [sender.id, sender]))
+    for (const connection of connections) {
+      if (sendersById[connection.fromProfileId] == null) {
+        const sender = await
+          profileModel.getById(
+            prisma,
+            connection.fromProfileId)
+
+        if (sender != null) {
+          sendersById[connection.fromProfileId] = sender
+        }
+      }
+    }
 
     // Return
     return {
       status: true,
       requests: connections
         .map(connection => {
-          const sender = sendersById.get(connection.fromProfileId)
+          const sender = sendersById[connection.fromProfileId]
 
           if (sender == null) {
             return null

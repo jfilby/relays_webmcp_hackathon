@@ -1,5 +1,12 @@
 import { PrismaClient } from '@/generated/prisma/client'
-import { DemoDataTypes, DemoInstanceData } from '@/types/demo-data-types'
+import { DemoDataTypes } from '@/types/demo-data-types'
+
+// Serene Core imports
+import { InstanceModel, UserProfileModel } from 'serene-core-server'
+
+// Models
+const userProfileModel = new UserProfileModel()
+const instanceModel = new InstanceModel()
 
 // Class
 // Upserts the serene-core records (user profiles and instances) that the
@@ -18,19 +25,20 @@ export class CoreDemoDataSetupService {
 
     // Upsert user profiles
     for (const data of DemoDataTypes.userProfiles) {
-      await prisma.userProfile.upsert({
-        where: {
-          publicId: data.publicId
-        },
-        create: {
-          publicId: data.publicId,
-          isAdmin: data.isAdmin ?? false,
-          roles: []
-        },
-        update: {
-          isAdmin: data.isAdmin ?? false
-        }
-      })
+
+      // The serene-core upsert locates existing records by user id (demo user
+      // profiles have none), so look the record up by publicId first
+      const existingUserProfile = await userProfileModel.getByPublicId(
+        prisma,
+        data.publicId)
+
+      await userProfileModel.upsert(
+        prisma,
+        existingUserProfile?.id,
+        data.publicId,
+        null,  // userId
+        data.isAdmin ?? false,
+        null)  // deletePending
     }
 
     // Upsert instances
@@ -39,19 +47,27 @@ export class CoreDemoDataSetupService {
         prisma,
         data.ownerUserProfileKey)
 
-      await prisma.instance.upsert({
-        where: {
-          publicId: data.publicId!
-        },
-        create: this.toCreate(data, ownerUserProfile.id),
-        update: {
-          status: data.status,
-          name: data.name,
-          instanceType: data.instanceType,
-          isDefault: data.isDefault ?? false,
-          isDemo: data.isDemo ?? false
-        }
-      })
+      // The serene-core upsert locates existing records by parent + key +
+      // user profile (demo instances have no parent), so look the record up
+      // by publicId first
+      const existingInstance = await instanceModel.getByPublicId(
+        prisma,
+        data.publicId!)
+
+      await instanceModel.upsert(
+        prisma,
+        existingInstance?.id,
+        data.publicId!,
+        null,  // parentId
+        ownerUserProfile.id,
+        data.instanceType,
+        null,  // projectType
+        data.isDemo ?? false,
+        data.isDefault ?? false,
+        data.status,
+        null,  // publicAccess
+        data.instanceKey,
+        data.name)
     }
   }
 
@@ -67,11 +83,9 @@ export class CoreDemoDataSetupService {
       throw `${this.clName}: no demo user profile data for key: ${key}`
     }
 
-    const userProfile = await prisma.userProfile.findUnique({
-      where: {
-        publicId: data.publicId
-      }
-    })
+    const userProfile = await userProfileModel.getByPublicId(
+      prisma,
+      data.publicId)
 
     if (userProfile == null) {
       throw `${this.clName}: demo user profile not found: ${data.publicId}`
@@ -90,32 +104,14 @@ export class CoreDemoDataSetupService {
       throw `${this.clName}: no demo instance data for key: ${key}`
     }
 
-    const instance = await prisma.instance.findUnique({
-      where: {
-        publicId: data.publicId!
-      }
-    })
+    const instance = await instanceModel.getByPublicId(
+      prisma,
+      data.publicId!)
 
     if (instance == null) {
       throw `${this.clName}: demo instance not found: ${data.publicId}`
     }
 
     return instance
-  }
-
-  private toCreate(
-    data: DemoInstanceData,
-    userProfileId: string) {
-
-    return {
-      publicId: data.publicId,
-      userProfileId: userProfileId,
-      status: data.status,
-      key: data.instanceKey,
-      name: data.name,
-      instanceType: data.instanceType,
-      isDefault: data.isDefault ?? false,
-      isDemo: data.isDemo ?? false
-    }
   }
 }

@@ -2,8 +2,14 @@ import { PrismaClient } from '@/generated/prisma/client'
 import { DemoDataTypes } from '@/types/demo-data-types'
 import { CoreDemoDataSetupService } from './core-service'
 
+// Models
+import { BatchJobModel } from '@/models/batch/batch-job-model'
+
 // Services
 const coreDemoDataService = new CoreDemoDataSetupService()
+
+// Models
+const batchJobModel = new BatchJobModel()
 
 // Class
 // Upserts demo batch jobs. BatchJob has no unique constraint, so jobs are
@@ -36,46 +42,41 @@ export class BatchDemoDataSetupService {
         JSON.stringify(data.parameters) :
         null
 
-      const existing = await prisma.batchJob.findFirst({
-        where: {
-          jobType: data.jobType,
-          refModel: data.refModel ?? null,
-          refId: data.refId ?? null
-        }
-      })
+      const existing = await batchJobModel.getByJobTypeAndRefModelAndRefId(
+        prisma,
+        data.jobType,
+        data.refModel ?? null,
+        data.refId ?? null)
 
       if (existing == null) {
-        await prisma.batchJob.create({
-          data: {
-            instanceId: instanceId,
-            userProfileId: userProfileId,
-            runInATransaction: data.runInATransaction,
-            status: data.status,
-            statusReason: data.statusReason,
-            progressPct: data.progressPct,
-            message: data.message,
-            jobType: data.jobType,
-            refModel: data.refModel,
-            refId: data.refId,
-            parameters: parameters
-          }
-        })
+        await batchJobModel.create(
+          prisma,
+          instanceId,
+          data.runInATransaction,
+          data.status,
+          data.statusReason,
+          data.progressPct,
+          data.message,
+          data.jobType,
+          data.refModel,
+          data.refId,
+          parameters,
+          userProfileId)
       } else {
-        await prisma.batchJob.update({
-          where: {
-            id: existing.id
-          },
-          data: {
-            instanceId: instanceId,
-            userProfileId: userProfileId,
-            runInATransaction: data.runInATransaction,
-            status: data.status,
-            statusReason: data.statusReason,
-            progressPct: data.progressPct,
-            message: data.message,
-            parameters: parameters
-          }
-        })
+        await batchJobModel.update(
+          prisma,
+          existing.id,
+          instanceId,
+          data.runInATransaction,
+          data.status,
+          data.statusReason,
+          data.progressPct,
+          data.message,
+          undefined,  // jobType
+          undefined,  // refModel
+          undefined,  // refId
+          parameters,
+          userProfileId)
       }
     }
   }

@@ -1,9 +1,15 @@
 import { PrismaClient } from '@/generated/prisma/client'
 import { CollaborationPlanModel } from '@/models/collaboration/collaboration-plan-model'
+import { PlanStepModel } from '@/models/collaboration/plan-step-model'
+import { ProfileModel } from '@/models/profiles/profile-model'
+import { ProjectModel } from '@/models/projects/project-model'
 import { NotificationsService } from '@/services/notifications/service'
 
 // Models
 const collaborationPlanModel = new CollaborationPlanModel()
+const planStepModel = new PlanStepModel()
+const profileModel = new ProfileModel()
+const projectModel = new ProjectModel()
 
 // Services
 const notificationsService = new NotificationsService()
@@ -55,11 +61,9 @@ export class CollaborationMutateService {
 
     // Resolve the creator's profile
     const creatorProfile = await
-      prisma.profile.findUnique({
-        where: {
-          userProfileId: userProfileId
-        }
-      })
+      profileModel.getByUserProfileId(
+        prisma,
+        userProfileId)
 
     if (creatorProfile == null) {
       return {
@@ -70,11 +74,9 @@ export class CollaborationMutateService {
 
     // Validate the project exists
     const project = await
-      prisma.project.findUnique({
-        where: {
-          id: projectId
-        }
-      })
+      projectModel.getById(
+        prisma,
+        projectId)
 
     if (project == null) {
       return {
@@ -95,11 +97,9 @@ export class CollaborationMutateService {
       }
 
       const targetProfile = await
-        prisma.profile.findUnique({
-          where: {
-            id: targetProfileId.trim()
-          }
-        })
+        profileModel.getById(
+          prisma,
+          targetProfileId.trim())
 
       if (targetProfile == null) {
         return {
@@ -151,11 +151,9 @@ export class CollaborationMutateService {
     // Notify the target, if there is one
     if (resolvedTargetProfileId != null) {
       const target = await
-        prisma.profile.findUnique({
-          where: {
-            id: resolvedTargetProfileId
-          }
-        })
+        profileModel.getById(
+          prisma,
+          resolvedTargetProfileId)
 
       if (target != null) {
         await notificationsService.notify(
@@ -195,11 +193,9 @@ export class CollaborationMutateService {
 
     // Load the plan to verify ownership
     const existing = await
-      prisma.collaborationPlan.findUnique({
-        where: {
-          id: planId
-        }
-      })
+      collaborationPlanModel.getById(
+        prisma,
+        planId)
 
     if (existing == null) {
       return {
@@ -298,11 +294,9 @@ export class CollaborationMutateService {
 
     // Load the plan
     const existing = await
-      prisma.collaborationPlan.findUnique({
-        where: {
-          id: planId
-        }
-      })
+      collaborationPlanModel.getById(
+        prisma,
+        planId)
 
     if (existing == null) {
       return {
@@ -313,11 +307,9 @@ export class CollaborationMutateService {
 
     // The actor must be the creator or the target
     const actorProfile = await
-      prisma.profile.findUnique({
-        where: {
-          userProfileId: userProfileId
-        }
-      })
+      profileModel.getByUserProfileId(
+        prisma,
+        userProfileId)
 
     if (actorProfile == null ||
         (actorProfile.id !== existing.createdByProfileId &&
@@ -352,11 +344,9 @@ export class CollaborationMutateService {
 
     if (counterpartProfileId != null) {
       const counterpart = await
-        prisma.profile.findUnique({
-          where: {
-            id: counterpartProfileId
-          }
-        })
+        profileModel.getById(
+          prisma,
+          counterpartProfileId)
 
       if (counterpart != null) {
         await notificationsService.notify(
@@ -397,11 +387,9 @@ export class CollaborationMutateService {
 
     // Load the plan to verify ownership
     const plan = await
-      prisma.collaborationPlan.findUnique({
-        where: {
-          id: planId
-        }
-      })
+      collaborationPlanModel.getById(
+        prisma,
+        planId)
 
     if (plan == null) {
       return {
@@ -424,32 +412,24 @@ export class CollaborationMutateService {
     }
 
     // Compute the next sequence number
-    const aggregate = await
-      prisma.planStep.aggregate({
-        where: {
-          planId: planId
-        },
-        _max: {
-          seq: true
-        }
-      })
+    const maxSeq = await
+      planStepModel.getMaxSeqByPlanId(
+        prisma,
+        planId)
 
-    const nextSeq = (aggregate._max.seq ?? 0) + 1
+    const nextSeq = maxSeq + 1
 
     // Create the step
     const step = await
-      prisma.planStep.create({
-        data: {
-          planId: planId,
-          seq: nextSeq,
-          title: title.trim(),
-          description:
-            description != null && description.trim() !== '' ?
-              description.trim() :
-              undefined,
-          status: 'P'
-        }
-      })
+      planStepModel.create(
+        prisma,
+        planId,
+        nextSeq,
+        title.trim(),
+        'P',
+        description != null && description.trim() !== '' ?
+          description.trim() :
+          undefined)
 
     // Return
     return {
@@ -480,11 +460,9 @@ export class CollaborationMutateService {
 
     // Load the step and its plan to verify ownership
     const step = await
-      prisma.planStep.findUnique({
-        where: {
-          id: stepId
-        }
-      })
+      planStepModel.getById(
+        prisma,
+        stepId)
 
     if (step == null) {
       return {
@@ -494,11 +472,9 @@ export class CollaborationMutateService {
     }
 
     const plan = await
-      prisma.collaborationPlan.findUnique({
-        where: {
-          id: step.planId
-        }
-      })
+      collaborationPlanModel.getById(
+        prisma,
+        step.planId)
 
     if (plan == null) {
       return {
@@ -531,19 +507,15 @@ export class CollaborationMutateService {
 
     // Update the step
     const updated = await
-      prisma.planStep.update({
-        where: {
-          id: step.id
-        },
-        data: {
-          title: title != null && title.trim() !== '' ? title.trim() : undefined,
-          description:
-            description != null && description.trim() !== '' ?
-              description.trim() :
-              undefined,
-          status: status ?? undefined
-        }
-      })
+      planStepModel.update(
+        prisma,
+        step.id,
+        undefined,
+        title != null && title.trim() !== '' ? title.trim() : undefined,
+        description != null && description.trim() !== '' ?
+          description.trim() :
+          undefined,
+        status ?? undefined)
 
     // Return
     return {
@@ -572,11 +544,9 @@ export class CollaborationMutateService {
 
     // Load the step and its plan to verify ownership
     const step = await
-      prisma.planStep.findUnique({
-        where: {
-          id: stepId
-        }
-      })
+      planStepModel.getById(
+        prisma,
+        stepId)
 
     if (step == null) {
       return {
@@ -586,11 +556,9 @@ export class CollaborationMutateService {
     }
 
     const plan = await
-      prisma.collaborationPlan.findUnique({
-        where: {
-          id: step.planId
-        }
-      })
+      collaborationPlanModel.getById(
+        prisma,
+        step.planId)
 
     if (plan == null) {
       return {
@@ -614,34 +582,27 @@ export class CollaborationMutateService {
 
     // Delete the step
     await
-      prisma.planStep.delete({
-        where: {
-          id: step.id
-        }
-      })
+      planStepModel.deleteById(
+        prisma,
+        step.id)
 
     // Renumber later steps to keep the sequence contiguous
     const laterSteps = await
-      prisma.planStep.findMany({
-        where: {
-          planId: step.planId,
-          seq: { gt: step.seq }
-        },
-        orderBy: {
-          seq: 'asc'
-        }
-      })
+      planStepModel.filter(
+        prisma,
+        step.planId,
+        undefined,
+        step.seq)
 
     for (const laterStep of laterSteps) {
       await
-        prisma.planStep.update({
-          where: {
-            id: laterStep.id
-          },
-          data: {
-            seq: laterStep.seq - 1
-          }
-        })
+        planStepModel.update(
+          prisma,
+          laterStep.id,
+          laterStep.seq - 1,
+          undefined,
+          undefined,
+          undefined)
     }
 
     // Return
@@ -660,13 +621,10 @@ export class CollaborationMutateService {
     // Debug
     const fnName = `${this.clName}.isCreator()`
 
-    // Resolve the viewer's profile
     const profile = await
-      prisma.profile.findUnique({
-        where: {
-          userProfileId: userProfileId
-        }
-      })
+      profileModel.getByUserProfileId(
+        prisma,
+        userProfileId)
 
     // Return
     return profile != null && profile.id === createdByProfileId

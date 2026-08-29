@@ -145,4 +145,75 @@ export class OrganizationMemberModel {
       throw 'Prisma error'
     }
   }
+
+  async upsert(
+    prisma: PrismaClient,
+    id: string | undefined,
+    organizationId: string | undefined,
+    profileId: string | undefined,
+    role: string | undefined,
+    status: string | undefined) {
+
+    // Debug
+    const fnName = `${this.clName}.upsert()`
+
+    // If id isn't specified, but the unique keys are, try to get the record
+    if (id == null &&
+        organizationId != null &&
+        profileId != null) {
+
+      const organizationMember = await
+        this.getByOrganizationAndProfile(
+          prisma,
+          organizationId,
+          profileId)
+
+      if (organizationMember != null) {
+        id = organizationMember.id
+      }
+    }
+
+    // Upsert
+    if (id == null) {
+
+      // Validate for create (mainly for type validation of the create call)
+      if (organizationId == null) {
+        console.error(`${fnName}: id is null and organizationId is null`)
+        throw 'Prisma error'
+      }
+
+      if (profileId == null) {
+        console.error(`${fnName}: id is null and profileId is null`)
+        throw 'Prisma error'
+      }
+
+      if (role == null) {
+        console.error(`${fnName}: id is null and role is null`)
+        throw 'Prisma error'
+      }
+
+      if (status == null) {
+        console.error(`${fnName}: id is null and status is null`)
+        throw 'Prisma error'
+      }
+
+      // Create
+      return await
+        this.create(
+          prisma,
+          organizationId,
+          profileId,
+          role,
+          status)
+    } else {
+
+      // Update
+      return await
+        this.update(
+          prisma,
+          id,
+          role,
+          status)
+    }
+  }
 }
