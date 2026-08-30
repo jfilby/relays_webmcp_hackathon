@@ -75,6 +75,7 @@ export default function EditProfilePage({
   const [newLinkKind, setNewLinkKind] = useState<string>('W')
   const [newLinkUrl, setNewLinkUrl] = useState<string>('')
   const [linkSaving, setLinkSaving] = useState<boolean>(false)
+  const [linkError, setLinkError] = useState<string | undefined>(undefined)
 
   // Link deletion confirmation state
   const [linkDeleteDialogOpen, setLinkDeleteDialogOpen] = useState<boolean>(false)
@@ -147,19 +148,6 @@ export default function EditProfilePage({
     }
 
   }, [updatedAction])
-
-  // Run the link delete once confirmed by the dialog
-  useEffect(() => {
-
-    // Return early if not confirmed
-    if (linkDeleteConfirmed !== true || linkDeletePendingId == null) {
-      return
-    }
-
-    setLinkDeleteConfirmed(false)
-    onRemoveLink(linkDeletePendingId)
-
-  }, [linkDeleteConfirmed])
 
   // Functions
   function onFieldChange(field: keyof ProfileFormValues, value: string | boolean) {
@@ -259,41 +247,63 @@ export default function EditProfilePage({
   }
 
   async function onAddLink() {
-
     if (profile == null || newLinkUrl.trim() === '') {
+      return
+    }
+
+    setLinkError(undefined)
+
+    // The URL must parse as an absolute http(s) URL
+    let parsedUrl: URL
+
+    try {
+      parsedUrl = new URL(newLinkUrl.trim())
+    } catch {
+      setLinkError(`URL must be a valid URL (e.g. https://example.com)`)
+      return
+    }
+
+    if (parsedUrl.protocol !== 'http:' && parsedUrl.protocol !== 'https:') {
+      setLinkError(`URL must start with http:// or https://`)
+      return
+    }
+
+    // The hostname must be a domain (e.g. example.com), not a bare label
+    if (parsedUrl.hostname.includes('.') === false) {
+      setLinkError(`URL must have a valid domain (e.g. example.com)`)
       return
     }
 
     setLinkSaving(true)
 
     // Query
-    let addedData: { status: boolean; message?: string } | undefined
+    try {
+      let addedData: { status: boolean; message?: string } | undefined
 
-    await sendAddProfileLinkMutation({
-      variables: {
-        userProfileId: userProfile.id,
-        kind: newLinkKind,
-        url: newLinkUrl.trim()
+      await sendAddProfileLinkMutation({
+        variables: {
+          userProfileId: userProfile.id,
+          kind: newLinkKind,
+          url: newLinkUrl.trim()
+        }
+      }).then(result => addedData = result.data?.addProfileLink)
+
+      // Get results and set fields
+      if (addedData == null) {
+        setLinkError(`Failed to add the link`)
+      } else if (addedData.status === true) {
+        setAlertSeverity('success')
+        setMessage(addedData.message)
+        setNewLinkUrl('')
+        setLinksReloadToken(token => token + 1)
+      } else {
+        setLinkError(addedData.message)
       }
-    }).then(result => addedData = result.data?.addProfileLink)
-
-    // Get results and set fields
-    if (addedData == null) {
-      setAlertSeverity('error')
-      setMessage(`Failed to add the link`)
-    } else if (addedData.status === true) {
-      setAlertSeverity('success')
-      setMessage(addedData.message)
-      toast(`Added`)
-      setNewLinkUrl('')
-      setLinksReloadToken(token => token + 1)
-    } else {
-      setAlertSeverity('error')
-      setMessage(addedData.message)
+    } catch {
+      setLinkError(`Failed to add the link`)
+    } finally {
+      setLinkSaving(false)
     }
-
-    // Done
-    setLinkSaving(false)
   }
 
   function onDeleteLink(id: string) {
@@ -337,6 +347,19 @@ export default function EditProfilePage({
     // Done
     setLinkSaving(false)
   }
+
+  // Run the link delete once confirmed by the dialog
+  useEffect(() => {
+
+    // Return early if not confirmed
+    if (linkDeleteConfirmed !== true || linkDeletePendingId == null) {
+      return
+    }
+
+    setLinkDeleteConfirmed(false)
+    onRemoveLink(linkDeletePendingId)
+
+  }, [linkDeleteConfirmed])
 
   // Render
   return (
@@ -511,9 +534,14 @@ export default function EditProfilePage({
                 <FormControl style={{ width: '20em' }}>
                   <TextField
                     autoComplete='off'
+                    error={linkError != null}
                     fullWidth
+                    helperText={linkError}
                     label='URL'
-                    onChange={(event) => setNewLinkUrl(event.target.value)}
+                    onChange={(event) => {
+                      setNewLinkUrl(event.target.value)
+                      setLinkError(undefined)
+                    }}
                     slotProps={{
                       inputLabel: {
                         shrink: Boolean(newLinkUrl),
@@ -521,7 +549,6 @@ export default function EditProfilePage({
                     }}
                     value={newLinkUrl} />
                 </FormControl>
-
                 <Button
                   disabled={linkSaving || newLinkUrl.trim() === ''}
                   onClick={onAddLink}

@@ -452,6 +452,33 @@ export class ProfilesMutateService {
       }
     }
 
+    // The URL must parse as an absolute http(s) URL
+    let parsedUrl: URL
+
+    try {
+      parsedUrl = new URL(url.trim())
+    } catch {
+      return {
+        status: false,
+        message: `URL must be a valid URL (e.g. https://example.com)`
+      }
+    }
+
+    if (parsedUrl.protocol !== 'http:' && parsedUrl.protocol !== 'https:') {
+      return {
+        status: false,
+        message: `URL must start with http:// or https://`
+      }
+    }
+
+    // The hostname must be a domain (e.g. example.com), not a bare label
+    if (parsedUrl.hostname.includes('.') === false) {
+      return {
+        status: false,
+        message: `URL must have a valid domain (e.g. example.com)`
+      }
+    }
+
     // Resolve the profile
     const profile = await
       profileModel.getByUserProfileId(
