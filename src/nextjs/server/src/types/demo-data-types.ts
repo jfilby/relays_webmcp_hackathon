@@ -274,11 +274,23 @@ export class DemoDataTypes {
     },
     {
       key: 'demo-instance-project-relays',
-      ownerUserProfileKey: 'demo-user-alice',
-      publicId: 'demo-instance-project-relays',
+      ownerUserProfileKey: 'jason-filby',
+      publicId: '',
       status: 'A',
       instanceKey: 'demo-relays',
       name: 'Relays',
+      instanceType: 'P',
+      isDefault: false,
+      isDemo: false,
+      publicAccess: 'R'
+    },
+    {
+      key: 'demo-instance-project-specwright',
+      ownerUserProfileKey: 'demo-user-alice',
+      publicId: 'demo-instance-project-specwright',
+      status: 'A',
+      instanceKey: 'demo-specwright',
+      name: 'Specwright',
       instanceType: 'P',
       isDefault: false,
       isDemo: true,
@@ -536,6 +548,30 @@ export class DemoDataTypes {
         {
           kind: 'R',
           url: 'https://github.com/example/relays',
+          label: 'Repository'
+        }
+      ]
+    },
+    {
+      key: 'demo-project-specwright',
+      instanceKey: 'demo-instance-project-specwright',
+      publicId: 'specwright-demo',
+      tagline: 'Turn plain-language specs into reviewed code changes',
+      description: `Specwright pairs an AI agent with human reviewers to convert product specs into proposed code changes, keeping every patch grounded in the written intent.`,
+      techStack: ['TypeScript', 'Next.js', 'Prisma', 'PostgreSQL'],
+      stage: 'B',
+      isOpenToCollaborators: true,
+      isPromoted: false,
+      status: 'A',
+      urls: [
+        {
+          kind: 'W',
+          url: 'https://specwright.example.com',
+          label: 'Website'
+        },
+        {
+          kind: 'R',
+          url: 'https://github.com/example/specwright',
           label: 'Repository'
         }
       ]
@@ -860,7 +896,7 @@ export class DemoDataTypes {
 
   static readonly projectMembers: DemoProjectMemberData[] = [
     {
-      projectKey: 'demo-project-relays',
+      projectKey: 'demo-project-specwright',
       profileKey: 'demo-profile-alice',
       role: 'O',
       status: 'A'

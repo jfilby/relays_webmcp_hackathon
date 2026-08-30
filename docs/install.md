@@ -19,3 +19,9 @@ pnpm prisma db push
 Run the search setup SQL script:
 server/prisma/custom-migrations/search-setup.sql
 
+
+## Demo data
+
+The Relays project will be assigned to the builder's user profile, make sure
+it exists with publicId 'jason-filby' before running the demo-data command.
+

@@ -5,8 +5,11 @@ import { DemoDataTypes } from '@/types/demo-data-types'
 import { InstanceModel, UserProfileModel } from 'serene-core-server'
 
 // Models
+import { ProfileModel } from '@/models/profiles/profile-model'
+
 const userProfileModel = new UserProfileModel()
 const instanceModel = new InstanceModel()
+const profileModel = new ProfileModel()
 
 // Class
 // Upserts the serene-core records (user profiles and instances) that the
@@ -79,8 +82,28 @@ export class CoreDemoDataSetupService {
 
     const data = DemoDataTypes.userProfiles.find(d => d.key === key)
 
+    // Keys outside the demo data refer to Relays profiles by publicId,
+    // e.g. a real user owning a demo instance
     if (data == null) {
-      throw `${this.clName}: no demo user profile data for key: ${key}`
+      const profile = await profileModel.getByPublicId(
+        prisma,
+        key)
+
+      if (profile == null) {
+        throw `${this.clName}: no demo user profile data or Relays profile ` +
+          `for key: ${key}`
+      }
+
+      const userProfile = await userProfileModel.getById(
+        prisma,
+        profile.userProfileId)
+
+      if (userProfile == null) {
+        throw `${this.clName}: user profile not found for Relays profile: ` +
+          `${key}`
+      }
+
+      return userProfile
     }
 
     const userProfile = await userProfileModel.getByPublicId(
