@@ -22,6 +22,7 @@ import {
 } from './queries/connections'
 import {
   getDiscussPosts,
+  searchDiscussPosts,
   getDiscussPostByPublicId,
   getDiscussCommentsByPostId
 } from './queries/discussion'
@@ -127,6 +128,7 @@ const Query = {
 
   // Discussion
   getDiscussPosts,
+  searchDiscussPosts,
   getDiscussPostByPublicId,
   getDiscussCommentsByPostId,
 

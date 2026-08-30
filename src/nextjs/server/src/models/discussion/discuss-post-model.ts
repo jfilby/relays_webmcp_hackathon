@@ -1,4 +1,4 @@
-import { PrismaClient } from '@/generated/prisma/client'
+import { Prisma, PrismaClient } from '@/generated/prisma/client'
 import { PublicIdService } from '@/services/utils/public-id-service'
 
 export class DiscussPostModel {
@@ -99,6 +99,52 @@ export class DiscussPostModel {
     } catch (error) {
       console.error(`${fnName}: error: ${error}`)
       throw 'Prisma error'
+    }
+  }
+
+  async filterByIds(
+    prisma: PrismaClient,
+    ids: string[],
+    status: string | undefined = undefined) {
+
+    // Debug
+    const fnName = `${this.clName}.filterByIds()`
+
+    // Query
+    try {
+      return await prisma.discussPost.findMany({
+        where: {
+          id: {
+            in: ids
+          },
+          status: status
+        }
+      })
+    } catch (error) {
+      console.error(`${fnName}: error: ${error}`)
+      throw 'Prisma error'
+    }
+  }
+
+  // Store the search embedding (pgvector). An undefined embedding clears the
+  // column. The vector column is managed outside the Prisma schema, so this
+  // is raw SQL.
+  async updateEmbedding(
+    prisma: PrismaClient,
+    id: string,
+    embedding: number[] | undefined) {
+
+    // Debug
+    const fnName = `${this.clName}.updateEmbedding()`
+
+    // Query
+    try {
+      await prisma.$executeRaw(
+        Prisma.sql`UPDATE public."discuss_post"
+          SET embedding = ${embedding != null ? `[${embedding.join(',')}]` : null}::vector
+          WHERE id = ${id}`)
+    } catch (error) {
+      console.error(`${fnName}: error: ${error}`)
     }
   }
 

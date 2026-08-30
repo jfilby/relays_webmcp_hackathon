@@ -5,12 +5,14 @@ import { DiscussPostModel } from '@/models/discussion/discuss-post-model'
 import { DiscussCommentModel } from '@/models/discussion/discuss-comment-model'
 import { ProjectModel } from '@/models/projects/project-model'
 import { ProfileModel } from '@/models/profiles/profile-model'
+import { EmbeddingService } from '@/services/search/embedding-service'
 
 // Models
 const discussPostModel = new DiscussPostModel()
 const discussCommentModel = new DiscussCommentModel()
 const profileModel = new ProfileModel()
 const projectModel = new ProjectModel()
+const embeddingService = new EmbeddingService()
 
 // Class
 export class DiscussionMutateService {
@@ -82,6 +84,10 @@ export class DiscussionMutateService {
         title.trim(),
         body,
         projectId)
+
+    // Sync the search embedding (best effort: on failure the embedding is
+    // cleared and search degrades to the other techniques)
+    await embeddingService.syncDiscussPostEmbedding(prisma, post)
 
     // Return
     return {
@@ -254,6 +260,11 @@ export class DiscussionMutateService {
         BaseDataTypes.activeStatus,
         body,
         parentCommentId)
+
+    // Sync the search embedding (best effort: on failure the embedding is
+    // cleared and search degrades to the other techniques)
+    await embeddingService.syncDiscussCommentEmbedding(prisma, comment)
+
     // Return
     return {
       status: true,

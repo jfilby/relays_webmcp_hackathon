@@ -1,4 +1,6 @@
-import { PrismaClient } from '@/generated/prisma/client'
+import { Prisma, PrismaClient } from '@/generated/prisma/client'
+import type { DiscussPost } from '@/generated/prisma/client'
+import { SearchService } from '@/services/search/search-service'
 import { DiscussPostModel } from '@/models/discussion/discuss-post-model'
 import { DiscussCommentModel } from '@/models/discussion/discuss-comment-model'
 import { ProfileModel } from '@/models/profiles/profile-model'
@@ -8,6 +10,7 @@ import { BaseDataTypes } from '@/types/base-data-types'
 const discussPostModel = new DiscussPostModel()
 const discussCommentModel = new DiscussCommentModel()
 const profileModel = new ProfileModel()
+const searchService = new SearchService()
 
 // Class
 export class DiscussionQueryService {
@@ -24,9 +27,6 @@ export class DiscussionQueryService {
     profileId: string | undefined = undefined,
     projectId: string | undefined = undefined) {
 
-    // Debug
-    const fnName = `${this.clName}.getDiscussPosts()`
-
     // Query
     const posts = await
       discussPostModel.filter(
@@ -34,12 +34,22 @@ export class DiscussionQueryService {
         profileId,
         projectId,
         BaseDataTypes.activeStatus)
+    // Return
+    return {
+      status: true,
+      posts: await this.toPostItems(prisma, posts)
+    }
+  }
+
+  // Enrich posts with comment counts and each author's display name,
+  // preserving the given order.
+  private async toPostItems(
+    prisma: PrismaClient,
+    posts: DiscussPost[]) {
+
     // No posts, no authors to fetch
     if (posts.length === 0) {
-      return {
-        status: true,
-        posts: []
-      }
+      return []
     }
 
     // Load comment counts for every post in one query
@@ -70,21 +80,133 @@ export class DiscussionQueryService {
       authors.map(author => [author.id, author.displayName]))
 
     // Return
+    return posts.map(post => ({
+      id: post.id,
+      publicId: post.publicId,
+      authorProfileId: post.authorProfileId,
+      authorName: authorNames.get(post.authorProfileId) ?? null,
+      projectId: post.projectId,
+      title: post.title,
+      body: post.body,
+      commentCount: commentCountMap.get(post.id) ?? 0,
+      created: post.created.toISOString()
+    }))
+  }
+
+  // Search active discussion posts, matching against both the posts
+  // themselves and their comments; a comment match surfaces its parent post
+  // and a post that matches both ways keeps its best score. An empty search
+  // browses all active posts without ranking.
+  //
+  // The tsvector/trigram expressions below must stay in sync with the
+  // matching indexes in prisma/search-setup.sql.
+  async searchDiscussPosts(
+    prisma: PrismaClient,
+    search: string | undefined) {
+
+    // Browse all when there is nothing to rank
+    if (search == null || search.trim() === '') {
+      const posts = await
+        discussPostModel.filter(
+          prisma,
+          undefined,
+          undefined,
+          BaseDataTypes.activeStatus)
+
+      // Return
+      return {
+        status: true,
+        posts: await this.toPostItems(prisma, posts)
+      }
+    }
+
+    // Hybrid search: one leg over the posts, one over the comments
+    const [postHits, commentHits] = await Promise.all([
+      searchService.hybridSearch(
+        prisma,
+        search,
+        {
+          fromSql: `public."discuss_post" dp`,
+          idColumn: `dp.id`,
+          tsvectorExpressions: [
+            SearchService.toTsvectorSql([
+              `dp.title`,
+              `dp.body`
+            ])
+          ],
+          trigramFieldsSql: [
+            `dp.title`,
+            `dp.body`
+          ],
+          embeddingColumn: `dp.embedding`,
+          filterSql: Prisma.sql`dp.status = 'A'`
+        }),
+      searchService.hybridSearch(
+        prisma,
+        search,
+        {
+          fromSql: `public."discuss_comment" dc`,
+          idColumn: `dc.id`,
+          tsvectorExpressions: [
+            SearchService.toTsvectorSql([
+              `dc.body`
+            ])
+          ],
+          trigramFieldsSql: [
+            `dc.body`
+          ],
+          embeddingColumn: `dc.embedding`,
+          filterSql: Prisma.sql`dc.status = 'A' AND dc.deleted IS NULL`
+        })
+    ])
+    // Map comment hits onto their parent posts
+    const comments = await
+      discussCommentModel.filterByIds(
+        prisma,
+        commentHits.map(hit => hit.id))
+
+    const postIdByCommentId = new Map(
+      comments.map(comment => [comment.id, comment.postId]))
+
+    // Best score per post across both legs
+    const scoreByPostId = new Map<string, number>()
+
+    for (const hit of postHits) {
+      scoreByPostId.set(hit.id, hit.score)
+    }
+
+    for (const hit of commentHits) {
+      const postId = postIdByCommentId.get(hit.id)
+
+      if (postId != null &&
+        (scoreByPostId.get(postId) ?? -Infinity) < hit.score) {
+        scoreByPostId.set(postId, hit.score)
+      }
+    }
+
+    // Load the posts and restore the ranking order
+    const postsById = new Map(
+      (await discussPostModel.filterByIds(
+        prisma,
+        [...scoreByPostId.keys()],
+        BaseDataTypes.activeStatus))
+        .map(post => [post.id, post]))
+
+    const orderedIds = [...scoreByPostId.entries()]
+      .sort((a, b) => b[1] - a[1])
+      .map(([id]) => id)
+
+    const posts = orderedIds
+      .map(id => postsById.get(id))
+      .filter(post => post != null) as DiscussPost[]
+
+    // Return
     return {
       status: true,
-      posts: posts.map(post => ({
-        id: post.id,
-        publicId: post.publicId,
-        authorProfileId: post.authorProfileId,
-        authorName: authorNames.get(post.authorProfileId) ?? null,
-        projectId: post.projectId,
-        title: post.title,
-        body: post.body,
-        commentCount: commentCountMap.get(post.id) ?? 0,
-        created: post.created.toISOString()
-      }))
+      posts: await this.toPostItems(prisma, posts)
     }
   }
+
 
   // Get one discussion post by public id, with its author's display name.
   async getDiscussPostByPublicId(

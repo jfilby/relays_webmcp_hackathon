@@ -1,13 +1,17 @@
 import { PrismaClient } from '@/generated/prisma/client'
-import type { Profile, Project } from '@/generated/prisma/client'
+import type { Profile, Project, DiscussPost, DiscussComment } from '@/generated/prisma/client'
 
 // Models
 import { ProfileModel } from '@/models/profiles/profile-model'
 import { ProjectModel } from '@/models/projects/project-model'
+import { DiscussPostModel } from '@/models/discussion/discuss-post-model'
+import { DiscussCommentModel } from '@/models/discussion/discuss-comment-model'
 
 // Models
 const profileModel = new ProfileModel()
 const projectModel = new ProjectModel()
+const discussPostModel = new DiscussPostModel()
+const discussCommentModel = new DiscussCommentModel()
 
 // Embeddings for hybrid search. Text is embedded through an
 // OpenAI-compatible /embeddings endpoint configured via env vars:
@@ -113,6 +117,26 @@ export class EmbeddingService {
     ].filter(part => part != null && part.trim() !== '').join('. ')
   }
 
+  // The searchable text for a discussion post: title plus body.
+  discussPostText(post: {
+    title: string
+    body: string
+  }): string {
+
+    return [
+      post.title,
+      post.body
+    ].filter(part => part != null && part.trim() !== '').join('. ')
+  }
+
+  // The searchable text for a discussion comment: just the body.
+  discussCommentText(comment: {
+    body: string
+  }): string {
+
+    return comment.body
+  }
+
   // Generate and store the embedding for a profile. Best effort: with no
   // provider configured or on failure the column is written as NULL so the
   // search service degrades to the other techniques.
@@ -158,6 +182,55 @@ export class EmbeddingService {
         projectModel.updateEmbedding(
           prisma,
           project.id,
+          embedding)
+    } catch (error) {
+      console.error(`${fnName}: error: ${error}`)
+    }
+  }
+
+
+  // Generate and store the embedding for a discussion post (same semantics
+  // as syncProfileEmbedding).
+  async syncDiscussPostEmbedding(
+    prisma: PrismaClient,
+    post: DiscussPost): Promise<void> {
+
+    // Debug
+    const fnName = `${this.clName}.syncDiscussPostEmbedding()`
+
+    // Embed and store
+    try {
+      const embedding = await
+        this.embed(this.discussPostText(post))
+
+      await
+        discussPostModel.updateEmbedding(
+          prisma,
+          post.id,
+          embedding)
+    } catch (error) {
+      console.error(`${fnName}: error: ${error}`)
+    }
+  }
+
+  // Generate and store the embedding for a discussion comment (same
+  // semantics as syncProfileEmbedding).
+  async syncDiscussCommentEmbedding(
+    prisma: PrismaClient,
+    comment: DiscussComment): Promise<void> {
+
+    // Debug
+    const fnName = `${this.clName}.syncDiscussCommentEmbedding()`
+
+    // Embed and store
+    try {
+      const embedding = await
+        this.embed(this.discussCommentText(comment))
+
+      await
+        discussCommentModel.updateEmbedding(
+          prisma,
+          comment.id,
           embedding)
     } catch (error) {
       console.error(`${fnName}: error: ${error}`)

@@ -25,6 +25,29 @@ export const getDiscussPostsQuery = gql`
   }
 `
 
+export const searchDiscussPostsQuery = gql`
+  query searchDiscussPosts(
+          $search: String) {
+    searchDiscussPosts(
+      search: $search) {
+
+      status
+      message
+      posts {
+        id
+        publicId
+        authorProfileId
+        authorName
+        projectId
+        title
+        body
+        commentCount
+        created
+      }
+    }
+  }
+`
+
 export const getDiscussPostByPublicIdQuery = gql`
   query getDiscussPostByPublicId(
           $publicId: String!) {

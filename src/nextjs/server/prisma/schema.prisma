@@ -361,6 +361,7 @@ model DiscussPost {
   body                         String               @db.Text
   title                        String
   status                       String               @db.Char(1)
+  embedding                    Unsupported("vector(3072)")?   // Search embedding (pgvector); written via raw SQL, see prisma/search-setup.sql
   created                      DateTime             @default(now())
   updated                      DateTime             @updatedAt
 
@@ -382,6 +383,7 @@ model DiscussComment {
   authorProfile                Profile              @relation("discussCommentAuthor", fields: [authorProfileId], references: [id])
   body                         String               @db.Text
   status                       String               @db.Char(1)
+  embedding                    Unsupported("vector(3072)")?   // Search embedding (pgvector); written via raw SQL, see prisma/search-setup.sql
   publicId                     String               @map("public_id") @unique
   parentCommentId              String?              @map("parent_comment_id")
   parentComment                DiscussComment?      @relation("discussCommentReplies", fields: [parentCommentId], references: [id])

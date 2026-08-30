@@ -1,4 +1,5 @@
-// Backfill NULL search embeddings for profiles and projects.
+// Backfill NULL search embeddings for profiles, projects, discuss posts
+// and discuss comments.
 //
 // Run as a housekeeping job from HousekeepingService.run(), which BatchService
 // calls on its 15m interval. Requires EMBEDDINGS_API_KEY (and optionally
@@ -95,6 +96,84 @@ async function backfillProjects(prisma: PrismaClient): Promise<void> {
   console.log(`${fnName}: projects done: ${count} processed`)
 }
 
+// Backfill discuss post embeddings.
+async function backfillDiscussPosts(prisma: PrismaClient): Promise<void> {
+
+  // Debug
+  const fnName = 'backfillDiscussPosts()'
+
+  // Rows to embed
+  const rows = await prisma.$queryRaw<Array<{ id: string }>>(
+    Prisma.sql`SELECT id FROM public."discuss_post" WHERE embedding IS NULL`)
+
+  console.log(`${fnName}: ${rows.length} discuss posts to embed`)
+
+  // Embed each row
+  var count = 0
+
+  for (const { id } of rows) {
+    const post = await prisma.discussPost.findUnique({
+      where: {
+        id: id
+      }
+    })
+
+    if (post == null) {
+      continue
+    }
+
+    // Best effort: on failure the embedding stays NULL
+    await embeddingService.syncDiscussPostEmbedding(prisma, post)
+    count++
+
+    if (count % 20 === 0) {
+      console.log(`${fnName}: ${count}/${rows.length} discuss posts embedded`)
+    }
+  }
+
+  // Report
+  console.log(`${fnName}: discuss posts done: ${count} processed`)
+}
+
+// Backfill discuss comment embeddings.
+async function backfillDiscussComments(prisma: PrismaClient): Promise<void> {
+
+  // Debug
+  const fnName = 'backfillDiscussComments()'
+
+  // Rows to embed
+  const rows = await prisma.$queryRaw<Array<{ id: string }>>(
+    Prisma.sql`SELECT id FROM public."discuss_comment" WHERE embedding IS NULL`)
+
+  console.log(`${fnName}: ${rows.length} discuss comments to embed`)
+
+  // Embed each row
+  var count = 0
+
+  for (const { id } of rows) {
+    const comment = await prisma.discussComment.findUnique({
+      where: {
+        id: id
+      }
+    })
+
+    if (comment == null) {
+      continue
+    }
+
+    // Best effort: on failure the embedding stays NULL
+    await embeddingService.syncDiscussCommentEmbedding(prisma, comment)
+    count++
+
+    if (count % 20 === 0) {
+      console.log(`${fnName}: ${count}/${rows.length} discuss comments embedded`)
+    }
+  }
+
+  // Report
+  console.log(`${fnName}: discuss comments done: ${count} processed`)
+}
+
 // Report how many rows are still NULL after the backfill (failed embedding
 // requests are swallowed by the sync services).
 async function reportRemainingNulls(prisma: PrismaClient): Promise<void> {
@@ -117,12 +196,15 @@ async function reportRemainingNulls(prisma: PrismaClient): Promise<void> {
     `projects still NULL: ${projectResult[0]?.count ?? '?'}`)
 }
 
-// Backfill NULL search embeddings for profiles and projects
+// Backfill NULL search embeddings for profiles, projects, discuss posts
+// and discuss comments
 export async function backfillEmbeddings(
   prisma: PrismaClient): Promise<void> {
 
   // Backfill
   await backfillProfiles(prisma)
   await backfillProjects(prisma)
+  await backfillDiscussPosts(prisma)
+  await backfillDiscussComments(prisma)
   // await reportRemainingNulls(prisma)
 }

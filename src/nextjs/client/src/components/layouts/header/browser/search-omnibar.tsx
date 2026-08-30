@@ -13,9 +13,10 @@ import Typography from '@mui/material/Typography'
 import SearchIcon from '@mui/icons-material/Search'
 import LoadProfilesByFilter from '@/components/profiles/load-by-filter'
 import LoadProjectsByFilter from '@/components/projects/load-by-filter'
+import LoadDiscussPostsBySearch from '@/components/discussion/search-discuss-posts'
 import { profileTypeName } from '@/components/profiles/profile-card'
 import { projectStageName } from '@/types/client-only-types'
-import type { Profile, Project } from '@/types/client-only-types'
+import type { DiscussPostItem, Profile, Project } from '@/types/client-only-types'
 
 // Number of results shown per group before the user expands it
 const previewCount = 3
@@ -42,6 +43,7 @@ export default function SearchOmnibar() {
   const [committedSearch, setCommittedSearch] = useState<string>('')
   const [profiles, setProfiles] = useState<Profile[]>([])
   const [projects, setProjects] = useState<Project[]>([])
+  const [posts, setPosts] = useState<DiscussPostItem[]>([])
   const [loading, setLoading] = useState<boolean>(false)
   const [message, setMessage] = useState<string | undefined>(undefined)
   const [open, setOpen] = useState<boolean>(false)
@@ -65,6 +67,7 @@ export default function SearchOmnibar() {
       latestSearchRef.current = committed
       setCommittedSearch(committed)
       setProfiles([])
+      setPosts([])
       setProjects([])
       setMessage(undefined)
       setLoading(committed.length >= minimumSearchLength)
@@ -141,6 +144,46 @@ export default function SearchOmnibar() {
             :
             <></>
           }
+        </Box>
+      </Link>
+    )
+  }
+
+  function renderPostRow(post: DiscussPostItem, key: string) {
+
+    return (
+      <Link
+        key={key}
+        href={`/discuss/${post.publicId}`}
+        onClick={() => setOpen(false)}
+        underline='none'
+        sx={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: '0.75em',
+          padding: '0.5em 0.75em',
+          borderRadius: '0.4em',
+          color: 'inherit',
+          '&:hover': { backgroundColor: 'rgba(0, 0, 0, 0.04)' }
+        }}>
+        <Box sx={{ minWidth: 0 }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: '0.5em' }}>
+            <Typography
+              variant='body2'
+              sx={{ fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+              {post.title}
+            </Typography>
+            <Chip
+              label={`${post.commentCount} comments`}
+              size='small'
+              sx={{ height: 18, fontSize: '0.65rem' }} />
+          </Box>
+          <Typography
+            variant='caption'
+            color='text.secondary'
+            sx={{ display: 'block', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+            {post.body}
+          </Typography>
         </Box>
       </Link>
     )
@@ -314,13 +357,13 @@ export default function SearchOmnibar() {
                 <></>
               }
 
-              {profiles.length === 0 && projects.length === 0 ?
+              {profiles.length === 0 && projects.length === 0 && posts.length === 0 ?
                 <Box sx={{ padding: '0.75em' }}>
                   <Typography
                     variant='body2'
                     color='text.secondary'
                     sx={{ marginBottom: '0.5em' }}>
-                    No profiles or projects match `{committedSearch}`
+                    No profiles, projects or posts match `{committedSearch}`
                   </Typography>
                   <Box sx={{ display: 'flex', gap: '0.5em' }}>
                     <Button
@@ -341,6 +384,15 @@ export default function SearchOmnibar() {
                       variant='outlined'>
                       Search projects
                     </Button>
+                    <Button
+                      onClick={() => {
+                        setOpen(false)
+                        router.push(`/discuss?search=${encodeURIComponent(committedSearch)}`)
+                      }}
+                      size='small'
+                      variant='outlined'>
+                      Search posts
+                    </Button>
                   </Box>
                 </Box>
                 :
@@ -352,7 +404,7 @@ export default function SearchOmnibar() {
                     `All profiles`,
                     `/profiles?search=${encodeURIComponent(committedSearch)}`)}
 
-                  {profiles.length > 0 && projects.length > 0 ?
+                  {profiles.length > 0 && (projects.length > 0 || posts.length > 0) ?
                     <Box sx={{ borderBottom: '1px solid #eeeeee', marginY: '0.4em' }} />
                     :
                     <></>
@@ -364,6 +416,19 @@ export default function SearchOmnibar() {
                     projects.map((project) => renderProjectRow(project, project.id)),
                     `All projects`,
                     `/projects?search=${encodeURIComponent(committedSearch)}`)}
+
+                  {projects.length > 0 && posts.length > 0 ?
+                    <Box sx={{ borderBottom: '1px solid #eeeeee', marginY: '0.4em' }} />
+                    :
+                    <></>
+                  }
+
+                  {renderGroup(
+                    'Posts',
+                    posts.length,
+                    posts.map((post) => renderPostRow(post, post.id)),
+                    `All posts`,
+                    `/discuss?search=${encodeURIComponent(committedSearch)}`)}
                 </>
               }
             </>
@@ -401,6 +466,24 @@ export default function SearchOmnibar() {
         setProjects={(loaded) => {
           if (latestSearchRef.current === committedSearch) {
             setProjects(loaded)
+            setLoading(false)
+          }
+        }}
+        setAlertSeverity={() => {}}
+        setMessage={(errorMessage) => {
+          if (latestSearchRef.current === committedSearch) {
+            setMessage(errorMessage)
+            setLoading(false)
+          }
+        }}
+        loadAction={hasQuery}
+        setLoadAction={() => {}} />
+      <LoadDiscussPostsBySearch
+        key={`posts-${committedSearch}`}
+        search={committedSearch}
+        setPosts={(loaded) => {
+          if (latestSearchRef.current === committedSearch) {
+            setPosts(loaded ?? [])
             setLoading(false)
           }
         }}

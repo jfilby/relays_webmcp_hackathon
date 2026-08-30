@@ -10,6 +10,11 @@ interface GetDiscussPostsArgs {
   projectId?: string | null
 }
 
+interface SearchDiscussPostsArgs {
+  search?: string | null
+}
+
+
 interface GetDiscussPostByPublicIdArgs {
   publicId: string
 }
@@ -28,6 +33,16 @@ export async function getDiscussPosts(
     prisma,
     profileId ?? undefined,
     projectId ?? undefined)
+}
+
+export async function searchDiscussPosts(
+  _parent: unknown,
+  { search }: SearchDiscussPostsArgs) {
+
+  // Query
+  return discussionQueryService.searchDiscussPosts(
+    prisma,
+    search ?? undefined)
 }
 
 export async function getDiscussPostByPublicId(

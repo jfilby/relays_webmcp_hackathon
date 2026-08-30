@@ -33,6 +33,16 @@ CREATE INDEX IF NOT EXISTS project_search_fts_idx
 CREATE INDEX IF NOT EXISTS instance_search_fts_idx
   ON public.instance USING gin (to_tsvector('english', name));
 
+-- DiscussPost: title, body
+CREATE INDEX IF NOT EXISTS discuss_post_search_fts_idx
+  ON public.discuss_post USING gin (to_tsvector('english',
+    coalesce(title, '') || ' ' || coalesce(body, '')));
+
+-- DiscussComment: body
+CREATE INDEX IF NOT EXISTS discuss_comment_search_fts_idx
+  ON public.discuss_comment USING gin (to_tsvector('english',
+    coalesce(body, '')));
+
 -- Trigram indexes (support LIKE/ILIKE/~ and future similarity operators) ------
 
 CREATE INDEX IF NOT EXISTS profile_display_name_trgm_idx
@@ -47,6 +57,15 @@ CREATE INDEX IF NOT EXISTS profile_bio_trgm_idx
 CREATE INDEX IF NOT EXISTS profile_location_trgm_idx
   ON public.profile USING gin (location gin_trgm_ops);
 
+CREATE INDEX IF NOT EXISTS discuss_post_title_trgm_idx
+  ON public.discuss_post USING gin (title gin_trgm_ops);
+
+CREATE INDEX IF NOT EXISTS discuss_post_body_trgm_idx
+  ON public.discuss_post USING gin (body gin_trgm_ops);
+
+CREATE INDEX IF NOT EXISTS discuss_comment_body_trgm_idx
+  ON public.discuss_comment USING gin (body gin_trgm_ops);
+
 CREATE INDEX IF NOT EXISTS project_tagline_trgm_idx
   ON public.project USING gin (tagline gin_trgm_ops);
 
@@ -60,6 +79,12 @@ CREATE INDEX IF NOT EXISTS instance_name_trgm_idx
 
 CREATE INDEX IF NOT EXISTS profile_embedding_hnsw_idx
   ON public.profile USING hnsw (embedding vector_cosine_ops);
+
+CREATE INDEX IF NOT EXISTS discuss_post_embedding_hnsw_idx
+  ON public.discuss_post USING hnsw (embedding vector_cosine_ops);
+
+CREATE INDEX IF NOT EXISTS discuss_comment_embedding_hnsw_idx
+  ON public.discuss_comment USING hnsw (embedding vector_cosine_ops);
 
 CREATE INDEX IF NOT EXISTS project_embedding_hnsw_idx
   ON public.project USING hnsw (embedding vector_cosine_ops);

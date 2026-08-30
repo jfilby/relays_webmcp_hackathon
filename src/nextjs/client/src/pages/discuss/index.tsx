@@ -1,10 +1,17 @@
 import Head from 'next/head'
-import { useState } from 'react'
-import { Button, Paper, TextField, Typography } from '@mui/material'
+import { useState, type FormEvent } from 'react'
+import {
+  Button,
+  FormControl,
+  Paper,
+  TextField,
+  Typography
+} from '@mui/material'
 import Layout, { pageBodyWidth } from '@/components/layouts/layout'
 import { loadServerPage } from '@/services/page/load-server-page'
 import DiscussPostListItem from '@/components/discussion/discuss-post-list-item'
 import LoadDiscussPosts from '@/components/discussion/load-discuss-posts'
+import SearchDiscussPosts from '@/components/discussion/search-discuss-posts'
 import SaveDiscussPost from '@/components/discussion/save-discuss-post'
 import EmptyState from '@/components/layouts/empty-state'
 import type { DiscussPostItem, UserProfile } from '@/types/client-only-types'
@@ -12,11 +19,35 @@ import type { GetServerSidePropsContext } from 'next'
 
 interface Props {
   userProfile: UserProfile
+  search?: string | string[]
 }
 
 export default function DiscussPage({
-  userProfile
+  userProfile,
+  search: initialSearch
 }: Props) {
+
+  // Consts
+  const startingSearch =
+    typeof initialSearch === 'string' ?
+      initialSearch
+      :
+      ''
+
+  // State
+  const [search, setSearch] = useState<string>(startingSearch)
+  const [appliedInitialSearch, setAppliedInitialSearch] = useState<string>(startingSearch)
+  const [loadAction, setLoadAction] = useState<boolean>(startingSearch !== '')
+  const [searched, setSearched] = useState<boolean>(startingSearch !== '')
+
+  // Re-run the search when the page is navigated to again with a different
+  // query (e.g. breaking out of the header omnibar while already here).
+  if (appliedInitialSearch !== startingSearch) {
+    setAppliedInitialSearch(startingSearch)
+    setSearch(startingSearch)
+    setSearched(startingSearch !== '')
+    setLoadAction(true)
+  }
 
   // State
   const [posts, setPosts] = useState<DiscussPostItem[] | undefined>(undefined)
@@ -52,6 +83,13 @@ export default function DiscussPage({
     setCreateAction(true)
   }
 
+  function submitSearch(event: FormEvent) {
+
+    event.preventDefault()
+    setSearched(true)
+    setLoadAction(true)
+  }
+
   // Render
   return (
     <>
@@ -73,56 +111,84 @@ export default function DiscussPage({
             </Typography>
           </div>
 
-          {signedIn ?
-            <Paper
-              sx={{ marginBottom: '2em', padding: '1.25em 1.5em' }}>
-              <Typography
-                style={{ marginBottom: '0.75em' }}
-                variant='h6'>
-                Start a discussion
-              </Typography>
+          <form style={{ marginBottom: '2em', display: 'flex', gap: '1em', flexWrap: 'wrap', alignItems: 'center' }} onSubmit={submitSearch}>
+            <FormControl style={{ width: '20em' }}>
+              <TextField
+                autoComplete='off'
+                fullWidth
+                label='Search posts and comments'
+                onChange={(event) => setSearch(event.target.value)}
+                slotProps={{
+                  inputLabel: {
+                    shrink: Boolean(search),
+                  }
+                }}
+                value={search} />
+            </FormControl>
 
-              {alertSeverity === 'error' && message ?
-                <Typography
-                  style={{ color: '#b91c1c', marginBottom: '1em' }}
-                  variant='body1'>
-                  {message}
-                </Typography>
+            <Button
+              type='submit'
+              variant='contained'>
+              Search
+            </Button>
+          </form>
+
+          {searched === false ?
+            <>
+              {signedIn ?
+                <Paper
+                  sx={{ marginBottom: '2em', padding: '1.25em 1.5em' }}>
+                  <Typography
+                    style={{ marginBottom: '0.75em' }}
+                    variant='h6'>
+                    Start a discussion
+                  </Typography>
+
+                  {alertSeverity === 'error' && message ?
+                    <Typography
+                      style={{ color: '#b91c1c', marginBottom: '1em' }}
+                      variant='body1'>
+                      {message}
+                    </Typography>
+                    :
+                    <></>
+                  }
+
+                  <TextField
+                    fullWidth
+                    label='Title'
+                    onChange={(e) => setNewPostTitle(e.target.value)}
+                    size='small'
+                    style={{ marginBottom: '1em' }}
+                    value={newPostTitle} />
+
+                  <TextField
+                    fullWidth
+                    label='What would you like to discuss?'
+                    maxRows={6}
+                    multiline
+                    onChange={(e) => setNewPostBody(e.target.value)}
+                    size='small'
+                    style={{ marginBottom: '1em' }}
+                    value={newPostBody} />
+
+                  <Button
+                    disabled={createAction}
+                    onClick={onSubmit}
+                    variant='contained'>
+                    {createAction ? 'Posting..' : 'Post'}
+                  </Button>
+                </Paper>
                 :
-                <></>
+                <Typography
+                  style={{ marginBottom: '2em' }}
+                  variant='body1'>
+                  Sign in to start a discussion or comment on posts.
+                </Typography>
               }
-
-              <TextField
-                fullWidth
-                label='Title'
-                onChange={(e) => setNewPostTitle(e.target.value)}
-                size='small'
-                style={{ marginBottom: '1em' }}
-                value={newPostTitle} />
-
-              <TextField
-                fullWidth
-                label='What would you like to discuss?'
-                maxRows={6}
-                multiline
-                onChange={(e) => setNewPostBody(e.target.value)}
-                size='small'
-                style={{ marginBottom: '1em' }}
-                value={newPostBody} />
-
-              <Button
-                disabled={createAction}
-                onClick={onSubmit}
-                variant='contained'>
-                {createAction ? 'Posting..' : 'Post'}
-              </Button>
-            </Paper>
+            </>
             :
-            <Typography
-              style={{ marginBottom: '2em' }}
-              variant='body1'>
-              Sign in to start a discussion or comment on posts.
-            </Typography>
+            <></>
           }
 
           {notFound === true ?
@@ -139,7 +205,11 @@ export default function DiscussPage({
                         post={post} />
                     ))
                     :
-                    <EmptyState message="No discussions yet. Start the first one." />
+                    <EmptyState message={searched === true ?
+                      'No posts found. Try a different search.'
+                      :
+                      'No discussions yet. Start the first one.'
+                    } />
                   }
                 </>
                 :
@@ -152,11 +222,21 @@ export default function DiscussPage({
         </div>
       </Layout>
 
-      <LoadDiscussPosts
-        setAlertSeverity={setAlertSeverity}
-        setMessage={setMessage}
-        setNotFound={setNotFound}
-        setPosts={setPosts} />
+      {searched === true ?
+        <SearchDiscussPosts
+          search={search}
+          setPosts={setPosts}
+          setAlertSeverity={setAlertSeverity}
+          setMessage={setMessage}
+          loadAction={loadAction}
+          setLoadAction={setLoadAction} />
+        :
+        <LoadDiscussPosts
+          setAlertSeverity={setAlertSeverity}
+          setMessage={setMessage}
+          setNotFound={setNotFound}
+          setPosts={setPosts} />
+      }
 
       {signedIn ?
         <SaveDiscussPost

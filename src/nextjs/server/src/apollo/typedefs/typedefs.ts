@@ -438,6 +438,9 @@ export const typeDefs = /* GraphQL */ `
       profileId: String,
       projectId: String): DiscussPostsResults!
 
+    searchDiscussPosts(
+      search: String): DiscussPostsResults!
+
     getDiscussPostByPublicId(
       publicId: String!): DiscussPostResults!
 
