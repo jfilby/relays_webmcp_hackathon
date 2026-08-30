@@ -26,6 +26,7 @@ export class CliService {
 
   commands = [
     this.batchCommand,
+    this.demoDataCommand,
     this.setupCommand,
     this.testsCommand
   ]
