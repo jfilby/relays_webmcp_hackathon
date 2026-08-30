@@ -9,7 +9,6 @@ export const createProfileMutation = gql`
     $headline: String,
     $bio: String,
     $location: String,
-    $website: String,
     $avatar: String,
     $updates: Boolean,
     $availabilityStatus: String)
@@ -22,7 +21,6 @@ export const createProfileMutation = gql`
       headline: $headline,
       bio: $bio,
       location: $location,
-      website: $website,
       avatar: $avatar,
       updates: $updates,
       availabilityStatus: $availabilityStatus) {
@@ -36,7 +34,6 @@ export const createProfileMutation = gql`
         headline
         bio
         location
-        website
         avatar
         isPublic
         availabilityStatus
@@ -56,7 +53,6 @@ export const updateProfileMutation = gql`
     $headline: String,
     $bio: String,
     $location: String,
-    $website: String,
     $avatar: String,
     $availabilityStatus: String)
   {
@@ -69,7 +65,6 @@ export const updateProfileMutation = gql`
       headline: $headline,
       bio: $bio,
       location: $location,
-      website: $website,
       avatar: $avatar,
       availabilityStatus: $availabilityStatus) {
 
@@ -82,7 +77,6 @@ export const updateProfileMutation = gql`
         headline
         bio
         location
-        website
         avatar
         isPublic
         availabilityStatus
@@ -212,7 +206,6 @@ export const getProfileByPublicIdQuery = gql`
         headline
         bio
         location
-        website
         avatar
         isPublic
         availabilityStatus
@@ -242,7 +235,6 @@ export const getProfileByUserProfileIdQuery = gql`
         headline
         bio
         location
-        website
         avatar
         isPublic
         availabilityStatus
@@ -272,7 +264,6 @@ export const searchProfilesQuery = gql`
         displayName
         headline
         location
-        website
         avatar
         availabilityStatus
       }

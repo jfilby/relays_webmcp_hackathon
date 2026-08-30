@@ -55,7 +55,6 @@ export class ProfilesMutateService {
     headline: string | undefined,
     bio: string | undefined,
     location: string | undefined,
-    website: string | undefined,
     avatar: string | undefined,
     updates: boolean | undefined,
     availabilityStatus: string | undefined = undefined) {
@@ -129,7 +128,6 @@ export class ProfilesMutateService {
         headline != null && headline.trim() !== '' ? headline.trim() : undefined,
         bio != null && bio.trim() !== '' ? bio.trim() : undefined,
         location != null && location.trim() !== '' ? location.trim() : undefined,
-        website != null && website.trim() !== '' ? website.trim() : undefined,
         avatar != null && avatar.trim() !== '' ? avatar.trim() : undefined,
         availabilityStatus)
 
@@ -162,7 +160,6 @@ export class ProfilesMutateService {
     headline: string | undefined,
     bio: string | undefined,
     location: string | undefined,
-    website: string | undefined,
     avatar: string | undefined,
     availabilityStatus: string | undefined = undefined) {
 
@@ -228,7 +225,6 @@ export class ProfilesMutateService {
         headline == null &&
         bio == null &&
         location == null &&
-        website == null &&
         avatar == null &&
         availabilityStatus == null) {
       return {
@@ -241,7 +237,6 @@ export class ProfilesMutateService {
     headline = headline != null && headline.trim() !== '' ? headline.trim() : undefined
     bio = bio != null && bio.trim() !== '' ? bio.trim() : undefined
     location = location != null && location.trim() !== '' ? location.trim() : undefined
-    website = website != null && website.trim() !== '' ? website.trim() : undefined
     avatar = avatar != null && avatar.trim() !== '' ? avatar.trim() : undefined
 
     // Update the profile
@@ -256,7 +251,6 @@ export class ProfilesMutateService {
         headline,
         bio,
         location,
-        website,
         avatar,
         availabilityStatus,
         undefined,  // isVerified

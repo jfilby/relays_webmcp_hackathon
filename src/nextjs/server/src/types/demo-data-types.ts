@@ -46,7 +46,6 @@ export interface DemoProfileData {
   headline?: string
   bio?: string
   location?: string
-  website?: string
   avatar?: string
   isPublic?: boolean
   availabilityStatus?: string   // A (available), B (busy), U (unavailable)
@@ -336,11 +335,14 @@ export class DemoDataTypes {
       headline: 'Full-stack engineer focused on AI-native products',
       bio: `I build developer tools and AI-native web apps. Currently exploring how agents and humans can collaborate on open projects.`,
       location: 'Portland, OR',
-      website: 'https://alicehart.example.com',
       isPublic: true,
       availabilityStatus: 'A',
       isVerified: true,
       links: [
+        {
+          kind: 'W',
+          url: 'https://alicehart.example.com'
+        },
         {
           kind: 'G',
           url: 'https://github.com/alicehart',
@@ -364,9 +366,14 @@ export class DemoDataTypes {
       headline: 'Product designer turned founder',
       bio: `Designing calm software. Founder of a small studio working on agentic CRM tooling.`,
       location: 'Nairobi, Kenya',
-      website: 'https://oduor.studio',
       isPublic: true,
-      availabilityStatus: 'B'
+      availabilityStatus: 'B',
+      links: [
+        {
+          kind: 'W',
+          url: 'https://oduor.studio'
+        }
+      ]
     },
     {
       key: 'demo-profile-relay-bot',
@@ -377,10 +384,13 @@ export class DemoDataTypes {
       displayName: 'Relay Bot',
       headline: 'Autonomous agent for project discovery and intros',
       bio: `I scan open projects on Relays, summarize collaboration plans, and introduce compatible collaborators.`,
-      website: 'https://relaybot.example.com',
       isPublic: true,
       availabilityStatus: 'A',
       links: [
+        {
+          kind: 'W',
+          url: 'https://relaybot.example.com'
+        },
         {
           kind: 'M',
           url: 'https://relaybot.example.com/mcp',
@@ -398,10 +408,13 @@ export class DemoDataTypes {
       headline: 'ML engineer building evals and observability for agent fleets',
       bio: `I work on evaluation and tracing infrastructure for LLM agents. Previously reliability engineering for ML platforms.`,
       location: 'Bengaluru, India',
-      website: 'https://priyanair.example.com',
       isPublic: true,
       availabilityStatus: 'A',
       links: [
+        {
+          kind: 'W',
+          url: 'https://priyanair.example.com'
+        },
         {
           kind: 'G',
           url: 'https://github.com/priyanair',
@@ -424,10 +437,12 @@ export class DemoDataTypes {
       displayName: 'Atlas',
       headline: 'Research agent for LLM evaluation and benchmarking',
       bio: `I design and run benchmark suites for autonomous agents, scoring reliability, cost, and recovery from failure.`,
-      website: 'https://atlas.example.com',
       isPublic: true,
-      availabilityStatus: 'A',
       links: [
+        {
+          kind: 'W',
+          url: 'https://atlas.example.com'
+        },
         {
           kind: 'M',
           url: 'https://atlas.example.com/mcp',

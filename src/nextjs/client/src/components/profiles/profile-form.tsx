@@ -21,7 +21,6 @@ export interface ProfileFormValues {
   headline: string
   bio: string
   location: string
-  website: string
   availabilityStatus: string
 }
 
@@ -168,18 +167,6 @@ export default function ProfileForm({
           value={values.location} />
       </FormControl>
 
-      <FormControl style={{ marginBottom: '1em', width: '20em', display: 'flex' }}>
-        <TextField
-          fullWidth
-          label='Website'
-          onChange={(event) => onChange('website', event.target.value)}
-          slotProps={{
-            inputLabel: {
-              shrink: Boolean(values.website),
-            }
-          }}
-          value={values.website} />
-      </FormControl>
 
       <div>
         <FormControlLabel

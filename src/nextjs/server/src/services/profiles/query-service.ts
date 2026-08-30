@@ -296,7 +296,6 @@ export class ProfilesQueryService {
       headline: profile.headline,
       bio: profile.bio,
       location: profile.location,
-      website: profile.website,
       avatar: profile.avatar,
       isPublic: profile.isPublic,
       availabilityStatus: profile.availabilityStatus,

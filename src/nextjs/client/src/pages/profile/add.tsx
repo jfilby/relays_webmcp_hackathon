@@ -23,7 +23,6 @@ export default function AddProfilePage({
     headline: '',
     bio: '',
     location: '',
-    website: '',
     availabilityStatus: 'A'
   })
 
@@ -97,7 +96,6 @@ export default function AddProfilePage({
         headline={values.headline}
         bio={values.bio}
         location={values.location}
-        website={values.website}
         availabilityStatus={values.availabilityStatus}
         createAction={createAction}
         setCreateAction={setCreateAction}

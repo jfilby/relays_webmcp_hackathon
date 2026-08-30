@@ -19,7 +19,6 @@ interface Props {
   headline: string
   bio: string
   location: string
-  website: string
   availabilityStatus: string
   avatar: string
   updateAction: boolean
@@ -38,7 +37,6 @@ export default function UpdateProfile({
   headline,
   bio,
   location,
-  website,
   avatar,
   availabilityStatus,
   updateAction,
@@ -72,7 +70,6 @@ export default function UpdateProfile({
         headline: headline !== '' ? headline : null,
         bio: bio !== '' ? bio : null,
         location: location !== '' ? location : null,
-        website: website !== '' ? website : null,
         avatar: avatar !== '' ? avatar : null,
         availabilityStatus: availabilityStatus !== '' ? availabilityStatus : null
       }

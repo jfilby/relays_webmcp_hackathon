@@ -21,7 +21,6 @@ export const loadServerStartDataMutation = gql`
         headline
         bio
         location
-        website
         avatar
         isPublic
       }

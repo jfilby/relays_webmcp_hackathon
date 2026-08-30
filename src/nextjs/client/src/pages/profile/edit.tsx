@@ -17,11 +17,23 @@ import { loadServerPage } from '@/services/page/load-server-page'
 import Layout, { pageBodyWidth } from '@/components/layouts/layout'
 import LoadProfileByUserProfileId from '@/components/profiles/load-by-user-profile-id'
 import LoadSkillsByProfileId from '@/components/profiles/load-skills'
+import LoadLinksByProfileId from '@/components/profiles/load-links'
+import DeleteDialog from '@/components/dialogs/delete-dialog'
 import ProfileForm, { ProfileFormValues } from '@/components/profiles/profile-form'
 import UpdateProfile from '@/components/profiles/update'
-import { addSkillToProfileMutation, removeSkillFromProfileMutation } from '@/apollo/profiles'
-import { skillLevelName, skillLevels } from '@/types/client-only-types'
-import type { Profile, ProfileSkill, UserProfile } from '@/types/client-only-types'
+import {
+  addProfileLinkMutation,
+  addSkillToProfileMutation,
+  deleteProfileLinkMutation,
+  removeSkillFromProfileMutation
+} from '@/apollo/profiles'
+import {
+  profileLinkKinds,
+  profileLinkName,
+  skillLevelName,
+  skillLevels
+} from '@/types/client-only-types'
+import type { Profile, ProfileLink, ProfileSkill, UserProfile } from '@/types/client-only-types'
 import type { GetServerSidePropsContext } from 'next'
 
 interface Props {
@@ -43,7 +55,6 @@ export default function EditProfilePage({
     headline: '',
     bio: '',
     location: '',
-    website: '',
     availabilityStatus: 'A'
   })
 
@@ -59,6 +70,17 @@ export default function EditProfilePage({
   const [newSkillLevel, setNewSkillLevel] = useState<string>('I')
   const [skillSaving, setSkillSaving] = useState<boolean>(false)
 
+  const [links, setLinks] = useState<ProfileLink[]>([])
+  const [linksReloadToken, setLinksReloadToken] = useState<number>(0)
+  const [newLinkKind, setNewLinkKind] = useState<string>('W')
+  const [newLinkUrl, setNewLinkUrl] = useState<string>('')
+  const [linkSaving, setLinkSaving] = useState<boolean>(false)
+
+  // Link deletion confirmation state
+  const [linkDeleteDialogOpen, setLinkDeleteDialogOpen] = useState<boolean>(false)
+  const [linkDeletePendingId, setLinkDeletePendingId] = useState<string | undefined>(undefined)
+  const [linkDeleteConfirmed, setLinkDeleteConfirmed] = useState<boolean>(false)
+
   // GraphQL
   const [sendAddSkillToProfileMutation] =
     useMutation<{
@@ -69,7 +91,6 @@ export default function EditProfilePage({
     }>(addSkillToProfileMutation, {
       fetchPolicy: 'no-cache'
     })
-
   const [sendRemoveSkillFromProfileMutation] =
     useMutation<{
       removeSkillFromProfile: {
@@ -77,6 +98,26 @@ export default function EditProfilePage({
         message: string
       }
     }>(removeSkillFromProfileMutation, {
+      fetchPolicy: 'no-cache'
+    })
+
+  const [sendAddProfileLinkMutation] =
+    useMutation<{
+      addProfileLink: {
+        status: boolean
+        message: string
+      }
+    }>(addProfileLinkMutation, {
+      fetchPolicy: 'no-cache'
+    })
+
+  const [sendDeleteProfileLinkMutation] =
+    useMutation<{
+      deleteProfileLink: {
+        status: boolean
+        message: string
+      }
+    }>(deleteProfileLinkMutation, {
       fetchPolicy: 'no-cache'
     })
 
@@ -92,7 +133,6 @@ export default function EditProfilePage({
         headline: profile.headline ?? '',
         bio: profile.bio ?? '',
         location: profile.location ?? '',
-        website: profile.website ?? '',
         availabilityStatus: profile.availabilityStatus ?? 'A'
       })
     }
@@ -107,6 +147,19 @@ export default function EditProfilePage({
     }
 
   }, [updatedAction])
+
+  // Run the link delete once confirmed by the dialog
+  useEffect(() => {
+
+    // Return early if not confirmed
+    if (linkDeleteConfirmed !== true || linkDeletePendingId == null) {
+      return
+    }
+
+    setLinkDeleteConfirmed(false)
+    onRemoveLink(linkDeletePendingId)
+
+  }, [linkDeleteConfirmed])
 
   // Functions
   function onFieldChange(field: keyof ProfileFormValues, value: string | boolean) {
@@ -203,6 +256,86 @@ export default function EditProfilePage({
 
     // Done
     setSkillSaving(false)
+  }
+
+  async function onAddLink() {
+
+    if (profile == null || newLinkUrl.trim() === '') {
+      return
+    }
+
+    setLinkSaving(true)
+
+    // Query
+    let addedData: { status: boolean; message?: string } | undefined
+
+    await sendAddProfileLinkMutation({
+      variables: {
+        userProfileId: userProfile.id,
+        kind: newLinkKind,
+        url: newLinkUrl.trim()
+      }
+    }).then(result => addedData = result.data?.addProfileLink)
+
+    // Get results and set fields
+    if (addedData == null) {
+      setAlertSeverity('error')
+      setMessage(`Failed to add the link`)
+    } else if (addedData.status === true) {
+      setAlertSeverity('success')
+      setMessage(addedData.message)
+      toast(`Added`)
+      setNewLinkUrl('')
+      setLinksReloadToken(token => token + 1)
+    } else {
+      setAlertSeverity('error')
+      setMessage(addedData.message)
+    }
+
+    // Done
+    setLinkSaving(false)
+  }
+
+  function onDeleteLink(id: string) {
+
+    // Ask for confirmation before deleting
+    setLinkDeletePendingId(id)
+    setLinkDeleteDialogOpen(true)
+  }
+
+  async function onRemoveLink(id: string) {
+
+    if (profile == null) {
+      return
+    }
+
+    setLinkSaving(true)
+
+    // Query
+    let removedData: { status: boolean; message?: string } | undefined
+
+    await sendDeleteProfileLinkMutation({
+      variables: {
+        userProfileId: userProfile.id,
+        id: id
+      }
+    }).then(result => removedData = result.data?.deleteProfileLink)
+    // Get results and set fields
+    if (removedData == null) {
+      setAlertSeverity('error')
+      setMessage(`Failed to remove the link`)
+    } else if (removedData.status === true) {
+      setAlertSeverity('success')
+      setMessage(removedData.message)
+      toast(`Removed`)
+      setLinksReloadToken(token => token + 1)
+    } else {
+      setAlertSeverity('error')
+      setMessage(removedData.message)
+    }
+
+    // Done
+    setLinkSaving(false)
   }
 
   // Render
@@ -315,6 +448,92 @@ export default function EditProfilePage({
             <></>
           }
 
+          {profile != null ?
+            <div style={{ marginBottom: '2em' }}>
+              <Typography
+                style={{ marginBottom: '0.5em' }}
+                variant='h3'>
+                Your links
+              </Typography>
+
+              {links.map(link => (
+                <div
+                  key={link.id}
+                  style={{ alignItems: 'center', display: 'flex', gap: '0.75em', marginBottom: '0.5em' }}>
+                  <Typography variant='body1'>
+                    {profileLinkName(link.kind)}:
+                    &nbsp;
+                    <a
+                      href={link.url}
+                      rel='noopener noreferrer'
+                      target='_blank'>
+                      {link.url}
+                    </a>
+                  </Typography>
+
+                  <Button
+                    disabled={linkSaving}
+                    onClick={() => onDeleteLink(link.id)}
+                    size='small'>
+                    Remove
+                  </Button>
+                </div>
+              ))}
+
+              {links.length === 0 ?
+                <Typography
+                  style={{ marginBottom: '1em' }}
+                  variant='body1'>
+                  No links yet.
+                </Typography>
+                :
+                <></>
+              }
+
+              <div style={{ alignItems: 'flex-end', display: 'flex', gap: '0.75em', marginTop: '1em' }}>
+                <FormControl style={{ width: '12em', display: 'flex' }}>
+                  <InputLabel id='new-link-kind'>Kind</InputLabel>
+                  <Select
+                    labelId='new-link-kind'
+                    label='Kind'
+                    onChange={(event: SelectChangeEvent) => setNewLinkKind(event.target.value as string)}
+                    value={newLinkKind}>
+                    {profileLinkKinds.map(kind => (
+                      <MenuItem
+                        key={kind.value}
+                        value={kind.value}>
+                        {kind.name}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+
+                <FormControl style={{ width: '20em' }}>
+                  <TextField
+                    autoComplete='off'
+                    fullWidth
+                    label='URL'
+                    onChange={(event) => setNewLinkUrl(event.target.value)}
+                    slotProps={{
+                      inputLabel: {
+                        shrink: Boolean(newLinkUrl),
+                      }
+                    }}
+                    value={newLinkUrl} />
+                </FormControl>
+
+                <Button
+                  disabled={linkSaving || newLinkUrl.trim() === ''}
+                  onClick={onAddLink}
+                  variant='contained'>
+                  Add
+                </Button>
+              </div>
+            </div>
+            :
+            <></>
+          }
+
           {notFound === true ?
             <Typography variant='body1'>
               You don&apos;t have a profile yet.
@@ -350,6 +569,15 @@ export default function EditProfilePage({
       }
 
       {profile != null ?
+        <LoadLinksByProfileId
+          profileId={profile.id}
+          reloadToken={linksReloadToken}
+          setLinks={setLinks} />
+        :
+        <></>
+      }
+
+      {profile != null ?
         <UpdateProfile
           id={profile.id}
           userProfileId={userProfile.id}
@@ -359,7 +587,6 @@ export default function EditProfilePage({
           headline={values.headline}
           bio={values.bio}
           location={values.location}
-          website={values.website}
           availabilityStatus={values.availabilityStatus}
           avatar=''
           updateAction={updateAction}
@@ -371,6 +598,14 @@ export default function EditProfilePage({
         <></>
       }
 
+
+      <DeleteDialog
+        open={linkDeleteDialogOpen}
+        type='link'
+        name='link'
+        message='Are you sure? This will permanently delete the link. This cannot be undone.'
+        setOpen={setLinkDeleteDialogOpen}
+        setDeleteConfirmed={setLinkDeleteConfirmed} />
       <Toaster />
     </>
   )

@@ -4,27 +4,15 @@ import { Toaster, toast } from 'sonner'
 import { useMutation } from '@apollo/client/react'
 import { createDiscussPostMutation, deleteDiscussPostMutation } from '@/apollo/discussion'
 import { sendConnectionRequestMutation } from '@/apollo/connections'
-import { availabilityStatusName, skillLevelName } from '@/types/client-only-types'
+import {
+  availabilityStatusName,
+  profileLinkName,
+  skillLevelName
+} from '@/types/client-only-types'
 import DiscussPostListItem from '@/components/discussion/discuss-post-list-item'
 import DeleteDialog from '@/components/dialogs/delete-dialog'
 import type { DiscussPostItem, Endorsement, Profile, ProfileLink, ProfileSkill } from '@/types/client-only-types'
 import { profileTypeName } from './profile-card'
-
-// Human-readable label for a profile link kind:
-// W website, G github, L linkedin, R repository, M MCP endpoint, X other
-function profileLinkName(kind: string | undefined | null): string {
-
-  const found = [
-    { value: 'W', name: 'Website' },
-    { value: 'G', name: 'GitHub' },
-    { value: 'L', name: 'LinkedIn' },
-    { value: 'R', name: 'Repository' },
-    { value: 'M', name: 'MCP endpoint' },
-    { value: 'X', name: 'Other' }
-  ].find(linkKind => linkKind.value === kind)
-
-  return found?.name ?? 'Link'
-}
 
 interface Props {
   profile: Profile
@@ -321,19 +309,6 @@ export default function ProfileView({
           <></>
         }
 
-        {profile.website != null && profile.website !== '' ?
-          <Typography variant='body2'>
-            Website:&nbsp;
-            <Link
-              href={profile.website}
-              target='_blank'
-              rel='noopener noreferrer'>
-              {profile.website}
-            </Link>
-          </Typography>
-          :
-          <></>
-        }
       </div>
 
       {skills != null && skills.length > 0 ?

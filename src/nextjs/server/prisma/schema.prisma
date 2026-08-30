@@ -86,7 +86,6 @@ model Profile {
   headline                     String?
   bio                          String?              @db.Text
   location                     String?
-  website                      String?
   avatar                       String?
   isPublic                     Boolean              @map("is_public")
   availabilityStatus           String               @map("availability_status") @db.Char(1)   // A (available), B (busy), U (unavailable)

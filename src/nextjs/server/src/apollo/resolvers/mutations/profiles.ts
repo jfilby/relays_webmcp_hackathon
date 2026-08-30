@@ -13,7 +13,6 @@ interface CreateProfileArgs {
   headline?: string | null
   bio?: string | null
   location?: string | null
-  website?: string | null
   avatar?: string | null
   updates?: boolean | null
   availabilityStatus?: string | null
@@ -28,7 +27,6 @@ interface UpdateProfileArgs {
   headline?: string | null
   bio?: string | null
   location?: string | null
-  website?: string | null
   avatar?: string | null
   availabilityStatus?: string | null
 }
@@ -79,7 +77,6 @@ export async function createProfile(
     headline,
     bio,
     location,
-    website,
     avatar,
     updates,
     availabilityStatus
@@ -95,7 +92,6 @@ export async function createProfile(
     headline ?? undefined,
     bio ?? undefined,
     location ?? undefined,
-    website ?? undefined,
     avatar ?? undefined,
     updates ?? undefined,
     availabilityStatus ?? undefined)
@@ -112,7 +108,6 @@ export async function updateProfile(
     headline,
     bio,
     location,
-    website,
     avatar,
     availabilityStatus
   }: UpdateProfileArgs) {
@@ -128,7 +123,6 @@ export async function updateProfile(
     headline ?? undefined,
     bio ?? undefined,
     location ?? undefined,
-    website ?? undefined,
     avatar ?? undefined,
     availabilityStatus ?? undefined)
 }

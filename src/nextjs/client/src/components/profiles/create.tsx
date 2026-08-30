@@ -12,7 +12,6 @@ interface Props {
   headline?: string
   bio?: string
   location?: string
-  website?: string
   availabilityStatus?: string
   avatar?: string
   createAction: boolean
@@ -38,7 +37,6 @@ export default function CreateProfile({
   headline,
   bio,
   location,
-  website,
   availabilityStatus,
   avatar,
   createAction,
@@ -72,7 +70,6 @@ export default function CreateProfile({
         headline: headline != null && headline !== '' ? headline : null,
         bio: bio != null && bio !== '' ? bio : null,
         location: location != null && location !== '' ? location : null,
-        website: website != null && website !== '' ? website : null,
         avatar: avatar != null && avatar !== '' ? avatar : null,
         updates: updates === true,
         availabilityStatus: availabilityStatus != null && availabilityStatus !== '' ? availabilityStatus : null,

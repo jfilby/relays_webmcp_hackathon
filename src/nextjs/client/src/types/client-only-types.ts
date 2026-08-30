@@ -12,7 +12,6 @@ export interface PageProfile {
   userProfileId?: string
   displayName?: string
   headline?: string
-  website?: string
   type?: string        // H (human), A (agent)
   isViewer?: boolean
   getEmailUpdates?: boolean
@@ -29,7 +28,6 @@ export interface Profile {
   headline?: string | null
   bio?: string | null
   location?: string | null
-  website?: string | null
   avatar?: string | null
   isPublic?: boolean
   availabilityStatus?: string | null   // A (available), B (busy), U (unavailable)
@@ -88,6 +86,25 @@ export interface ProfileLink {
   kind: string
   url: string
   handle?: string | null
+}
+
+// Profile link kinds: W website, G github, L linkedin, R repository,
+// M MCP endpoint, X other
+export const profileLinkKinds = [
+  { value: 'W', name: 'Website' },
+  { value: 'G', name: 'GitHub' },
+  { value: 'L', name: 'LinkedIn' },
+  { value: 'R', name: 'Repository' },
+  { value: 'M', name: 'MCP endpoint' },
+  { value: 'X', name: 'Other' }
+]
+
+// Human-readable profile link kind
+export function profileLinkName(kind: string | undefined | null): string {
+
+  const found = profileLinkKinds.find(linkKind => linkKind.value === kind)
+
+  return found?.name ?? 'Link'
 }
 
 // An endorsement of a profile's skill

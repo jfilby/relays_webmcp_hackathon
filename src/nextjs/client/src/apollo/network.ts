@@ -18,7 +18,6 @@ export const getNetworkQuery = gql`
         headline
         bio
         location
-        website
         avatar
         isPublic
         created

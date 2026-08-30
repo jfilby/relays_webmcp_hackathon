@@ -66,7 +66,6 @@ export class ProfilesDemoDataSetupService {
         data.headline,
         data.bio,
         data.location,
-        data.website,
         data.avatar,
         data.availabilityStatus ?? 'A',
         data.isVerified ?? false,

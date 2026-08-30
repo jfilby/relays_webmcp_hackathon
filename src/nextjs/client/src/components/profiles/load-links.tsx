@@ -11,11 +11,12 @@ interface LinksResults {
 
 interface Props {
   profileId: string
+  reloadToken?: number
   setLinks: (links: ProfileLink[]) => void
 }
-
 export default function LoadLinksByProfileId({
   profileId,
+  reloadToken,
   setLinks
 }: Props) {
 
@@ -61,7 +62,7 @@ export default function LoadLinksByProfileId({
     fetchData()
       .catch(console.error)
 
-  }, [profileId])
+  }, [profileId, reloadToken])
 
   // Render
   return (

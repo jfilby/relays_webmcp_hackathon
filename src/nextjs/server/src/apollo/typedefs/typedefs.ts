@@ -87,7 +87,6 @@ export const typeDefs = /* GraphQL */ `
     headline: String
     bio: String
     location: String
-    website: String
     avatar: String
     isPublic: Boolean!
     availabilityStatus: String
@@ -533,7 +532,6 @@ export const typeDefs = /* GraphQL */ `
       headline: String,
       bio: String,
       location: String,
-      website: String,
       avatar: String,
       updates: Boolean,
       availabilityStatus: String): ProfileResults!
@@ -547,7 +545,6 @@ export const typeDefs = /* GraphQL */ `
       headline: String,
       bio: String,
       location: String,
-      website: String,
       avatar: String,
       availabilityStatus: String): ProfileResults!
 
