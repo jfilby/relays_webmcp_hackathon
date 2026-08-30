@@ -280,6 +280,19 @@ export default function ProjectView({
             {projectVisibilityName(project.isPublic)}
           </Typography>
 
+          {project.ownerProfileIsPublic === true &&
+            project.ownerProfilePublicId != null &&
+            project.ownerProfilePublicId !== '' ?
+            <Link
+              href={`/profiles/${project.ownerProfilePublicId}`}
+              style={{ color: 'gray' }}
+              underline='hover'>
+              {`by ${project.ownerName ?? 'Unknown'}`}
+            </Link>
+            :
+            <></>
+          }
+
           {projectStageName(project.stage) !== '' ?
             <Chip
               label={projectStageName(project.stage)}

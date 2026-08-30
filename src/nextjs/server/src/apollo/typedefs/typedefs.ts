@@ -271,6 +271,9 @@ export const typeDefs = /* GraphQL */ `
     isPromoted: Boolean!
     isDemoData: Boolean
     isPublic: Boolean!
+    ownerName: String
+    ownerProfilePublicId: String
+    ownerProfileIsPublic: Boolean
     urls: [ProjectUrl]
     interestCount: Int
     viewerIsInterested: Boolean

@@ -195,6 +195,9 @@ export interface Project {
   isPromoted: boolean
   isDemoData?: boolean | null
   isPublic: boolean
+  ownerName?: string | null
+  ownerProfilePublicId?: string | null
+  ownerProfileIsPublic?: boolean | null
   urls?: ProjectUrlItem[] | null
   interestCount?: number | null
   viewerIsInterested?: boolean | null

@@ -17,6 +17,9 @@ const projectFields = `
         isOpenToCollaborators
         isPromoted
         isPublic
+        ownerName
+        ownerProfilePublicId
+        ownerProfileIsPublic
         urls {
           id
           kind

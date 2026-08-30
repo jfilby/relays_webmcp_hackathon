@@ -20,11 +20,24 @@ const projectMemberModel = new ProjectMemberModel()
 const projectInterestModel = new ProjectInterestModel()
 const searchService = new SearchService()
 
-// Class
+// Owner display info for a project. All fields null when there is no
+// active owner.
+export interface ProjectOwnerInfo {
+  ownerName: string | null
+  ownerProfilePublicId: string | null
+  ownerProfileIsPublic: boolean | null
+}
+
 export class ProjectsQueryService {
 
-  // Consts
   clName = 'ProjectsQueryService'
+
+  // Owner info used when a project has no active owner
+  ownerInfoNone: ProjectOwnerInfo = {
+    ownerName: null,
+    ownerProfilePublicId: null,
+    ownerProfileIsPublic: null
+  }
 
   // Project URL kinds: W (website), R (repository), D (docs), E (demo),
   // S (social), X (other)
@@ -89,6 +102,13 @@ export class ProjectsQueryService {
         prisma,
         project.id,
         viewerUserProfileId)
+
+    // Owner display info
+    const ownerInfosByProjectId = await
+      this.getOwnerInfosByProjectIds(
+        prisma,
+        [project.id])
+
     // Return
     return {
       status: true,
@@ -98,7 +118,8 @@ export class ProjectsQueryService {
         isOwner,
         project.ofProjectUrls,
         interestInfo.interestCount,
-        interestInfo.viewerIsInterested)
+        interestInfo.viewerIsInterested,
+        ownerInfosByProjectId[project.id] ?? this.ownerInfoNone)
     }
   }
 
@@ -126,10 +147,14 @@ export class ProjectsQueryService {
           isPromoted,
           undefined,  // organizationId
           true)  // isPublic (instance public access set)
-
-      // Batch the interest counts for the result set
+      // Batch the interest counts and owner info for the result set
       const countsByProjectId = await
         this.getInterestCounts(
+          prisma,
+          projects.map(project => project.id))
+
+      const ownerInfosByProjectId = await
+        this.getOwnerInfosByProjectIds(
           prisma,
           projects.map(project => project.id))
 
@@ -143,7 +168,8 @@ export class ProjectsQueryService {
             false,
             project.ofProjectUrls,
             countsByProjectId[project.id],
-            undefined))
+            undefined,
+            ownerInfosByProjectId[project.id] ?? this.ownerInfoNone))
       }
     }
 
@@ -186,9 +212,14 @@ export class ProjectsQueryService {
         true))
         .map(project => [project.id, project]))
 
-    // Batch the interest counts for the result set
+    // Batch the interest counts and owner info for the result set
     const countsByProjectId = await
       this.getInterestCounts(
+        prisma,
+        hits.map(hit => hit.id))
+
+    const ownerInfosByProjectId = await
+      this.getOwnerInfosByProjectIds(
         prisma,
         hits.map(hit => hit.id))
 
@@ -205,7 +236,8 @@ export class ProjectsQueryService {
             false,
             project!.ofProjectUrls,
             countsByProjectId[project!.id],
-            undefined))
+            undefined,
+            ownerInfosByProjectId[project!.id] ?? this.ownerInfoNone))
     }
   }
 
@@ -241,9 +273,14 @@ export class ProjectsQueryService {
         'O',  // role
         true)  // withProjectIncludes
 
-    // Batch the interest counts for the result set
+    // Batch the interest counts and owner info for the result set
     const countsByProjectId = await
       this.getInterestCounts(
+        prisma,
+        memberships.map(membership => membership.project.id))
+
+    const ownerInfosByProjectId = await
+      this.getOwnerInfosByProjectIds(
         prisma,
         memberships.map(membership => membership.project.id))
 
@@ -257,7 +294,8 @@ export class ProjectsQueryService {
           true,
           membership.project.ofProjectUrls,
           countsByProjectId[membership.project.id],
-          undefined))
+          undefined,
+          ownerInfosByProjectId[membership.project.id] ?? this.ownerInfoNone))
     }
   }
 
@@ -327,6 +365,55 @@ export class ProjectsQueryService {
     }
   }
 
+  // Owner display info for a set of projects, keyed by project id. Projects
+  // without an active owner are absent.
+  async getOwnerInfosByProjectIds(
+    prisma: PrismaClient,
+    projectIds: string[]): Promise<Record<string, ProjectOwnerInfo>> {
+
+    // Debug
+    const fnName = `${this.clName}.getOwnerInfosByProjectIds()`
+
+    // Nothing to look up
+    if (projectIds.length === 0) {
+      return {}
+    }
+
+    // The active owner memberships
+    const memberships = await
+      projectMemberModel.getOwnersByProjectIds(
+        prisma,
+        projectIds)
+
+    if (memberships.length === 0) {
+      return {}
+    }
+
+    // The owning profiles
+    const profiles = await
+      profileModel.getByIds(
+        prisma,
+        memberships.map(membership => membership.profileId))
+
+    const profilesById = new Map(
+      profiles.map(profile => [profile.id, profile]))
+
+    // Return
+    const result: Record<string, ProjectOwnerInfo> = {}
+
+    for (const membership of memberships) {
+      const profile = profilesById.get(membership.profileId)
+
+      result[membership.projectId] = {
+        ownerName: profile?.displayName ?? null,
+        ownerProfilePublicId: profile?.publicId ?? null,
+        ownerProfileIsPublic: profile?.isPublic ?? null
+      }
+    }
+
+    return result
+  }
+
   // Is the given user profile an active owner of the project?
   async isOwner(
     prisma: PrismaClient,
@@ -371,7 +458,8 @@ export class ProjectsQueryService {
     isOwner: boolean,
     urls: ProjectUrl[],
     interestCount: number | undefined,
-    viewerIsInterested: boolean | undefined) {
+    viewerIsInterested: boolean | undefined,
+    ownerInfo: ProjectOwnerInfo = this.ownerInfoNone) {
 
     // The website is the first website-kind URL, if any
     const websiteUrl = urls.find(url => url.kind === 'W')
@@ -392,6 +480,9 @@ export class ProjectsQueryService {
       isPromoted: project.isPromoted,
       isDemoData: project.isDemoData === true,
       isPublic: instance.publicAccess != null,
+      ownerName: ownerInfo.ownerName,
+      ownerProfilePublicId: ownerInfo.ownerProfilePublicId,
+      ownerProfileIsPublic: ownerInfo.ownerProfileIsPublic,
       urls: urls.map(url => ({
         id: url.id,
         kind: url.kind,

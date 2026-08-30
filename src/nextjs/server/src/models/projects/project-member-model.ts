@@ -76,6 +76,32 @@ export class ProjectMemberModel {
     }
   }
 
+  // Get the active owner memberships for a set of projects. Returns an
+  // empty array when none exist.
+  async getOwnersByProjectIds(
+    prisma: PrismaClient,
+    projectIds: string[]) {
+
+    // Debug
+    const fnName = `${this.clName}.getOwnersByProjectIds()`
+
+    // Query
+    try {
+      return await prisma.projectMember.findMany({
+        where: {
+          projectId: {
+            in: projectIds
+          },
+          role: 'O',
+          status: 'A'
+        }
+      })
+    } catch (error) {
+      console.error(`${fnName}: error: ${error}`)
+      throw 'Prisma error'
+    }
+  }
+
   async filter(
     prisma: PrismaClient,
     projectId: string | undefined = undefined,
