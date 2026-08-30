@@ -8,6 +8,7 @@ import { DiscussionDemoDataSetupService } from './discussion-service'
 import { NotificationsDemoDataSetupService } from './notifications-service'
 import { EmailListsDemoDataSetupService } from './email-lists-service'
 import { BatchDemoDataSetupService } from './batch-service'
+import { AvatarsDemoDataSetupService } from './avatars-service'
 
 // Services
 const coreDemoDataService = new CoreDemoDataSetupService()
@@ -19,6 +20,7 @@ const discussionDemoDataService = new DiscussionDemoDataSetupService()
 const notificationsDemoDataService = new NotificationsDemoDataSetupService()
 const emailListsDemoDataService = new EmailListsDemoDataSetupService()
 const batchDemoDataService = new BatchDemoDataSetupService()
+const avatarsDemoDataService = new AvatarsDemoDataSetupService()
 
 // Class
 export class DemoDataSetupService {
@@ -57,5 +59,9 @@ export class DemoDataSetupService {
 
     // Setup batch jobs
     await batchDemoDataService.setup(prisma)
+
+    // Assign the staged avatars (must run last so it overrides any avatar
+    // set in the profile data)
+    await avatarsDemoDataService.setup(prisma)
   }
 }
