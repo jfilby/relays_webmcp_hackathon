@@ -202,6 +202,12 @@ export default function LaunchedHero({
                   variant='outlined'>
                   Explore projects
                 </Button>
+                <Button
+                  onClick={() => window.location.href = '/profile'}
+                  size='large'
+                  variant='outlined'>
+                  My profile
+                </Button>
               </div>
             </div>
             :
