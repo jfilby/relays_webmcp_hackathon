@@ -46,9 +46,13 @@ export class CoreDemoDataSetupService {
 
     // Upsert instances
     for (const data of DemoDataTypes.instances) {
+
       const ownerUserProfile = await this.getUserProfileByKey(
         prisma,
         data.ownerUserProfileKey)
+
+      // console.log(`${fnName}: profileKey: ${data.ownerUserProfileKey} - ` +
+      //   `${ownerUserProfile?.id ?? 'NOTFOUND'}`)
 
       // The serene-core upsert locates existing records by parent + key +
       // user profile (demo instances have no parent), so look the record up
