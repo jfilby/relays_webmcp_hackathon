@@ -1,13 +1,13 @@
 import Head from 'next/head'
 import { useState } from 'react'
-import { Button, Link, Paper, TextField, Typography } from '@mui/material'
+import { Button, Paper, TextField, Typography } from '@mui/material'
 import Layout, { pageBodyWidth } from '@/components/layouts/layout'
 import { loadServerPage } from '@/services/page/load-server-page'
+import DiscussPostListItem from '@/components/discussion/discuss-post-list-item'
 import LoadDiscussPosts from '@/components/discussion/load-discuss-posts'
 import SaveDiscussPost from '@/components/discussion/save-discuss-post'
 import EmptyState from '@/components/layouts/empty-state'
 import type { DiscussPostItem, UserProfile } from '@/types/client-only-types'
-import { formatSince } from '@/services/utils/dates'
 import type { GetServerSidePropsContext } from 'next'
 
 interface Props {
@@ -133,57 +133,10 @@ export default function DiscussPage({
                 <>
                   {posts.length > 0 ?
                     posts.map(post => (
-                      <Paper
+                      <DiscussPostListItem
+                        clampBody={true}
                         key={post.id}
-                        sx={{
-                          display: 'block',
-                          marginBottom: '1em',
-                          padding: '1.25em 1.5em',
-                          transition: 'transform 0.18s ease, box-shadow 0.18s ease',
-                          '&:hover': {
-                            transform: 'translateY(-2px)',
-                            boxShadow: '0 8px 22px rgba(0, 0, 0, 0.08)'
-                          }
-                        }}>
-                        <Link
-                          href={`/discuss/${post.publicId}`}
-                          style={{ textDecoration: 'none', color: 'inherit', display: 'block' }}
-                          underline='none'>
-                          <Typography
-                            sx={{
-                              fontWeight: 600,
-                              '&:hover': { textDecoration: 'underline' },
-                            }}
-                            variant='h6'>
-                            {post.title}
-                          </Typography>
-
-                          <Typography
-                            style={{
-                              color: '#5a5a5a',
-                              marginTop: '0.35em',
-                              fontSize: '0.85rem',
-                              overflow: 'hidden',
-                              textOverflow: 'ellipsis',
-                              display: '-webkit-box',
-                              WebkitLineClamp: 2,
-                              WebkitBoxOrient: 'vertical'
-                            }}
-                            variant='body2'>
-                            {post.body}
-                          </Typography>
-
-                          <Typography
-                            style={{ color: '#5a5a5a', marginTop: '0.5em', fontSize: '0.85rem' }}
-                            variant='body2'>
-                            {post.authorName != null && post.authorName !== '' ?
-                              `${post.authorName} · ` :
-                              ''}
-                            {formatSince(post.created)} · {post.commentCount}{' '}
-                            {post.commentCount === 1 ? 'comment' : 'comments'}
-                          </Typography>
-                        </Link>
-                      </Paper>
+                        post={post} />
                     ))
                     :
                     <EmptyState message="No discussions yet. Start the first one." />

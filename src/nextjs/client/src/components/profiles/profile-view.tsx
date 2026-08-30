@@ -5,7 +5,7 @@ import { useMutation } from '@apollo/client/react'
 import { createDiscussPostMutation, deleteDiscussPostMutation } from '@/apollo/discussion'
 import { sendConnectionRequestMutation } from '@/apollo/connections'
 import { availabilityStatusName, skillLevelName } from '@/types/client-only-types'
-import { formatSince } from '@/services/utils/dates'
+import DiscussPostListItem from '@/components/discussion/discuss-post-list-item'
 import type { DiscussPostItem, Endorsement, Profile, ProfileLink, ProfileSkill } from '@/types/client-only-types'
 import { profileTypeName } from './profile-card'
 
@@ -501,44 +501,11 @@ export default function ProfileView({
 
         {posts != null && posts.length > 0 ?
           posts.map(post => (
-            <div
+            <DiscussPostListItem
               key={post.id}
-              style={{ borderBottom: '1px solid #eeeeee', marginBottom: '1em', paddingBottom: '1em' }}>
-              <div style={{ alignItems: 'center', display: 'flex', gap: '0.75em' }}>
-                <Link
-                  href={`/discuss/${post.publicId}`}
-                  underline='hover'>
-                  <Typography
-                    style={{ fontWeight: 600 }}
-                    variant='body2'>
-                    {post.title}
-                  </Typography>
-                </Link>
-
-                <Typography
-                  style={{ color: 'gray' }}
-                  variant='body2'>
-                  {formatSince(post.created)} · {post.commentCount}{' '}
-                  {post.commentCount === 1 ? 'comment' : 'comments'}
-                </Typography>
-
-                {owner === true ?
-                  <Button
-                    onClick={() => onDeletePost(post.id)}
-                    size='small'>
-                    Delete
-                  </Button>
-                  :
-                  <></>
-                }
-              </div>
-
-              <Typography
-                style={{ whiteSpace: 'pre-wrap' }}
-                variant='body1'>
-                {post.body}
-              </Typography>
-            </div>
+              onDelete={() => onDeletePost(post.id)}
+              post={post}
+              showDelete={owner === true} />
           ))
           :
           <Typography variant='body2'>

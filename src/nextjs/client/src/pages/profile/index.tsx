@@ -44,9 +44,10 @@ export default function MyProfilePage({
 
           {profile != null ?
             <ProfileView
-              profile={profile}
               owner={true}
               posts={posts}
+              profile={profile}
+              viewerUserProfileId={userProfile.id}
               onPostsChanged={onPostsChanged} />
             :
             <></>

@@ -12,7 +12,7 @@ import { useMutation } from '@apollo/client/react'
 import { toggleProjectInterestMutation } from '@/apollo/projects'
 import { createDiscussPostMutation, deleteDiscussPostMutation } from '@/apollo/discussion'
 import type { DiscussPostItem, Project } from '@/types/client-only-types'
-import { formatSince } from '@/services/utils/dates'
+import DiscussPostListItem from '@/components/discussion/discuss-post-list-item'
 import { projectStageName } from '@/types/client-only-types'
 import { projectVisibilityName } from './project-card'
 
@@ -419,57 +419,12 @@ export default function ProjectView({
 
         {posts != null && posts.length > 0 ?
           posts.map(post => (
-            <Paper
+            <DiscussPostListItem
               key={post.id}
-              style={{ marginBottom: '0.75em', padding: '1em' }}
-              variant='outlined'>
-              <div style={{
-                alignItems: 'center',
-                display: 'flex',
-                flexWrap: 'wrap',
-                gap: '0.5em',
-                justifyContent: 'space-between'
-              }}>
-                <Link
-                  href={`/discuss/${post.publicId}`}
-                  underline='hover'>
-                  <Typography
-                    style={{ fontWeight: 600 }}
-                    variant='subtitle2'>
-                    {post.title}
-                  </Typography>
-                </Link>
-
-                {signedIn === true &&
-                  post.authorProfileId === userProfileId ?
-                  <Button
-                    color='error'
-                    onClick={() => deletePost(post.id)}
-                    size='small'
-                    variant='outlined'>
-                    Delete
-                  </Button>
-                  :
-                  <></>
-                }
-              </div>
-
-              <Typography
-                style={{ whiteSpace: 'pre-wrap' }}
-                variant='body2'>
-                {post.body}
-              </Typography>
-
-              <Typography
-                style={{ color: '#5a5a5a', marginTop: '0.5em', fontSize: '0.85rem' }}
-                variant='body2'>
-                {post.authorName != null && post.authorName !== '' ?
-                  `${post.authorName} · ` :
-                  ''}
-                {formatSince(post.created)} · {post.commentCount}{' '}
-                {post.commentCount === 1 ? 'comment' : 'comments'}
-              </Typography>
-            </Paper>
+              onDelete={() => deletePost(post.id)}
+              post={post}
+              showDelete={signedIn === true &&
+                post.authorProfileId === userProfileId} />
           ))
           :
           <Typography variant='body2'>
