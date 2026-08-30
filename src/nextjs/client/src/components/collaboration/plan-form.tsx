@@ -265,7 +265,7 @@ export default function PlanForm({
       <div>
         <Button
           disabled={saving || values.projectId === '' || values.title.trim() === ''}
-          onClick={onSubmit}
+          onClick={() => onSubmit()}
           size='large'
           variant='contained'>
           {submitLabel}

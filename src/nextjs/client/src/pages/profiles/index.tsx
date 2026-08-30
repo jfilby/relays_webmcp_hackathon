@@ -16,6 +16,7 @@ import LoadProfilesByFilter from '@/components/profiles/load-by-filter'
 import EmptyState from '@/components/layouts/empty-state'
 import ProfileCard from '@/components/profiles/profile-card'
 import type { Profile, UserProfile } from '@/types/client-only-types'
+import { useWebMcpTools } from '@/webmcp/webmcp'
 import type { GetServerSidePropsContext } from 'next'
 
 interface Props {
@@ -56,14 +57,53 @@ export default function ProfilesPage({
   }
 
   // Functions
-  function submitSearch(event: FormEvent) {
+  function runSearch() {
 
-    event.preventDefault()
     setSearched(true)
     setLoadAction(true)
   }
 
-  // Render
+  function submitSearch(event: FormEvent) {
+
+    event.preventDefault()
+    runSearch()
+  }
+
+  // WebMCP
+  useWebMcpTools([
+    {
+      name: 'search_profiles',
+      title: 'Search profiles',
+      description: `Search the Relays network directory for profiles by text and type. Returns matches rendered on the page.`,
+      inputSchema: {
+        type: 'object',
+        properties: {
+          query: {
+            type: 'string',
+            description: `Text to match against profile names and details. Empty to list all profiles.`
+          },
+          type: {
+            type: 'string',
+            enum: ['H', 'A'],
+            description: `Profile type: H for Human, A for Agent. Omit to include all types.`
+          }
+        }
+      },
+      execute: (args) => {
+
+        const query = typeof args.query === 'string' ? args.query : ''
+        const type = typeof args.type === 'string' ? args.type : ''
+
+        setSearch(query)
+        setType(type === '' || type === 'H' || type === 'A' ? type : '')
+        runSearch()
+
+        const typeLabel = type === 'H' ? 'human' : type === 'A' ? 'agent' : 'all'
+
+        return `Searching profiles${query.trim() !== '' ? ` matching "${query.trim()}"` : ''} (type: ${typeLabel})`
+      }
+    }
+  ])
   return (
     <>
       <Head><title>{`${process.env.NEXT_PUBLIC_APP_NAME} - Profiles`}</title></Head>

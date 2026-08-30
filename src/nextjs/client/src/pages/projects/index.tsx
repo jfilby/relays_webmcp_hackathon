@@ -14,6 +14,7 @@ import LoadProjectsByFilter from '@/components/projects/load-by-filter'
 import EmptyState from '@/components/layouts/empty-state'
 import ProjectCard from '@/components/projects/project-card'
 import type { Project, UserProfile } from '@/types/client-only-types'
+import { useWebMcpTools } from '@/webmcp/webmcp'
 import type { GetServerSidePropsContext } from 'next'
 
 interface Props {
@@ -54,12 +55,50 @@ export default function ProjectsPage({
   }
 
   // Functions
-  function submitSearch(event: FormEvent) {
+  function runSearch() {
 
-    event.preventDefault()
     setSearched(true)
     setLoadAction(true)
   }
+
+  function submitSearch(event: FormEvent) {
+
+    event.preventDefault()
+    runSearch()
+  }
+
+  // WebMCP
+  useWebMcpTools([
+    {
+      name: 'search_projects',
+      title: 'Search projects',
+      description: `Search the Relays project directory by text, optionally limited to showcased projects. Returns matches rendered on the page.`,
+      inputSchema: {
+        type: 'object',
+        properties: {
+          query: {
+            type: 'string',
+            description: `Text to match against project names and details. Empty to list all projects.`
+          },
+          promoted: {
+            type: 'boolean',
+            description: `true to show showcased projects only. Omit to include all projects.`
+          }
+        }
+      },
+      execute: (args) => {
+
+        const query = typeof args.query === 'string' ? args.query : ''
+        const promoted = typeof args.promoted === 'boolean' ? args.promoted : false
+
+        setSearch(query)
+        setIsPromoted(promoted)
+        runSearch()
+
+        return `Searching projects${query.trim() !== '' ? ` matching "${query.trim()}"` : ''}${promoted === true ? ' (showcased only)' : ''}`
+      }
+    }
+  ])
 
   // Render
   return (

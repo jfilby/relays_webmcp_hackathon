@@ -1,6 +1,6 @@
 import { useState } from 'react'
-import type { FormEvent } from 'react'
 import { useMutation } from '@apollo/client/react'
+import { useWebMcpTools } from '@/webmcp/webmcp'
 import { signUpForUpdatesMutation } from '@/apollo/sign-ups'
 import { Alert, Button, TextField, Typography } from '@mui/material'
 import FullHeightLayout, { pageBodyWidth } from '@/components/layouts/full-height-layout'
@@ -34,15 +34,21 @@ export default function WaitListLandingPage() {
     return regexp.test(search)
   }
 
-  async function waitlistSignup(e: FormEvent) {
+  async function waitlistSignup(signupEmail?: string): Promise<{ status: 'ok' | 'error'; message: string }> {
 
-    e.preventDefault()
+    // Use the explicitly provided email when given, so tool callers and the
+    // human form share one code path.
+    const submittedEmail = signupEmail ?? email
+
+    if (signupEmail != null) {
+      setEmail(signupEmail)
+    }
 
     // Verify email address
-    if (isEmail(email) === false) {
+    if (isEmail(submittedEmail) === false) {
       setAlertSeverity('error')
       setMessage('The email address you entered is invalid')
-      return
+      return { status: 'error', message: 'The email address you entered is invalid' }
     } else {
       setAlertSeverity(undefined)
       setMessage(undefined)
@@ -56,7 +62,7 @@ export default function WaitListLandingPage() {
 
     await fetchSignUpForUpdatesMutation({
       variables: {
-        email: email
+        email: submittedEmail
       }
     }).then(res => result = res.data?.signUpForUpdates)
 
@@ -65,20 +71,53 @@ export default function WaitListLandingPage() {
       setAlertSeverity('error')
       setMessage(`Failed to sign up`)
       setSubmitDisabled(false)
-      return
+      return { status: 'error', message: `Failed to sign up` }
     }
 
     if (result.status === true) {
       // Success
       setAlertSeverity('success')
       setMessage(`You've applied to join the private beta!`)
+      return { status: 'ok', message: `You've applied to join the private beta!` }
     } else {
       // Error
       setAlertSeverity('error')
       setMessage(result.message)
       setSubmitDisabled(false)
+      return { status: 'error', message: result.message }
     }
   }
+
+  // WebMCP
+  useWebMcpTools([
+    {
+      name: 'join_waitlist',
+      title: 'Join the waitlist',
+      description: `Submit the waitlist form to apply to join the private beta with the given email address. The outcome is shown in the page alert.`,
+      inputSchema: {
+        type: 'object',
+        properties: {
+          email: {
+            type: 'string',
+            format: 'email',
+            description: `Email address to apply with.`
+          }
+        },
+        required: ['email']
+      },
+      execute: async (args) => {
+
+        const submittedEmail = typeof args.email === 'string' ? args.email.trim() : ''
+        const result = await waitlistSignup(submittedEmail)
+
+        if (result.status === 'error') {
+          throw new Error(result.message)
+        }
+
+        return result.message
+      }
+    }
+  ])
 
   // Render
   return (
@@ -95,7 +134,7 @@ export default function WaitListLandingPage() {
           <div style={{ marginBottom: '2em' }}>
             <h1>Join the waitlist</h1>
 
-            <form onSubmit={waitlistSignup}>
+            <form onSubmit={(e) => { e.preventDefault(); waitlistSignup() }}>
               <TextField
                 id='email'
                 label='Email address'

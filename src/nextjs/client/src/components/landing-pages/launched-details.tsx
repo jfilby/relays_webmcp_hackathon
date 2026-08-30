@@ -2,6 +2,7 @@ import React, { useState } from 'react'
 import { Alert, Button, TextField, Typography } from '@mui/material'
 import { useMutation } from '@apollo/client/react'
 import { signUpForUpdatesMutation } from '@/apollo/sign-ups'
+import { useWebMcpTools } from '@/webmcp/webmcp'
 import type { UserProfile } from '@/types/client-only-types'
 import styles from './landing.module.css'
 
@@ -62,15 +63,29 @@ export default function LaunchedDetails({
     return regexp.test(search)
   }
 
-  async function updatesSignup() {
+  async function updatesSignup(signupEmail?: string): Promise<{ status: 'ok' | 'error'; message: string }> {
+
+    // Use the explicitly provided email when given, so tool callers and the
+    // human form share one code path.
+    const submittedEmail = signupEmail ?? email
+
+    if (signupEmail != null) {
+      setEmail(signupEmail)
+    }
 
     // Anonymous visitors must provide a valid email address
     if (signedIn === false) {
 
-      if (isEmail(email) === false) {
+      if (submittedEmail.trim() === '') {
+        setAlertSeverity('error')
+        setMessage('An email address is required to sign up for updates')
+        return { status: 'error', message: 'An email address is required to sign up for updates' }
+      }
+
+      if (isEmail(submittedEmail) === false) {
         setAlertSeverity('error')
         setMessage('The email address you entered is invalid')
-        return
+        return { status: 'error', message: 'The email address you entered is invalid' }
       } else {
         setAlertSeverity(undefined)
         setMessage(undefined)
@@ -85,7 +100,7 @@ export default function LaunchedDetails({
 
     await fetchSignUpForUpdatesMutation({
       variables: {
-        email: signedIn === true ? null : email,
+        email: signedIn === true ? null : submittedEmail,
         userProfileId: signedIn === true ? userProfile?.id ?? null : null
       }
     }).then(res => result = res.data?.signUpForUpdates)
@@ -95,7 +110,7 @@ export default function LaunchedDetails({
       setAlertSeverity('error')
       setMessage(`Failed to sign up for updates`)
       setSubmitDisabled(false)
-      return
+      return { status: 'error', message: `Failed to sign up for updates` }
     }
 
     if (result.status === true) {
@@ -104,19 +119,57 @@ export default function LaunchedDetails({
         // Reload so the server reflects the newly-enabled updates preference
         // and this form is hidden.
         window.location.reload()
+        return { status: 'ok', message: `You've subscribed to updates!` }
       } else {
         // Success
         setAlertSeverity('success')
         setMessage("You've subscribed to updates!")
         setSubmitDisabled(false)
+        return { status: 'ok', message: `You've subscribed to updates!` }
       }
     } else {
       // Error
       setAlertSeverity('error')
       setMessage(result.message)
       setSubmitDisabled(false)
+      return { status: 'error', message: result.message }
     }
   }
+
+  // WebMCP
+  useWebMcpTools([
+    {
+      name: 'sign_up_for_updates',
+      title: 'Sign up for updates',
+      description: `Submit the email-updates form to subscribe the current visitor to Relays updates. Signed-out visitors must pass an email address; signed-in users are subscribed against their account address. The outcome is shown in the page alert.`,
+      inputSchema: {
+        type: 'object',
+        properties: {
+          email: {
+            type: 'string',
+            format: 'email',
+            description: `Email address to subscribe. Required when signed out; ignored when signed in.`
+          }
+        }
+      },
+      execute: async (args) => {
+
+        const submittedEmail = typeof args.email === 'string' ? args.email.trim() : undefined
+
+        if (signedIn === false && (submittedEmail == null || submittedEmail === '')) {
+          throw new Error(`An email address is required to sign up for updates while signed out`)
+        }
+
+        const result = await updatesSignup(submittedEmail)
+
+        if (result.status === 'error') {
+          throw new Error(result.message)
+        }
+
+        return result.message
+      }
+    }
+  ])
 
   // Render
   return (

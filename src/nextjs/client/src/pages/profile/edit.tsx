@@ -1,5 +1,5 @@
 import Head from 'next/head'
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import {
   Avatar,
   Button,
@@ -35,6 +35,7 @@ import {
   skillLevels
 } from '@/types/client-only-types'
 import type { Profile, ProfileLink, ProfileSkill, UserProfile } from '@/types/client-only-types'
+import { useWebMcpTools } from '@/webmcp/webmcp'
 import type { GetServerSidePropsContext } from 'next'
 
 interface Props {
@@ -58,6 +59,9 @@ export default function EditProfilePage({
     location: '',
     availabilityStatus: 'A'
   })
+
+  const valuesRef = useRef<ProfileFormValues>(values)
+  valuesRef.current = values
 
   const [alertSeverity, setAlertSeverity] = useState<'success' | 'error' | undefined>(undefined)
   const [message, setMessage] = useState<string | undefined>(undefined)
@@ -159,23 +163,38 @@ export default function EditProfilePage({
     }))
   }
 
-  function onSubmit() {
+  function onSubmit(submitValues?: ProfileFormValues): { status: 'ok' | 'error'; message: string } {
 
-    if (values.displayName.trim() === '') {
+    const v = submitValues ?? values
+
+    if (submitValues != null) {
+      setValues(submitValues)
+    }
+
+    if (v.displayName.trim() === '') {
       setAlertSeverity('error')
       setMessage(`Display name is required`)
-      return
+      return { status: 'error', message: `Display name is required` }
     }
 
     setAlertSeverity(undefined)
     setMessage(undefined)
     setUpdateAction(true)
+
+    return { status: 'ok', message: `Profile update started` }
   }
 
-  async function onAddSkill() {
+  async function onAddSkill(submitName?: string, submitLevel?: string): Promise<{ status: 'ok' | 'error'; message: string }> {
 
-    if (profile == null || newSkillName.trim() === '') {
-      return
+    const skillName = (submitName ?? newSkillName).trim()
+    const skillLevel = submitLevel ?? newSkillLevel
+
+    if (profile == null) {
+      return { status: 'error', message: `Profile not loaded yet` }
+    }
+
+    if (skillName === '') {
+      return { status: 'error', message: `Skill name is required` }
     }
 
     setSkillSaving(true)
@@ -186,8 +205,8 @@ export default function EditProfilePage({
     await sendAddSkillToProfileMutation({
       variables: {
         userProfileId: userProfile.id,
-        skillName: newSkillName.trim(),
-        level: newSkillLevel !== '' ? newSkillLevel : null
+        skillName: skillName,
+        level: skillLevel !== '' ? skillLevel : null
       }
     }).then(result => addedData = result.data?.addSkillToProfile)
 
@@ -195,6 +214,7 @@ export default function EditProfilePage({
     if (addedData == null) {
       setAlertSeverity('error')
       setMessage(`Failed to add the skill`)
+      return { status: 'error', message: `Failed to add the skill` }
     } else if (addedData.status === true) {
       setAlertSeverity('success')
       setMessage(addedData.message)
@@ -202,13 +222,12 @@ export default function EditProfilePage({
       setNewSkillName('')
       setNewSkillLevel('I')
       setSkillsReloadToken(token => token + 1)
+      return { status: 'ok', message: addedData.message ?? `Skill added` }
     } else {
       setAlertSeverity('error')
       setMessage(addedData.message)
+      return { status: 'error', message: addedData.message ?? `Failed to add the skill` }
     }
-
-    // Done
-    setSkillSaving(false)
   }
 
   async function onRemoveSkill(profileSkillId: string) {
@@ -247,9 +266,17 @@ export default function EditProfilePage({
     setSkillSaving(false)
   }
 
-  async function onAddLink() {
-    if (profile == null || newLinkUrl.trim() === '') {
-      return
+  async function onAddLink(submitKind?: string, submitUrl?: string): Promise<{ status: 'ok' | 'error'; message: string }> {
+
+    const linkKind = submitKind ?? newLinkKind
+    const linkUrl = (submitUrl ?? newLinkUrl).trim()
+
+    if (profile == null) {
+      return { status: 'error', message: `Profile not loaded yet` }
+    }
+
+    if (linkUrl === '') {
+      return { status: 'error', message: `URL is required` }
     }
 
     setLinkError(undefined)
@@ -258,21 +285,21 @@ export default function EditProfilePage({
     let parsedUrl: URL
 
     try {
-      parsedUrl = new URL(newLinkUrl.trim())
+      parsedUrl = new URL(linkUrl)
     } catch {
       setLinkError(`URL must be a valid URL (e.g. https://example.com)`)
-      return
+      return { status: 'error', message: `URL must be a valid URL (e.g. https://example.com)` }
     }
 
     if (parsedUrl.protocol !== 'http:' && parsedUrl.protocol !== 'https:') {
       setLinkError(`URL must start with http:// or https://`)
-      return
+      return { status: 'error', message: `URL must start with http:// or https://` }
     }
 
     // The hostname must be a domain (e.g. example.com), not a bare label
     if (parsedUrl.hostname.includes('.') === false) {
       setLinkError(`URL must have a valid domain (e.g. example.com)`)
-      return
+      return { status: 'error', message: `URL must have a valid domain (e.g. example.com)` }
     }
 
     setLinkSaving(true)
@@ -284,24 +311,28 @@ export default function EditProfilePage({
       await sendAddProfileLinkMutation({
         variables: {
           userProfileId: userProfile.id,
-          kind: newLinkKind,
-          url: newLinkUrl.trim()
+          kind: linkKind,
+          url: linkUrl
         }
       }).then(result => addedData = result.data?.addProfileLink)
 
       // Get results and set fields
       if (addedData == null) {
         setLinkError(`Failed to add the link`)
+        return { status: 'error', message: `Failed to add the link` }
       } else if (addedData.status === true) {
         setAlertSeverity('success')
         setMessage(addedData.message)
         setNewLinkUrl('')
         setLinksReloadToken(token => token + 1)
+        return { status: 'ok', message: addedData.message ?? `Link added` }
       } else {
         setLinkError(addedData.message)
+        return { status: 'error', message: addedData.message ?? `Failed to add the link` }
       }
     } catch {
       setLinkError(`Failed to add the link`)
+      return { status: 'error', message: `Failed to add the link` }
     } finally {
       setLinkSaving(false)
     }
@@ -361,6 +392,139 @@ export default function EditProfilePage({
     onRemoveLink(linkDeletePendingId)
 
   }, [linkDeleteConfirmed])
+
+  // WebMCP
+  useWebMcpTools([
+    {
+      name: 'update_profile',
+      title: 'Update profile',
+      description: `Update the signed-in user's Relays profile from the edit-profile form on this page. Fields omitted from the arguments keep their current values. The page redirects to the profile once the update succeeds.`,
+      inputSchema: {
+        type: 'object',
+        properties: {
+          displayName: {
+            type: 'string',
+            description: `Display name shown on the profile. Required.`
+          },
+          type: {
+            type: 'string',
+            enum: ['H', 'A'],
+            description: `Profile type: H for Human, A for Agent.`
+          },
+          availabilityStatus: {
+            type: 'string',
+            enum: ['A', 'B', 'U'],
+            description: `Availability status: A for Available, B for Busy, U for Unavailable.`
+          },
+          headline: {
+            type: 'string',
+            description: `Short headline shown on the profile.`
+          },
+          bio: {
+            type: 'string',
+            description: `Longer bio shown on the profile.`
+          },
+          location: {
+            type: 'string',
+            description: `Location shown on the profile.`
+          },
+          isPublic: {
+            type: 'boolean',
+            description: `Whether the profile is publicly visible.`
+          }
+        },
+        required: ['displayName']
+      },
+      execute: (args) => {
+
+        const current = valuesRef.current
+
+        const submitValues: ProfileFormValues = {
+          displayName: typeof args.displayName === 'string' ? args.displayName : current.displayName,
+          type: typeof args.type === 'string' && (args.type === 'H' || args.type === 'A') ? args.type : current.type,
+          isPublic: typeof args.isPublic === 'boolean' ? args.isPublic : current.isPublic,
+          headline: typeof args.headline === 'string' ? args.headline : current.headline,
+          bio: typeof args.bio === 'string' ? args.bio : current.bio,
+          location: typeof args.location === 'string' ? args.location : current.location,
+          availabilityStatus: typeof args.availabilityStatus === 'string' && (args.availabilityStatus === 'A' || args.availabilityStatus === 'B' || args.availabilityStatus === 'U') ? args.availabilityStatus : current.availabilityStatus
+        }
+
+        const result = onSubmit(submitValues)
+
+        if (result.status === 'error') {
+          throw new Error(result.message)
+        }
+
+        return `Updating your profile "${submitValues.displayName}"`
+      }
+    },
+    {
+      name: 'add_profile_skill',
+      title: 'Add profile skill',
+      description: `Add a skill with a proficiency level to the signed-in user's Relays profile. The skills list on this page refreshes once the skill is added.`,
+      inputSchema: {
+        type: 'object',
+        properties: {
+          name: {
+            type: 'string',
+            description: `Skill name, e.g. TypeScript. Required.`
+          },
+          level: {
+            type: 'string',
+            enum: ['B', 'I', 'A', 'E'],
+            description: `Proficiency level: B for Beginner, I for Intermediate, A for Advanced, E for Expert. Defaults to Intermediate.`
+          }
+        },
+        required: ['name']
+      },
+      execute: async (args) => {
+
+        const name = typeof args.name === 'string' ? args.name : ''
+        const level = typeof args.level === 'string' && (args.level === 'B' || args.level === 'I' || args.level === 'A' || args.level === 'E') ? args.level : 'I'
+
+        const result = await onAddSkill(name, level)
+
+        if (result.status === 'error') {
+          throw new Error(result.message)
+        }
+
+        return result.message
+      }
+    },
+    {
+      name: 'add_profile_link',
+      title: 'Add profile link',
+      description: `Add a link (website, GitHub, LinkedIn, repository, MCP endpoint, or other) to the signed-in user's Relays profile. The links list on this page refreshes once the link is added.`,
+      inputSchema: {
+        type: 'object',
+        properties: {
+          kind: {
+            type: 'string',
+            enum: ['W', 'G', 'L', 'R', 'M', 'X'],
+            description: `Link kind: W for Website, G for GitHub, L for LinkedIn, R for Repository, M for MCP endpoint, X for Other. Defaults to Website.`
+          },
+          url: {
+            type: 'string',
+            description: `Absolute URL starting with http:// or https://. Required.`
+          }
+        },
+        required: ['url']
+      },
+      execute: async (args) => {
+
+        const kind = typeof args.kind === 'string' && (args.kind === 'W' || args.kind === 'G' || args.kind === 'L' || args.kind === 'R' || args.kind === 'M' || args.kind === 'X') ? args.kind : newLinkKind
+        const url = typeof args.url === 'string' ? args.url : ''
+
+        const result = await onAddLink(kind, url)
+
+        if (result.status === 'error') {
+          throw new Error(result.message)
+        }
+
+        return result.message
+      }
+    }
+  ])
 
   // Render
   return (
@@ -497,7 +661,7 @@ export default function EditProfilePage({
 
                 <Button
                   disabled={skillSaving || newSkillName.trim() === ''}
-                  onClick={onAddSkill}
+                  onClick={() => onAddSkill()}
                   variant='contained'>
                   Add
                 </Button>
@@ -587,7 +751,7 @@ export default function EditProfilePage({
                 </FormControl>
                 <Button
                   disabled={linkSaving || newLinkUrl.trim() === ''}
-                  onClick={onAddLink}
+                  onClick={() => onAddLink()}
                   variant='contained'>
                   Add
                 </Button>

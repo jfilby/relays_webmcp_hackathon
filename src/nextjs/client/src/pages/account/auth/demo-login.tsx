@@ -3,6 +3,7 @@ import { Alert, Button, FormControl, TextField, Typography } from '@mui/material
 import type { GetServerSidePropsContext, InferGetServerSidePropsType } from 'next'
 import { signIn } from 'next-auth/react'
 import Layout from '@/components/layouts/layout'
+import { useWebMcpTools } from '@/webmcp/webmcp'
 
 // https://<host>/account/auth/demo-login?password=<demo password>
 // signs them straight into the demo account. Without the password in the URL
@@ -67,7 +68,39 @@ export default function DemoLogin({
       urlLoginRun.current = true
       attemptLogin(urlPassword)
     }
+
   }, [urlPassword, attemptLogin])
+
+  // WebMCP
+  useWebMcpTools([
+    {
+      name: 'demo_sign_in',
+      title: 'Sign in to the demo account',
+      description: `Sign in to the Relays demo account with the given password. On success the browser is redirected into the app; on a wrong password the page shows an error alert.`,
+      inputSchema: {
+        type: 'object',
+        properties: {
+          password: {
+            type: 'string',
+            description: `Demo account password.`
+          }
+        },
+        required: ['password']
+      },
+      execute: async (args) => {
+
+        const pw = typeof args.password === 'string' ? args.password : ''
+
+        if (pw === '') {
+          throw new Error(`Please provide the demo account password.`)
+        }
+
+        attemptLogin(pw)
+
+        return `Signing in to the demo account`
+      }
+    }
+  ])
 
   // Render
   return (

@@ -183,7 +183,7 @@ export default function ProfileForm({
       <div>
         <Button
           disabled={saving}
-          onClick={onSubmit}
+          onClick={() => onSubmit()}
           size='large'
           style={{ marginBottom: '2em' }}
           variant='contained'>

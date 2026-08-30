@@ -3,6 +3,7 @@ import { Button, FormControl, TextField, Typography } from '@mui/material'
 import type { GetServerSidePropsContext, InferGetServerSidePropsType } from 'next'
 import { getCsrfToken, signIn } from 'next-auth/react'
 import Layout from '@/components/layouts/layout'
+import { useWebMcpTools } from '@/webmcp/webmcp'
 
 export default function SignIn({
   csrfToken,
@@ -28,15 +29,44 @@ export default function SignIn({
   }, [])
 
   // Functions
-  const handleEmailSignIn = async (e: React.FormEvent) => {
-    e.preventDefault()
+  const handleEmailSignIn = async (submitEmail?: string) => {
 
     await signIn('email', {
-      email,
+      email: submitEmail ?? email,
       callbackUrl,
     })
   }
 
+  // WebMCP
+  useWebMcpTools([
+    {
+      name: 'send_sign_in_link',
+      title: 'Send sign-in link',
+      description: `Submit the email sign-in form, sending a magic sign-in link to the given email address. The user follows the link in their email to sign in.`,
+      inputSchema: {
+        type: 'object',
+        properties: {
+          email: {
+            type: 'string',
+            description: `Email address of the account to send the sign-in link to.`
+          }
+        },
+        required: ['email']
+      },
+      execute: async (args) => {
+
+        const emailArg = typeof args.email === 'string' ? args.email.trim() : ''
+
+        if (emailArg === '') {
+          throw new Error(`Please provide the email address to send the sign-in link to.`)
+        }
+
+        handleEmailSignIn(emailArg)
+
+        return `Sending sign-in link to "${emailArg}"`
+      }
+    }
+  ])
   // Render
   return (
     <Layout>
@@ -85,7 +115,10 @@ export default function SignIn({
           </Typography>
         </div>
 
-        <form onSubmit={handleEmailSignIn}>
+        <form onSubmit={(e) => {
+          e.preventDefault()
+          handleEmailSignIn()
+        }}>
           <FormControl style={{ marginBottom: '2em', width: '20em' }}>
             <TextField
               id='email'

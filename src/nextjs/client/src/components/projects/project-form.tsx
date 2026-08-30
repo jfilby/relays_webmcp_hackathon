@@ -220,7 +220,7 @@ export default function ProjectForm({
       <div>
         <Button
           disabled={saving}
-          onClick={onSubmit}
+          onClick={() => onSubmit()}
           size='large'
           variant='contained'>
           {submitLabel}
