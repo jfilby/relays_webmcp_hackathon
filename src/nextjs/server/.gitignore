@@ -42,6 +42,9 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# Uploaded files (avatars)
+/uploads
 node_modules/
 dist/
 .env

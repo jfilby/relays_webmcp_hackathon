@@ -66,6 +66,10 @@ interface EndorseSkillArgs {
   comment?: string | null
 }
 
+interface DeleteProfileAvatarArgs {
+  userProfileId: string
+}
+
 // Code
 export async function createProfile(
   _parent: unknown,
@@ -125,6 +129,16 @@ export async function updateProfile(
     location ?? undefined,
     avatar ?? undefined,
     availabilityStatus ?? undefined)
+}
+
+export async function deleteProfileAvatar(
+  _parent: unknown,
+  { userProfileId }: DeleteProfileAvatarArgs) {
+
+  // Mutation
+  return profilesMutateService.deleteAvatar(
+    prisma,
+    userProfileId)
 }
 
 export async function setProfileUpdates(

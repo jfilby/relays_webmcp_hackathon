@@ -1,6 +1,7 @@
 import Head from 'next/head'
 import { useEffect, useState } from 'react'
 import {
+  Avatar,
   Button,
   Chip,
   FormControl,
@@ -380,6 +381,41 @@ export default function EditProfilePage({
               saving={updateAction}
               alertSeverity={alertSeverity}
               message={message} />
+            :
+            <></>
+          }
+
+          {profile != null ?
+            <div style={{ marginBottom: '2em' }}>
+              <Typography
+                style={{ marginBottom: '0.5em' }}
+                variant='h3'>
+                Profile photo
+              </Typography>
+
+              <div style={{ alignItems: 'center', display: 'flex', gap: '1em' }}>
+                <Avatar
+                  alt={`${profile.displayName} avatar`}
+                  src={profile.avatar || undefined}
+                  sx={{
+                    width: '3em',
+                    height: '3em',
+                    backgroundColor: '#111111',
+                    color: '#ffffff',
+                    fontWeight: 700
+                  }}>
+                  {profile.displayName?.charAt(0)?.toUpperCase()}
+                </Avatar>
+
+                <Button href='/profile/photo'>
+                  {profile.avatar != null && profile.avatar !== '' ?
+                    `Change photo`
+                    :
+                    `Add photo`
+                  }
+                </Button>
+              </div>
+            </div>
             :
             <></>
           }

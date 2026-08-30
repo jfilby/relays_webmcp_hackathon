@@ -558,6 +558,9 @@ export const typeDefs = /* GraphQL */ `
       avatar: String,
       availabilityStatus: String): ProfileResults!
 
+    deleteProfileAvatar(
+      userProfileId: String!): StatusAndMessage!
+
     setProfileUpdates(
       userProfileId: String!,
       updates: Boolean!): StatusAndMessage!

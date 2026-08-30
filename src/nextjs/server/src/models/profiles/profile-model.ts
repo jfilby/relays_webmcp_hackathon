@@ -129,7 +129,7 @@ export class ProfileModel {
     headline: string | undefined,
     bio: string | undefined,
     location: string | undefined,
-    avatar: string | undefined,
+    avatar: string | null | undefined,
     availabilityStatus: string | undefined,
     isVerified: boolean | undefined,
     verifiedAt: Date | null | undefined,
@@ -154,6 +154,31 @@ export class ProfileModel {
           isVerified: isVerified,
           verifiedAt: verifiedAt,
           isDemoData: isDemoData
+        },
+        where: {
+          id: id
+        }
+      })
+    } catch (error) {
+      console.error(`${fnName}: error: ${error}`)
+      throw 'Prisma error'
+    }
+  }
+
+  // Set or clear (null) the avatar field only
+  async updateAvatar(
+    prisma: PrismaClient,
+    id: string,
+    avatar: string | null) {
+
+    // Debug
+    const fnName = `${this.clName}.updateAvatar()`
+
+    // Update record
+    try {
+      return await prisma.profile.update({
+        data: {
+          avatar: avatar
         },
         where: {
           id: id

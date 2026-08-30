@@ -86,6 +86,19 @@ export const updateProfileMutation = gql`
   }
 `
 
+export const deleteProfileAvatarMutation = gql`
+  mutation deleteProfileAvatar(
+    $userProfileId: String!)
+  {
+    deleteProfileAvatar(
+      userProfileId: $userProfileId) {
+
+      status
+      message
+    }
+  }
+`
+
 export const setProfileUpdatesMutation = gql`
   mutation setProfileUpdates(
     $userProfileId: String!,

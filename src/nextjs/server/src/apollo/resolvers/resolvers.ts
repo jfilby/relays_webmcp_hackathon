@@ -65,6 +65,7 @@ import { signUpForUpdates } from './mutations/sign-ups'
 import {
   createProfile,
   updateProfile,
+  deleteProfileAvatar,
   setProfileUpdates,
   addSkillToProfile,
   removeSkillFromProfile,
@@ -178,6 +179,7 @@ const Mutation = {
   // Profiles
   createProfile,
   updateProfile,
+  deleteProfileAvatar,
   setProfileUpdates,
 
   // Profile skills, links, endorsements

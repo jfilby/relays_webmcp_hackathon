@@ -11,6 +11,7 @@ import { EmailListsMutateService } from '@/services/email-lists/mutate-service'
 import { PublicIdService } from '@/services/utils/public-id-service'
 import { ProfilesQueryService } from './query-service'
 import { EmbeddingService } from '@/services/search/embedding-service'
+import { AvatarStorageService } from '@/services/uploads/avatar-storage-service'
 
 // Models
 const userProfileModel = new UserProfileModel()
@@ -24,6 +25,7 @@ const endorsementModel = new EndorsementModel()
 const emailListsMutateService = new EmailListsMutateService()
 const profilesQueryService = new ProfilesQueryService()
 const embeddingService = new EmbeddingService()
+const avatarStorageService = new AvatarStorageService()
 
 // Class
 export class ProfilesMutateService {
@@ -260,11 +262,74 @@ export class ProfilesMutateService {
     // cleared and search degrades to the other techniques)
     await embeddingService.syncProfileEmbedding(prisma, profile)
 
+    // If the avatar was replaced, remove the file behind the old avatar
+    // (best effort: only files uploaded through the avatar API are removed)
+    if (avatar != null &&
+        existing.avatar != null &&
+        existing.avatar !== avatar) {
+
+      const oldFilename = avatarStorageService.filenameFromUrl(existing.avatar)
+
+      if (oldFilename != null) {
+        await avatarStorageService.delete(oldFilename)
+      }
+    }
+
     // Return
     return {
       status: true,
       message: `Your profile was updated`,
       profile: profilesQueryService.toGraphQL(profile)
+    }
+  }
+
+  // Delete the profile photo (avatar): clears the field and removes the file
+  // behind it (best effort: only files uploaded through the avatar API)
+  async deleteAvatar(
+    prisma: PrismaClient,
+    userProfileId: string) {
+
+    // Debug
+    const fnName = `${this.clName}.deleteAvatar()`
+
+    // Get the profile to verify ownership
+    const profile = await
+      profileModel.getByUserProfileId(
+        prisma,
+        userProfileId)
+
+    if (profile == null) {
+      return {
+        status: false,
+        message: `Profile not found`
+      }
+    }
+
+    // Remove the file, if the avatar points at one uploaded through the API
+    const filename = avatarStorageService.filenameFromUrl(profile.avatar)
+
+    if (filename != null) {
+      await avatarStorageService.delete(filename)
+    }
+
+    // Clear the avatar
+    try {
+      await profileModel.updateAvatar(
+        prisma,
+        profile.id,
+        null)
+    } catch (error) {
+      console.error(`${fnName}: error: ${error}`)
+      return {
+        status: false,
+        message: `Failed to delete the profile photo`
+      }
+    }
+
+    // Return
+    return {
+      status: true,
+      message: `Your profile photo was deleted`
     }
   }
 
