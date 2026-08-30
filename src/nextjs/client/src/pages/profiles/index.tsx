@@ -20,20 +20,40 @@ import type { GetServerSidePropsContext } from 'next'
 
 interface Props {
   userProfile: UserProfile
+  search?: string | string[]
 }
 
 export default function ProfilesPage({
-  userProfile
+  userProfile,
+  search: initialSearch
 }: Props) {
 
+  // Consts
+  const startingSearch =
+    typeof initialSearch === 'string' ?
+      initialSearch
+      :
+      ''
+
   // State
-  const [search, setSearch] = useState<string>('')
+  const [search, setSearch] = useState<string>(startingSearch)
   const [type, setType] = useState<string>('')
   const [profiles, setProfiles] = useState<Profile[] | undefined>(undefined)
-  const [searched, setSearched] = useState<boolean>(false)
+  const [searched, setSearched] = useState<boolean>(startingSearch !== '')
   const [alertSeverity, setAlertSeverity] = useState<'success' | 'error' | undefined>(undefined)
   const [message, setMessage] = useState<string | undefined>(undefined)
   const [loadAction, setLoadAction] = useState<boolean>(true)
+  const [appliedInitialSearch, setAppliedInitialSearch] = useState<string>(startingSearch)
+
+  // Re-run the search when the page is navigated to again with a different
+  // query (e.g. breaking out of the header omnibar while already here).
+  if (appliedInitialSearch !== startingSearch) {
+    setAppliedInitialSearch(startingSearch)
+    setSearch(startingSearch)
+    setType('')
+    setSearched(startingSearch !== '')
+    setLoadAction(true)
+  }
 
   // Functions
   function submitSearch(event: FormEvent) {

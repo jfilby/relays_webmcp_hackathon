@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import { useRouter } from 'next/router'
 import Avatar from '@mui/material/Avatar'
 import Box from '@mui/material/Box'
 import Button from '@mui/material/Button'
@@ -27,6 +28,9 @@ const searchDebounceMilliseconds = 300
 
 export default function SearchOmnibar() {
 
+  // Router
+  const router = useRouter()
+
   // Refs
   const containerRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLInputElement>(null)
@@ -40,8 +44,6 @@ export default function SearchOmnibar() {
   const [projects, setProjects] = useState<Project[]>([])
   const [loading, setLoading] = useState<boolean>(false)
   const [message, setMessage] = useState<string | undefined>(undefined)
-  const [expandProfiles, setExpandProfiles] = useState<boolean>(false)
-  const [expandProjects, setExpandProjects] = useState<boolean>(false)
   const [open, setOpen] = useState<boolean>(false)
 
   // Consts
@@ -64,8 +66,6 @@ export default function SearchOmnibar() {
       setCommittedSearch(committed)
       setProfiles([])
       setProjects([])
-      setExpandProfiles(false)
-      setExpandProjects(false)
       setMessage(undefined)
       setLoading(committed.length >= minimumSearchLength)
     }, searchDebounceMilliseconds)
@@ -197,11 +197,8 @@ export default function SearchOmnibar() {
   function renderGroupHeader(
     name: string,
     count: number,
-    expanded: boolean,
-    setExpanded: (value: boolean) => void) {
-
-    // No expand button needed when everything is already visible
-    const canExpand = count > previewCount
+    breakoutLabel: string,
+    breakoutLink: string) {
 
     return (
       <Box sx={{
@@ -213,20 +210,15 @@ export default function SearchOmnibar() {
         <Typography variant='overline' color='text.secondary'>
           {name} ({count})
         </Typography>
-        {canExpand ?
-          <Button
-            size='small'
-            onClick={() => setExpanded(!expanded)}
-            sx={{ textTransform: 'none', padding: '0 0.5em', minWidth: 0 }}>
-            {expanded === true ?
-              `Show fewer`
-              :
-              `Show all ${count}`
-            }
-          </Button>
-          :
-          <></>
-        }
+        <Button
+          size='small'
+          onClick={() => {
+            setOpen(false)
+            router.push(breakoutLink)
+          }}
+          sx={{ textTransform: 'none', padding: '0 0.5em', minWidth: 0 }}>
+          {breakoutLabel}
+        </Button>
       </Box>
     )
   }
@@ -235,25 +227,21 @@ export default function SearchOmnibar() {
     name: string,
     count: number,
     items: React.ReactNode[],
-    expanded: boolean,
-    setExpanded: (value: boolean) => void) {
+    breakoutLabel: string,
+    breakoutLink: string) {
 
     if (count === 0) {
       return null
     }
 
-    const visible = expanded === true ?
-      items
-      :
-      items.slice(0, previewCount)
-
     return (
       <Box>
-        {renderGroupHeader(name, count, expanded, setExpanded)}
-        {visible}
+        {renderGroupHeader(name, count, breakoutLabel, breakoutLink)}
+        {items.slice(0, previewCount)}
       </Box>
     )
   }
+
 
   // Render
   return (
@@ -266,10 +254,11 @@ export default function SearchOmnibar() {
         marginX: '1em'
       }}>
       <TextField
+        autoComplete='off'
         inputRef={inputRef}
         size='small'
         fullWidth
-        placeholder={`Search profiles and projects`}
+        placeholder={`Search`}
         value={searchText}
         onChange={handleSearchChange}
         onFocus={() => setOpen(true)}
@@ -326,20 +315,42 @@ export default function SearchOmnibar() {
               }
 
               {profiles.length === 0 && projects.length === 0 ?
-                <Typography
-                  variant='body2'
-                  color='text.secondary'
-                  sx={{ padding: '0.75em' }}>
-                  No profiles or projects match `{committedSearch}`
-                </Typography>
+                <Box sx={{ padding: '0.75em' }}>
+                  <Typography
+                    variant='body2'
+                    color='text.secondary'
+                    sx={{ marginBottom: '0.5em' }}>
+                    No profiles or projects match `{committedSearch}`
+                  </Typography>
+                  <Box sx={{ display: 'flex', gap: '0.5em' }}>
+                    <Button
+                      onClick={() => {
+                        setOpen(false)
+                        router.push(`/profiles?search=${encodeURIComponent(committedSearch)}`)
+                      }}
+                      size='small'
+                      variant='outlined'>
+                      Search profiles
+                    </Button>
+                    <Button
+                      onClick={() => {
+                        setOpen(false)
+                        router.push(`/projects?search=${encodeURIComponent(committedSearch)}`)
+                      }}
+                      size='small'
+                      variant='outlined'>
+                      Search projects
+                    </Button>
+                  </Box>
+                </Box>
                 :
                 <>
                   {renderGroup(
                     'Profiles',
                     profiles.length,
                     profiles.map((profile) => renderProfileRow(profile, profile.id)),
-                    expandProfiles,
-                    setExpandProfiles)}
+                    `All profiles`,
+                    `/profiles?search=${encodeURIComponent(committedSearch)}`)}
 
                   {profiles.length > 0 && projects.length > 0 ?
                     <Box sx={{ borderBottom: '1px solid #eeeeee', marginY: '0.4em' }} />
@@ -351,8 +362,8 @@ export default function SearchOmnibar() {
                     'Projects',
                     projects.length,
                     projects.map((project) => renderProjectRow(project, project.id)),
-                    expandProjects,
-                    setExpandProjects)}
+                    `All projects`,
+                    `/projects?search=${encodeURIComponent(committedSearch)}`)}
                 </>
               }
             </>
