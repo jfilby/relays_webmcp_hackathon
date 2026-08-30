@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { signIn, signOut, useSession } from 'next-auth/react'
 import { Box, Link } from '@mui/material'
+import SearchOmnibar from './search-omnibar'
 import { HeaderBrowserLink } from './link'
 
 interface Props {
@@ -46,6 +47,7 @@ export function HeaderBrowser({
             linkName='projects'
             highLevelLink={highLevelLink} />
         </div>
+        <SearchOmnibar />
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.4em', textAlign: 'right' }}>
           {session &&
             <>
