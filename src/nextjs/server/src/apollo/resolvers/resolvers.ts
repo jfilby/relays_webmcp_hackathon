@@ -18,37 +18,46 @@ import {
   getProjectsByUserProfileId
 } from './queries/projects'
 import {
-  getIncomingConnectionRequests,
-  sendConnectionRequest,
-  respondToConnectionRequest,
-  removeConnection
-} from './connections'
+  getIncomingConnectionRequests
+} from './queries/connections'
 import {
   getDiscussPosts,
   getDiscussPostByPublicId,
-  getDiscussCommentsByPostId,
+  getDiscussCommentsByPostId
+} from './queries/discussion'
+import {
+  getNotifications
+} from './queries/notifications'
+import {
+  getCollaborationPlanById,
+  searchCollaborationPlans,
+  getPlanStepsByPlanId
+} from './queries/collaboration'
+
+// Relays mutations imports
+import {
+  sendConnectionRequest,
+  respondToConnectionRequest,
+  removeConnection
+} from './mutations/connections'
+import {
   createDiscussPost,
   deleteDiscussPost,
   createDiscussComment,
   deleteDiscussComment
-} from './discussion'
+} from './mutations/discussion'
 import {
-  getNotifications,
   markNotificationAsRead
-} from './notifications'
+} from './mutations/notifications'
 import {
-  getCollaborationPlanById,
-  searchCollaborationPlans,
-  getPlanStepsByPlanId,
   createPlan,
   updatePlan,
   setPlanStatus,
   addPlanStep,
   updatePlanStep,
   deletePlanStep
-} from './collaboration'
+} from './mutations/collaboration'
 
-// Relays mutations imports
 import { loadServerStartData } from './mutations/server-data-start'
 import { signUpForUpdates } from './mutations/sign-ups'
 import {

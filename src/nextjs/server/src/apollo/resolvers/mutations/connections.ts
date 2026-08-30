@@ -5,10 +5,6 @@ import { ConnectionsService } from '@/services/connections/service'
 const connectionsService = new ConnectionsService()
 
 // GraphQL args are schema-validated before the resolver runs
-interface GetIncomingConnectionRequestsArgs {
-  userProfileId: string
-}
-
 interface SendConnectionRequestArgs {
   userProfileId: string
   toProfileId: string
@@ -27,33 +23,13 @@ interface RemoveConnectionArgs {
 }
 
 // Code
-export async function getIncomingConnectionRequests(
-  parent: unknown,
-  args: unknown,
-  context: unknown,
-  info: unknown) {
-
-  // GraphQL args are schema-validated before the resolver runs
-  const { userProfileId } = args as unknown as GetIncomingConnectionRequestsArgs
-
-  // Query
-  return connectionsService.getIncomingRequests(
-    prisma,
-    userProfileId)
-}
-
 export async function sendConnectionRequest(
-  parent: unknown,
-  args: unknown,
-  context: unknown,
-  info: unknown) {
-
-  // GraphQL args are schema-validated before the resolver runs
-  const {
+  _parent: unknown,
+  {
     userProfileId,
     toProfileId,
     message
-  } = args as unknown as SendConnectionRequestArgs
+  }: SendConnectionRequestArgs) {
 
   // Mutation
   return connectionsService.sendRequest(
@@ -64,17 +40,12 @@ export async function sendConnectionRequest(
 }
 
 export async function respondToConnectionRequest(
-  parent: unknown,
-  args: unknown,
-  context: unknown,
-  info: unknown) {
-
-  // GraphQL args are schema-validated before the resolver runs
-  const {
+  _parent: unknown,
+  {
     userProfileId,
     connectionId,
     response
-  } = args as unknown as RespondToConnectionRequestArgs
+  }: RespondToConnectionRequestArgs) {
 
   // Mutation
   return connectionsService.respondToRequest(
@@ -85,16 +56,11 @@ export async function respondToConnectionRequest(
 }
 
 export async function removeConnection(
-  parent: unknown,
-  args: unknown,
-  context: unknown,
-  info: unknown) {
-
-  // GraphQL args are schema-validated before the resolver runs
-  const {
+  _parent: unknown,
+  {
     userProfileId,
     peerProfileId
-  } = args as unknown as RemoveConnectionArgs
+  }: RemoveConnectionArgs) {
 
   // Mutation
   return connectionsService.removeConnection(
