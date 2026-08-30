@@ -301,6 +301,7 @@ export class ProfilesQueryService {
       isPublic: profile.isPublic,
       availabilityStatus: profile.availabilityStatus,
       isVerified: profile.isVerified,
+      isDemoData: profile.isDemoData === true,
       verifiedAt: profile.verifiedAt != null ? profile.verifiedAt.toISOString() : undefined,
       created: profile.created.toISOString(),
       updated: profile.updated != null ? profile.updated.toISOString() : undefined

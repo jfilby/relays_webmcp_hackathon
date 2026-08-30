@@ -22,7 +22,8 @@ export class ProfileModel {
     avatar: string | undefined = undefined,
     availabilityStatus: string = 'A',
     isVerified: boolean = false,
-    verifiedAt: Date | undefined = undefined) {
+    verifiedAt: Date | undefined = undefined,
+    isDemoData: boolean = false) {
 
     // Debug
     const fnName = `${this.clName}.create()`
@@ -44,7 +45,8 @@ export class ProfileModel {
           avatar: avatar,
           availabilityStatus: availabilityStatus,
           isVerified: isVerified,
-          verifiedAt: verifiedAt
+          verifiedAt: verifiedAt,
+          isDemoData: isDemoData
         }
       })
     } catch (error) {
@@ -133,7 +135,8 @@ export class ProfileModel {
     avatar: string | undefined,
     availabilityStatus: string | undefined,
     isVerified: boolean | undefined,
-    verifiedAt: Date | null | undefined) {
+    verifiedAt: Date | null | undefined,
+    isDemoData: boolean | undefined = undefined) {
 
     // Debug
     const fnName = `${this.clName}.update()`
@@ -153,7 +156,8 @@ export class ProfileModel {
           avatar: avatar,
           availabilityStatus: availabilityStatus,
           isVerified: isVerified,
-          verifiedAt: verifiedAt
+          verifiedAt: verifiedAt,
+          isDemoData: isDemoData
         },
         where: {
           id: id
@@ -285,7 +289,8 @@ export class ProfileModel {
     avatar: string | undefined,
     availabilityStatus: string | undefined,
     isVerified: boolean | undefined,
-    verifiedAt: Date | null | undefined) {
+    verifiedAt: Date | null | undefined,
+    isDemoData: boolean | undefined = undefined) {
 
     // Debug
     const fnName = `${this.clName}.upsert()`
@@ -350,7 +355,8 @@ export class ProfileModel {
             avatar: avatar,
             availabilityStatus: availabilityStatus ?? 'A',
             isVerified: isVerified ?? false,
-            verifiedAt: verifiedAt
+            verifiedAt: verifiedAt,
+            isDemoData: isDemoData ?? false
           }
         })
       } catch (error) {
@@ -375,7 +381,8 @@ export class ProfileModel {
           avatar,
           availabilityStatus,
           isVerified,
-          verifiedAt)
+          verifiedAt,
+          isDemoData)
     }
   }
 }

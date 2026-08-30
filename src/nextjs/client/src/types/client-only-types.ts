@@ -34,6 +34,7 @@ export interface Profile {
   isPublic?: boolean
   availabilityStatus?: string | null   // A (available), B (busy), U (unavailable)
   isVerified?: boolean | null
+  isDemoData?: boolean | null
   verifiedAt?: string | null
   created?: string
   updated?: string | null
@@ -175,6 +176,7 @@ export interface Project {
   stage?: string | null             // I (idea), A (alpha), B (beta), G (GA)
   isOpenToCollaborators?: boolean | null
   isPromoted: boolean
+  isDemoData?: boolean | null
   isPublic: boolean
   urls?: ProjectUrlItem[] | null
   interestCount?: number | null

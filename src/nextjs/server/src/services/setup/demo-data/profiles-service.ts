@@ -70,7 +70,8 @@ export class ProfilesDemoDataSetupService {
         data.avatar,
         data.availabilityStatus ?? 'A',
         data.isVerified ?? false,
-        data.verifiedAt != null ? new Date(data.verifiedAt) : null)
+        data.verifiedAt != null ? new Date(data.verifiedAt) : null,
+        true)  // isDemoData
 
       // Upsert links
       for (const link of data.links ?? []) {

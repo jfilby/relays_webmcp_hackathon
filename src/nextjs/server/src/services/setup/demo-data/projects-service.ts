@@ -58,7 +58,8 @@ export class ProjectsDemoDataSetupService {
         data.image,
         data.techStack ?? [],
         data.stage,
-        data.isOpenToCollaborators ?? false)
+        data.isOpenToCollaborators ?? false,
+        true)  // isDemoData
 
       // Upsert URLs
       for (const url of data.urls ?? []) {

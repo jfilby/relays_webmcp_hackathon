@@ -92,6 +92,7 @@ export const typeDefs = /* GraphQL */ `
     isPublic: Boolean!
     availabilityStatus: String
     isVerified: Boolean
+    isDemoData: Boolean
     verifiedAt: String
     created: String!
     updated: String
@@ -263,6 +264,7 @@ export const typeDefs = /* GraphQL */ `
     stage: String
     isOpenToCollaborators: Boolean
     isPromoted: Boolean!
+    isDemoData: Boolean
     isPublic: Boolean!
     urls: [ProjectUrl]
     interestCount: Int

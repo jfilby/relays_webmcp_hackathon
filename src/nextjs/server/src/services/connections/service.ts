@@ -104,15 +104,21 @@ export class ConnectionsService {
             `You're already connected`
       }
     }
-    // Create (or recreate after rejection) the pending edge
+    // Create (or recreate after rejection) the edge. Requests to demo-data
+    // profiles are auto-approved: the edge goes straight to active and the
+    // requester is notified of acceptance instead of the recipient of a
+    // pending request.
+    const autoApprove = toProfile.isDemoData === true
+    const status = autoApprove ? this.activeStatus : this.pendingStatus
+
     if (existingForward != null && existingForward.status === this.rejectedStatus) {
       await
         connectionModel.update(
           prisma,
           existingForward.id,
-          this.pendingStatus,
+          status,
           message != null && message.trim() !== '' ? message.trim() : null,
-          undefined,
+          autoApprove ? new Date() : undefined,
           this.defaultOrigin)
     } else {
       await
@@ -120,24 +126,37 @@ export class ConnectionsService {
           prisma,
           fromProfile.id,
           toProfileId,
-          this.pendingStatus,
+          status,
           this.defaultOrigin,
-          message != null && message.trim() !== '' ? message.trim() : undefined)
+          message != null && message.trim() !== '' ? message.trim() : undefined,
+          autoApprove ? new Date() : undefined)
     }
 
-    // Notify the recipient
-    await notificationsService.notify(
-      prisma,
-      toProfile.userProfileId,
-      'connection_request',
-      'Connection',
-      undefined)
+    // Notify the recipient, or the requester when a demo profile auto-accepted
+    if (autoApprove) {
+      await notificationsService.notify(
+        prisma,
+        fromProfile.userProfileId,
+        'connection_accepted',
+        'Connection',
+        undefined)
+    } else {
+      await notificationsService.notify(
+        prisma,
+        toProfile.userProfileId,
+        'connection_request',
+        'Connection',
+        undefined)
+    }
 
     // Return
     return {
       status: true,
-      message: `Connection request sent`
+      message: autoApprove ?
+        `Connection request auto-approved` :
+        `Connection request sent`
     }
+
   }
 
   // Respond to an incoming connection request (accept or reject)

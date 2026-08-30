@@ -18,7 +18,8 @@ export class ProjectModel {
     image: string | undefined = undefined,
     techStack: string[] = [],
     stage: string | undefined = undefined,
-    isOpenToCollaborators: boolean = false) {
+    isOpenToCollaborators: boolean = false,
+    isDemoData: boolean = false) {
 
     // Debug
     const fnName = `${this.clName}.create()`
@@ -37,7 +38,8 @@ export class ProjectModel {
           stage: stage,
           isOpenToCollaborators: isOpenToCollaborators,
           isPromoted: isPromoted,
-          status: status
+          status: status,
+          isDemoData: isDemoData,
         }
       })
     } catch (error) {
@@ -215,7 +217,8 @@ export class ProjectModel {
     stage: string | undefined,
     isOpenToCollaborators: boolean | undefined,
     isPromoted: boolean | undefined,
-    status: string | undefined) {
+    status: string | undefined,
+    isDemoData: boolean | undefined = undefined) {
 
     // Debug
     const fnName = `${this.clName}.update()`
@@ -232,6 +235,7 @@ export class ProjectModel {
           stage: stage,
           isOpenToCollaborators: isOpenToCollaborators,
           isPromoted: isPromoted,
+          isDemoData: isDemoData,
           status: status
         },
         where: {
@@ -277,7 +281,8 @@ export class ProjectModel {
     image: string | undefined = undefined,
     techStack: string[] = [],
     stage: string | undefined = undefined,
-    isOpenToCollaborators: boolean = false) {
+    isOpenToCollaborators: boolean = false,
+    isDemoData: boolean = false) {
 
     // Debug
     const fnName = `${this.clName}.upsert()`
@@ -329,7 +334,8 @@ export class ProjectModel {
           image,
           techStack,
           stage,
-          isOpenToCollaborators)
+          isOpenToCollaborators,
+          isDemoData)
     } else {
 
       // Update
@@ -345,7 +351,8 @@ export class ProjectModel {
           stage,
           isOpenToCollaborators,
           isPromoted,
-          status)
+          status,
+          isDemoData)
     }
   }
 }

@@ -390,6 +390,7 @@ export class ProjectsQueryService {
       stage: project.stage,
       isOpenToCollaborators: project.isOpenToCollaborators,
       isPromoted: project.isPromoted,
+      isDemoData: project.isDemoData === true,
       isPublic: instance.publicAccess != null,
       urls: urls.map(url => ({
         id: url.id,

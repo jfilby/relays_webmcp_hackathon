@@ -92,6 +92,7 @@ model Profile {
   availabilityStatus           String               @map("availability_status") @db.Char(1)   // A (available), B (busy), U (unavailable)
   isVerified                   Boolean              @map("is_verified")
   verifiedAt                   DateTime?            @map("verified_at")
+  isDemoData                   Boolean              @map("is_demo_data")   // True for demo-data records; connection requests are auto-approved
   embedding                    Unsupported("vector(3072)")?   // Search embedding (pgvector); written via raw SQL, see prisma/search-setup.sql
   created                      DateTime             @default(now())
   updated                      DateTime             @updatedAt
@@ -195,6 +196,7 @@ model Project {
   stage                        String?              @db.Char(1)   // I (idea), A (alpha), B (beta), G (generally available)
   isOpenToCollaborators        Boolean              @map("is_open_to_collaborators")
   isPromoted                   Boolean              @map("is_promoted")
+  isDemoData                   Boolean              @map("is_demo_data")   // True for demo-data records
   embedding                    Unsupported("vector(3072)")?   // Search embedding (pgvector); written via raw SQL, see prisma/search-setup.sql
   status                       String               @db.Char(1)
   created                      DateTime             @default(now())
