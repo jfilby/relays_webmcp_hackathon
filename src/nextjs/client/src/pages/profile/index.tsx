@@ -5,8 +5,9 @@ import { loadServerPage } from '@/services/page/load-server-page'
 import Layout, { pageBodyWidth } from '@/components/layouts/layout'
 import ProfileView from '@/components/profiles/profile-view'
 import LoadProfileByUserProfileId from '@/components/profiles/load-by-user-profile-id'
+import LoadProjectsByUserProfileId from '@/components/projects/load-by-user-profile-id'
 import LoadDiscussPosts from '@/components/discussion/load-discuss-posts'
-import type { DiscussPostItem, Profile, UserProfile } from '@/types/client-only-types'
+import type { DiscussPostItem, Profile, Project, UserProfile } from '@/types/client-only-types'
 import type { GetServerSidePropsContext } from 'next'
 
 interface Props {
@@ -24,6 +25,9 @@ export default function MyProfilePage({
   // Posts of the profile
   const [posts, setPosts] = useState<DiscussPostItem[] | undefined>(undefined)
   const [postsReloadToken, setPostsReloadToken] = useState<number>(0)
+
+  // Projects of the profile
+  const [projects, setProjects] = useState<Project[]>([])
 
   // Functions
   function onPostsChanged() {
@@ -45,6 +49,7 @@ export default function MyProfilePage({
           {profile != null ?
             <ProfileView
               owner={true}
+              projects={projects}
               posts={posts}
               profile={profile}
               viewerUserProfileId={userProfile.id}
@@ -92,6 +97,12 @@ export default function MyProfilePage({
         setNotFound={setNotFound} />
 
       {/* Posts are keyed by the profile's internal id */}
+      {/* Projects are keyed by the profile's user id */}
+      <LoadProjectsByUserProfileId
+        userProfileId={userProfile.id}
+        viewerUserProfileId={userProfile.id}
+        setProjects={setProjects} />
+
       {profile != null ?
         <LoadDiscussPosts
           profileId={profile.id}

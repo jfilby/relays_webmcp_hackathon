@@ -486,7 +486,8 @@ export const typeDefs = /* GraphQL */ `
       isPromoted: Boolean): ProjectsResults!
 
     getProjectsByUserProfileId(
-      userProfileId: String!): ProjectsResults!
+      userProfileId: String!,
+      viewerUserProfileId: String): ProjectsResults!
   }
 
   type Mutation {

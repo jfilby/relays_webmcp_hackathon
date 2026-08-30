@@ -92,6 +92,7 @@ export default function MyProjectsPage({
 
       <LoadProjectsByUserProfileId
         userProfileId={userProfile.id}
+        viewerUserProfileId={userProfile.id}
         setProjects={setProjects}
         setNotFound={setNotFound} />
     </>

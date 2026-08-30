@@ -174,9 +174,11 @@ ${projectFields}
 
 export const getProjectsByUserProfileIdQuery = gql`
   query getProjectsByUserProfileId(
-          $userProfileId: String!) {
+          $userProfileId: String!,
+          $viewerUserProfileId: String) {
     getProjectsByUserProfileId(
-      userProfileId: $userProfileId) {
+      userProfileId: $userProfileId,
+      viewerUserProfileId: $viewerUserProfileId) {
 
       status
       message

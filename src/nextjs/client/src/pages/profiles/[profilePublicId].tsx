@@ -6,11 +6,12 @@ import { loadServerPage } from '@/services/page/load-server-page'
 import Layout, { pageBodyWidth } from '@/components/layouts/layout'
 import LoadProfileByPublicId from '@/components/profiles/load-by-id'
 import LoadSkillsByProfileId from '@/components/profiles/load-skills'
+import LoadProjectsByUserProfileId from '@/components/projects/load-by-user-profile-id'
 import LoadLinksByProfileId from '@/components/profiles/load-links'
 import LoadEndorsementsByProfileId from '@/components/profiles/load-endorsements'
 import LoadDiscussPosts from '@/components/discussion/load-discuss-posts'
 import ProfileView from '@/components/profiles/profile-view'
-import type { DiscussPostItem, Endorsement, Profile, ProfileLink, ProfileSkill, UserProfile } from '@/types/client-only-types'
+import type { DiscussPostItem, Endorsement, Profile, ProfileLink, ProfileSkill, Project, UserProfile } from '@/types/client-only-types'
 import type { GetServerSidePropsContext } from 'next'
 
 interface Props {
@@ -36,6 +37,7 @@ export default function ProfilePage({
   const [endorsements, setEndorsements] = useState<Endorsement[]>([])
   const [posts, setPosts] = useState<DiscussPostItem[] | undefined>(undefined)
   const [postsReloadToken, setPostsReloadToken] = useState<number>(0)
+  const [projects, setProjects] = useState<Project[]>([])
 
   // Functions
   function onPostsChanged() {
@@ -60,7 +62,7 @@ export default function ProfilePage({
               skills={skills}
               links={links}
               endorsements={endorsements}
-              posts={posts}
+              projects={projects}
               onPostsChanged={onPostsChanged} />
             :
             <></>
@@ -115,6 +117,15 @@ export default function ProfilePage({
         <LoadLinksByProfileId
           profileId={profile.id}
           setLinks={setLinks} />
+        :
+        <></>
+      }
+
+      {profile != null ?
+        <LoadProjectsByUserProfileId
+          userProfileId={profile.userProfileId ?? ''}
+          viewerUserProfileId={userProfile.id}
+          setProjects={setProjects} />
         :
         <></>
       }

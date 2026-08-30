@@ -14,8 +14,9 @@ import {
   skillLevelName
 } from '@/types/client-only-types'
 import DiscussPostListItem from '@/components/discussion/discuss-post-list-item'
+import ProjectCard from '@/components/projects/project-card'
 import DeleteDialog from '@/components/dialogs/delete-dialog'
-import type { DiscussPostItem, Endorsement, Profile, ProfileLink, ProfileSkill } from '@/types/client-only-types'
+import type { DiscussPostItem, Endorsement, Profile, ProfileLink, ProfileSkill, Project } from '@/types/client-only-types'
 import { profileTypeName } from './profile-card'
 
 interface Props {
@@ -25,6 +26,7 @@ interface Props {
   skills?: ProfileSkill[]
   links?: ProfileLink[]
   endorsements?: Endorsement[]
+  projects?: Project[]
   posts?: DiscussPostItem[]
   onPostsChanged?: () => void
 }
@@ -62,6 +64,7 @@ export default function ProfileView({
   skills,
   links,
   endorsements,
+  projects,
   posts,
   onPostsChanged
 }: Props) {
@@ -450,6 +453,24 @@ export default function ProfileView({
                 }
               </Link>
             </Typography>
+          ))}
+        </div>
+        :
+        <></>
+      }
+
+      {projects != null && projects.length > 0 ?
+        <div style={{ marginBottom: '2em' }}>
+          <Typography
+            style={{ marginBottom: '0.5em' }}
+            variant='h4'>
+            Projects
+          </Typography>
+
+          {projects.map(project => (
+            <ProjectCard
+              key={project.id}
+              project={project} />
           ))}
         </div>
         :

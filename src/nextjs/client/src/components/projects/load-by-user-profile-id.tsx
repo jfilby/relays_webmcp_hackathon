@@ -11,6 +11,7 @@ interface ProjectsResults {
 
 interface Props {
   userProfileId: string
+  viewerUserProfileId?: string
   setProjects: (projects: Project[]) => void
   setNotFound?: (notFound: boolean) => void
   setAlertSeverity?: (severity: 'success' | 'error' | undefined) => void
@@ -19,6 +20,7 @@ interface Props {
 
 export default function LoadProjectsByUserProfileId({
   userProfileId,
+  viewerUserProfileId,
   setProjects,
   setNotFound,
   setAlertSeverity,
@@ -39,7 +41,8 @@ export default function LoadProjectsByUserProfileId({
     // Query
     const { data } = await
       fetchGetProjectsByUserProfileIdQuery({
-        userProfileId: userProfileId
+        userProfileId: userProfileId,
+        viewerUserProfileId: viewerUserProfileId
       })
 
     if (data == null) {

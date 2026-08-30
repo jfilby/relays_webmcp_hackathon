@@ -134,6 +134,7 @@ export default function AddPlanPage({
         <>
           <LoadProjectsByUserProfileId
             userProfileId={userProfile.id ?? ''}
+            viewerUserProfileId={userProfile.id ?? undefined}
             setProjects={setProjects}
             setNotFound={setProjectsNotFound}
             setAlertSeverity={setAlertSeverity}

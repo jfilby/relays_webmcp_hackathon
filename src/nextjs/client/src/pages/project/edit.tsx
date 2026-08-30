@@ -241,6 +241,7 @@ export default function EditProjectPage({
 
       <LoadProjectsByUserProfileId
         userProfileId={userProfile.id}
+        viewerUserProfileId={userProfile.id}
         setProjects={setProjects}
         setNotFound={setNotFound} />
 

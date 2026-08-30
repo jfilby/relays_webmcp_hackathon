@@ -241,10 +241,12 @@ export class ProjectsQueryService {
     }
   }
 
-  // Get the projects a signed-in user owns (via their profile membership)
+  // Get the projects a user owns (via their profile membership). Viewers
+  // other than the profile owner only see the public projects.
   async getProjectsByUserProfileId(
     prisma: PrismaClient,
-    userProfileId: string) {
+    userProfileId: string,
+    viewerUserProfileId: string | undefined) {
 
     // Debug
     const fnName = `${this.clName}.getProjectsByUserProfileId()`
@@ -273,31 +275,43 @@ export class ProjectsQueryService {
         'O',  // role
         true)  // withProjectIncludes
 
+    // Public projects are visible to everyone; private ones only to their
+    // owner
+    const isOwner = viewerUserProfileId != null &&
+      viewerUserProfileId !== '' &&
+      viewerUserProfileId === userProfileId
+
+    const visibleMemberships = isOwner === true ?
+      memberships :
+      memberships.filter(membership =>
+        membership.project.instance.publicAccess != null)
+
     // Batch the interest counts and owner info for the result set
     const countsByProjectId = await
       this.getInterestCounts(
         prisma,
-        memberships.map(membership => membership.project.id))
+        visibleMemberships.map(membership => membership.project.id))
 
     const ownerInfosByProjectId = await
       this.getOwnerInfosByProjectIds(
         prisma,
-        memberships.map(membership => membership.project.id))
+        visibleMemberships.map(membership => membership.project.id))
 
     // Return
     return {
       status: true,
-      projects: memberships.map(membership =>
+      projects: visibleMemberships.map(membership =>
         this.toGraphQL(
           membership.project,
           membership.project.instance,
-          true,
+          isOwner,
           membership.project.ofProjectUrls,
           countsByProjectId[membership.project.id],
           undefined,
           ownerInfosByProjectId[membership.project.id] ?? this.ownerInfoNone))
     }
   }
+
 
   // Interest counts for a set of projects, keyed by project id. An empty
   // object means no interests anywhere.

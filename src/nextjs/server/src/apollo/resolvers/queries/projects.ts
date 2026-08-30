@@ -17,6 +17,7 @@ interface SearchProjectsArgs {
 
 interface GetProjectsByUserProfileIdArgs {
   userProfileId: string
+  viewerUserProfileId?: string | null
 }
 
 // Code
@@ -44,10 +45,11 @@ export async function searchProjects(
 
 export async function getProjectsByUserProfileId(
   _parent: unknown,
-  { userProfileId }: GetProjectsByUserProfileIdArgs) {
+  { userProfileId, viewerUserProfileId }: GetProjectsByUserProfileIdArgs) {
 
   // Query
   return projectsQueryService.getProjectsByUserProfileId(
     prisma,
-    userProfileId)
+    userProfileId,
+    viewerUserProfileId ?? undefined)
 }
