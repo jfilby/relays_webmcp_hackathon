@@ -63,7 +63,7 @@ export default function ProfilesPage({
             </Typography>
           </div>
 
-          <form style={{ marginBottom: '2em', display: 'flex', gap: '1em', flexWrap: 'wrap' }} onSubmit={submitSearch}>
+          <form style={{ marginBottom: '2em', display: 'flex', gap: '1em', flexWrap: 'wrap', alignItems: 'center' }} onSubmit={submitSearch}>
             <FormControl style={{ width: '20em' }}>
               <TextField
                 autoComplete='off'
@@ -78,13 +78,12 @@ export default function ProfilesPage({
                 value={search} />
             </FormControl>
 
-            <FormControl>
+            <FormControl style={{ width: '10em' }}>
               <InputLabel id='profile-type-filter'>Type</InputLabel>
               <Select
                 labelId='profile-type-filter'
                 label='Type'
                 onChange={(event: SelectChangeEvent) => setType(event.target.value as string)}
-                size='small'
                 value={type}>
                 <MenuItem value=''>
                   All
