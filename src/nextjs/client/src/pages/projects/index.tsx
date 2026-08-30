@@ -1,5 +1,5 @@
 import Head from 'next/head'
-import { useState } from 'react'
+import { useState, type FormEvent } from 'react'
 import {
   Button,
   Checkbox,
@@ -33,6 +33,14 @@ export default function ProjectsPage({
   const [message, setMessage] = useState<string | undefined>(undefined)
   const [loadAction, setLoadAction] = useState<boolean>(true)
 
+  // Functions
+  function submitSearch(event: FormEvent) {
+
+    event.preventDefault()
+    setSearched(true)
+    setLoadAction(true)
+  }
+
   // Render
   return (
     <>
@@ -53,7 +61,7 @@ export default function ProjectsPage({
             </Typography>
           </div>
 
-          <div style={{ marginBottom: '2em', display: 'flex', gap: '1em', flexWrap: 'wrap', alignItems: 'center' }}>
+          <form style={{ marginBottom: '2em', display: 'flex', gap: '1em', flexWrap: 'wrap', alignItems: 'center' }} onSubmit={submitSearch}>
             <FormControl style={{ width: '20em' }}>
               <TextField
                 autoComplete='off'
@@ -78,14 +86,11 @@ export default function ProjectsPage({
               label='Showcased only' />
 
             <Button
-              onClick={() => {
-                setSearched(true)
-                setLoadAction(true)
-              }}
+              type='submit'
               variant='contained'>
               Search
             </Button>
-          </div>
+          </form>
 
           {userProfile.id != null ?
             <div style={{ marginBottom: '2em' }}>
