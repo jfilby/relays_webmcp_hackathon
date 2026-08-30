@@ -146,11 +146,11 @@ export class SearchService {
       const rows = await prisma.$queryRaw<HybridSearchRow[]>(Prisma.sql`
         SELECT
           id,
-          (${weights.semantic} * COALESCE(semantic, 0) +
-           ${weights.fullText} * full_text +
-           ${weights.trigram} * trigram) /
-          (CASE WHEN semantic IS NOT NULL THEN ${weights.semantic} ELSE 0 END +
-           ${weights.fullText} + ${weights.trigram}) AS score,
+          (${weights.semantic}::float8 * COALESCE(semantic, 0) +
+           ${weights.fullText}::float8 * full_text +
+           ${weights.trigram}::float8 * trigram) /
+          (CASE WHEN semantic IS NOT NULL THEN ${weights.semantic}::float8 ELSE 0::float8 END +
+           ${weights.fullText}::float8 + ${weights.trigram}::float8) AS score,
           full_text,
           trigram,
           semantic
