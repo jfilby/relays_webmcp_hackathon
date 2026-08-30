@@ -5,11 +5,12 @@ import { ProfilesQueryService } from '@/services/profiles/query-service'
 const profilesQueryService = new ProfilesQueryService()
 
 // GraphQL args are schema-validated before the resolver runs
-interface ProfileByPublicIdArgs {
+interface GetProfileByPublicIdArgs {
   publicId: string
+  userProfileId?: string | null
 }
 
-interface ProfileByUserProfileIdArgs {
+interface GetProfileByUserProfileIdArgs {
   userProfileId: string
 }
 
@@ -28,91 +29,50 @@ interface ProfileIdArgs {
 
 // Code
 export async function getProfileByPublicId(
-  parent: unknown,
-  args: unknown,
-  context: unknown,
-  info: unknown) {
-
-  // GraphQL args are schema-validated before the resolver runs
-  const { publicId, userProfileId } = args as unknown as ProfileByPublicIdArgs & ProfileByUserProfileIdArgs
+  _parent: unknown,
+  { publicId, userProfileId }: GetProfileByPublicIdArgs) {
 
   // Query
-  const results = await
-    profilesQueryService.getProfileByPublicId(
-      prisma,
-      publicId,
-      userProfileId ?? undefined)
-
-  // Return
-  return results
+  return profilesQueryService.getProfileByPublicId(
+    prisma,
+    publicId,
+    userProfileId ?? undefined)
 }
 
 export async function getProfileByUserProfileId(
-  parent: unknown,
-  args: unknown,
-  context: unknown,
-  info: unknown) {
-
-  // GraphQL args are schema-validated before the resolver runs
-  const { userProfileId } = args as unknown as ProfileByUserProfileIdArgs
+  _parent: unknown,
+  { userProfileId }: GetProfileByUserProfileIdArgs) {
 
   // Query
-  const results = await
-    profilesQueryService.getProfileByUserProfileId(
-      prisma,
-      userProfileId)
-
-  // Return
-  return results
+  return profilesQueryService.getProfileByUserProfileId(
+    prisma,
+    userProfileId)
 }
 
 export async function searchProfiles(
-  parent: unknown,
-  args: unknown,
-  context: unknown,
-  info: unknown) {
-
-  // GraphQL args are schema-validated before the resolver runs
-  const { search, type } = args as unknown as SearchProfilesArgs
+  _parent: unknown,
+  { search, type }: SearchProfilesArgs) {
 
   // Query
-  const results = await
-    profilesQueryService.searchProfiles(
-      prisma,
-      search ?? undefined,
-      type ?? undefined)
-
-  // Return
-  return results
+  return profilesQueryService.searchProfiles(
+    prisma,
+    search ?? undefined,
+    type ?? undefined)
 }
 
 export async function getNetwork(
-  parent: unknown,
-  args: unknown,
-  context: unknown,
-  info: unknown) {
-
-  // GraphQL args are schema-validated before the resolver runs
-  const { userProfileId } = args as unknown as GetNetworkArgs
+  _parent: unknown,
+  { userProfileId }: GetNetworkArgs) {
 
   // Query
-  const results = await
-    profilesQueryService.getNetwork(
-      prisma,
-      userProfileId)
-
-  // Return
-  return results
+  return profilesQueryService.getNetwork(
+    prisma,
+    userProfileId)
 }
 
 export async function getSkillsByProfileId(
-  parent: unknown,
-  args: unknown,
-  context: unknown,
-  info: unknown) {
-
-  // GraphQL args are schema-validated before the resolver runs
-  const { profileId } = args as unknown as ProfileIdArgs
+  _parent: unknown,
+  { profileId }: ProfileIdArgs) {
 
   // Query
   return profilesQueryService.getSkillsByProfileId(
@@ -121,13 +81,8 @@ export async function getSkillsByProfileId(
 }
 
 export async function getProfileLinksByProfileId(
-  parent: unknown,
-  args: unknown,
-  context: unknown,
-  info: unknown) {
-
-  // GraphQL args are schema-validated before the resolver runs
-  const { profileId } = args as unknown as ProfileIdArgs
+  _parent: unknown,
+  { profileId }: ProfileIdArgs) {
 
   // Query
   return profilesQueryService.getLinksByProfileId(
@@ -136,13 +91,8 @@ export async function getProfileLinksByProfileId(
 }
 
 export async function getEndorsementsByProfileId(
-  parent: unknown,
-  args: unknown,
-  context: unknown,
-  info: unknown) {
-
-  // GraphQL args are schema-validated before the resolver runs
-  const { profileId } = args as unknown as ProfileIdArgs
+  _parent: unknown,
+  { profileId }: ProfileIdArgs) {
 
   // Query
   return profilesQueryService.getEndorsementsByProfileId(

@@ -4,9 +4,10 @@ import { ProjectsQueryService } from '@/services/projects/query-service'
 // Services
 const projectsQueryService = new ProjectsQueryService()
 
+// GraphQL args are schema-validated before the resolver runs
 interface GetProjectByPublicIdArgs {
   publicId: string
-  userProfileId: string
+  userProfileId?: string | null
 }
 
 interface SearchProjectsArgs {
@@ -20,77 +21,33 @@ interface GetProjectsByUserProfileIdArgs {
 
 // Code
 export async function getProjectByPublicId(
-  parent: unknown,
-  args: unknown,
-  context: unknown,
-  info: unknown) {
-
-  // Debug
-  const fnName = `getProjectByPublicId()`
-
-  // GraphQL args are schema-validated before the resolver runs
-  const {
-    publicId,
-    userProfileId
-  } = args as unknown as GetProjectByPublicIdArgs
+  _parent: unknown,
+  { publicId, userProfileId }: GetProjectByPublicIdArgs) {
 
   // Query
-  const results = await
-    projectsQueryService.getProjectByPublicId(
-      prisma,
-      publicId,
-      userProfileId)
-
-  // Return
-  return results
+  return projectsQueryService.getProjectByPublicId(
+    prisma,
+    publicId,
+    userProfileId ?? undefined)
 }
 
 export async function searchProjects(
-  parent: unknown,
-  args: unknown,
-  context: unknown,
-  info: unknown) {
-
-  // Debug
-  const fnName = `searchProjects()`
-
-  // GraphQL args are schema-validated before the resolver runs
-  const {
-    search,
-    isPromoted
-  } = args as unknown as SearchProjectsArgs
+  _parent: unknown,
+  { search, isPromoted }: SearchProjectsArgs) {
 
   // Query
-  const results = await
-    projectsQueryService.searchProjects(
-      prisma,
-      search ?? undefined,
-      isPromoted ?? undefined)
-
-  // Return
-  return results
+  return projectsQueryService.searchProjects(
+    prisma,
+    search ?? undefined,
+    isPromoted ?? undefined)
 }
 
 export async function getProjectsByUserProfileId(
-  parent: unknown,
-  args: unknown,
-  context: unknown,
-  info: unknown) {
-
-  // Debug
-  const fnName = `getProjectsByUserProfileId()`
-
-  // GraphQL args are schema-validated before the resolver runs
-  const {
-    userProfileId
-  } = args as unknown as GetProjectsByUserProfileIdArgs
+  _parent: unknown,
+  { userProfileId }: GetProjectsByUserProfileIdArgs) {
 
   // Query
-  const results = await
-    projectsQueryService.getProjectsByUserProfileId(
-      prisma,
-      userProfileId)
-
-  // Return
-  return results
+  return projectsQueryService.getProjectsByUserProfileId(
+    prisma,
+    userProfileId)
 }

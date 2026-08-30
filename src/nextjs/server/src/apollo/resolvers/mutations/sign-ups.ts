@@ -4,9 +4,17 @@ import { EmailListsMutateService } from '@/services/email-lists/mutate-service'
 // Services
 const emailListsMutateService = new EmailListsMutateService()
 
+// GraphQL args are schema-validated before the resolver runs
+interface SignUpForUpdatesArgs {
+  email?: string | null
+  userProfileId?: string | null
+}
+
 // Subscribe to the updates email list. Pass a userProfileId for a signed-in
 // user, or an email for a visitor who isn't signed-in.
-export async function signUpForUpdates(parent: any, args: any, context: any, info: any) {
+export async function signUpForUpdates(
+  _parent: unknown,
+  args: SignUpForUpdatesArgs) {
 
   // Debug
   const fnName = `signUpForUpdates()`

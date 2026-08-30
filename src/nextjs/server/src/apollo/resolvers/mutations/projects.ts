@@ -34,6 +34,11 @@ interface UpdateProjectArgs {
   isOpenToCollaborators?: boolean | null
 }
 
+interface ToggleProjectInterestArgs {
+  userProfileId: string
+  projectId: string
+}
+
 interface DeleteProjectArgs {
   id: string
   userProfileId: string
@@ -41,13 +46,8 @@ interface DeleteProjectArgs {
 
 // Code
 export async function createProject(
-  parent: unknown,
-  args: unknown,
-  context: unknown,
-  info: unknown) {
-
-  // GraphQL args are schema-validated before the resolver runs
-  const {
+  _parent: unknown,
+  {
     userProfileId,
     name,
     tagline,
@@ -59,7 +59,7 @@ export async function createProject(
     techStack,
     stage,
     isOpenToCollaborators
-  } = args as unknown as CreateProjectArgs
+  }: CreateProjectArgs) {
 
   // Mutation
   return projectsMutateService.create(
@@ -78,13 +78,8 @@ export async function createProject(
 }
 
 export async function updateProject(
-  parent: unknown,
-  args: unknown,
-  context: unknown,
-  info: unknown) {
-
-  // GraphQL args are schema-validated before the resolver runs
-  const {
+  _parent: unknown,
+  {
     id,
     userProfileId,
     name,
@@ -97,7 +92,7 @@ export async function updateProject(
     techStack,
     stage,
     isOpenToCollaborators
-  } = args as unknown as UpdateProjectArgs
+  }: UpdateProjectArgs) {
 
   // Mutation
   return projectsMutateService.update(
@@ -117,19 +112,8 @@ export async function updateProject(
 }
 
 export async function toggleProjectInterest(
-  parent: unknown,
-  args: unknown,
-  context: unknown,
-  info: unknown) {
-
-  // GraphQL args are schema-validated before the resolver runs
-  const {
-    userProfileId,
-    projectId
-  } = args as unknown as {
-    userProfileId: string
-    projectId: string
-  }
+  _parent: unknown,
+  { userProfileId, projectId }: ToggleProjectInterestArgs) {
 
   // Mutation
   return projectsMutateService.toggleProjectInterest(
@@ -139,16 +123,8 @@ export async function toggleProjectInterest(
 }
 
 export async function deleteProject(
-  parent: unknown,
-  args: unknown,
-  context: unknown,
-  info: unknown) {
-
-  // GraphQL args are schema-validated before the resolver runs
-  const {
-    id,
-    userProfileId
-  } = args as unknown as DeleteProjectArgs
+  _parent: unknown,
+  { id, userProfileId }: DeleteProjectArgs) {
 
   // Mutation
   return projectsMutateService.deleteById(

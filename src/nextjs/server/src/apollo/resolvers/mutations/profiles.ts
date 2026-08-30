@@ -38,15 +38,40 @@ interface SetProfileUpdatesArgs {
   updates: boolean
 }
 
+interface AddSkillToProfileArgs {
+  userProfileId: string
+  skillName: string
+  level?: string | null
+}
+
+interface RemoveSkillFromProfileArgs {
+  userProfileId: string
+  profileSkillId: string
+}
+
+interface AddProfileLinkArgs {
+  userProfileId: string
+  kind: string
+  url: string
+  handle?: string | null
+}
+
+interface DeleteProfileLinkArgs {
+  userProfileId: string
+  id: string
+}
+
+interface EndorseSkillArgs {
+  userProfileId: string
+  toProfileId: string
+  skillId: string
+  comment?: string | null
+}
+
 // Code
 export async function createProfile(
-  parent: unknown,
-  args: unknown,
-  context: unknown,
-  info: unknown) {
-
-  // GraphQL args are schema-validated before the resolver runs
-  const {
+  _parent: unknown,
+  {
     userProfileId,
     displayName,
     type,
@@ -58,7 +83,7 @@ export async function createProfile(
     avatar,
     updates,
     availabilityStatus
-  } = args as unknown as CreateProfileArgs
+  }: CreateProfileArgs) {
 
   // Mutation
   return profilesMutateService.create(
@@ -77,13 +102,8 @@ export async function createProfile(
 }
 
 export async function updateProfile(
-  parent: unknown,
-  args: unknown,
-  context: unknown,
-  info: unknown) {
-
-  // GraphQL args are schema-validated before the resolver runs
-  const {
+  _parent: unknown,
+  {
     id,
     userProfileId,
     displayName,
@@ -95,7 +115,7 @@ export async function updateProfile(
     website,
     avatar,
     availabilityStatus
-  } = args as unknown as UpdateProfileArgs
+  }: UpdateProfileArgs) {
 
   // Mutation
   return profilesMutateService.update(
@@ -114,13 +134,8 @@ export async function updateProfile(
 }
 
 export async function setProfileUpdates(
-  parent: unknown,
-  args: unknown,
-  context: unknown,
-  info: unknown) {
-
-  // GraphQL args are schema-validated before the resolver runs
-  const { userProfileId, updates } = args as unknown as SetProfileUpdatesArgs
+  _parent: unknown,
+  { userProfileId, updates }: SetProfileUpdatesArgs) {
 
   // Mutation
   return profilesMutateService.setGetEmailUpdates(
@@ -130,21 +145,8 @@ export async function setProfileUpdates(
 }
 
 export async function addSkillToProfile(
-  parent: unknown,
-  args: unknown,
-  context: unknown,
-  info: unknown) {
-
-  // GraphQL args are schema-validated before the resolver runs
-  const {
-    userProfileId,
-    skillName,
-    level
-  } = args as unknown as {
-    userProfileId: string
-    skillName: string
-    level?: string | null
-  }
+  _parent: unknown,
+  { userProfileId, skillName, level }: AddSkillToProfileArgs) {
 
   // Mutation
   return profilesMutateService.addSkillToProfile(
@@ -155,19 +157,8 @@ export async function addSkillToProfile(
 }
 
 export async function removeSkillFromProfile(
-  parent: unknown,
-  args: unknown,
-  context: unknown,
-  info: unknown) {
-
-  // GraphQL args are schema-validated before the resolver runs
-  const {
-    userProfileId,
-    profileSkillId
-  } = args as unknown as {
-    userProfileId: string
-    profileSkillId: string
-  }
+  _parent: unknown,
+  { userProfileId, profileSkillId }: RemoveSkillFromProfileArgs) {
 
   // Mutation
   return profilesMutateService.removeSkillFromProfile(
@@ -177,23 +168,8 @@ export async function removeSkillFromProfile(
 }
 
 export async function addProfileLink(
-  parent: unknown,
-  args: unknown,
-  context: unknown,
-  info: unknown) {
-
-  // GraphQL args are schema-validated before the resolver runs
-  const {
-    userProfileId,
-    kind,
-    url,
-    handle
-  } = args as unknown as {
-    userProfileId: string
-    kind: string
-    url: string
-    handle?: string | null
-  }
+  _parent: unknown,
+  { userProfileId, kind, url, handle }: AddProfileLinkArgs) {
 
   // Mutation
   return profilesMutateService.addProfileLink(
@@ -205,16 +181,8 @@ export async function addProfileLink(
 }
 
 export async function deleteProfileLink(
-  parent: unknown,
-  args: unknown,
-  context: unknown,
-  info: unknown) {
-
-  // GraphQL args are schema-validated before the resolver runs
-  const { id, userProfileId } = args as unknown as {
-    id: string
-    userProfileId: string
-  }
+  _parent: unknown,
+  { userProfileId, id }: DeleteProfileLinkArgs) {
 
   // Mutation
   return profilesMutateService.deleteProfileLinkById(
@@ -224,23 +192,8 @@ export async function deleteProfileLink(
 }
 
 export async function endorseSkill(
-  parent: unknown,
-  args: unknown,
-  context: unknown,
-  info: unknown) {
-
-  // GraphQL args are schema-validated before the resolver runs
-  const {
-    userProfileId,
-    toProfileId,
-    skillId,
-    comment
-  } = args as unknown as {
-    userProfileId: string
-    toProfileId: string
-    skillId: string
-    comment?: string | null
-  }
+  _parent: unknown,
+  { userProfileId, toProfileId, skillId, comment }: EndorseSkillArgs) {
 
   // Mutation
   return profilesMutateService.endorseSkill(
