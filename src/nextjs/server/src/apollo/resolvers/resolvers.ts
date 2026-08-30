@@ -18,7 +18,8 @@ import {
   getProjectsByUserProfileId
 } from './queries/projects'
 import {
-  getIncomingConnectionRequests
+  getIncomingConnectionRequests,
+  getConnectionStatus
 } from './queries/connections'
 import {
   getDiscussPosts,
@@ -125,6 +126,7 @@ const Query = {
 
   // Connections
   getIncomingConnectionRequests,
+  getConnectionStatus,
 
   // Discussion
   getDiscussPosts,

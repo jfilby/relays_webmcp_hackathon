@@ -223,6 +223,12 @@ export const typeDefs = /* GraphQL */ `
     requests: [IncomingConnectionRequest]
   }
 
+  type ConnectionStatusResults {
+    status: Boolean!
+    message: String
+    connectionStatus: String
+  }
+
   # Notifications
 
   type NotificationItem {
@@ -432,6 +438,10 @@ export const typeDefs = /* GraphQL */ `
     # Connections
     getIncomingConnectionRequests(
       userProfileId: String!): IncomingConnectionRequestsResults!
+
+    getConnectionStatus(
+      userProfileId: String!,
+      peerProfileId: String!): ConnectionStatusResults!
 
     # Notifications
     getNotifications(

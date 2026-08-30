@@ -9,6 +9,11 @@ interface GetIncomingConnectionRequestsArgs {
   userProfileId: string
 }
 
+interface GetConnectionStatusArgs {
+  userProfileId: string
+  peerProfileId: string
+}
+
 // Code
 export async function getIncomingConnectionRequests(
   _parent: unknown,
@@ -18,4 +23,15 @@ export async function getIncomingConnectionRequests(
   return connectionsService.getIncomingRequests(
     prisma,
     userProfileId)
+}
+
+export async function getConnectionStatus(
+  _parent: unknown,
+  { userProfileId, peerProfileId }: GetConnectionStatusArgs) {
+
+  // Query
+  return connectionsService.getConnectionStatus(
+    prisma,
+    userProfileId,
+    peerProfileId)
 }

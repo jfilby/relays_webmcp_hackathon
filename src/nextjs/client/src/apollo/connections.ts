@@ -69,3 +69,18 @@ export const getIncomingConnectionRequestsQuery = gql`
     }
   }
 `
+
+export const getConnectionStatusQuery = gql`
+  query getConnectionStatus(
+    $userProfileId: String!,
+    $peerProfileId: String!) {
+    getConnectionStatus(
+      userProfileId: $userProfileId,
+      peerProfileId: $peerProfileId) {
+
+      status
+      message
+      connectionStatus
+    }
+  }
+`

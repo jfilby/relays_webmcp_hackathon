@@ -1,9 +1,13 @@
 import { useEffect, useState } from 'react'
 import { Button, Chip, Link, TextField, Tooltip, Typography } from '@mui/material'
 import { Toaster, toast } from 'sonner'
-import { useMutation } from '@apollo/client/react'
+import { useMutation, useQuery } from '@apollo/client/react'
 import { createDiscussPostMutation, deleteDiscussPostMutation } from '@/apollo/discussion'
-import { sendConnectionRequestMutation } from '@/apollo/connections'
+import {
+  getConnectionStatusQuery,
+  removeConnectionMutation,
+  sendConnectionRequestMutation
+} from '@/apollo/connections'
 import {
   availabilityStatusName,
   profileLinkName,
@@ -26,6 +30,17 @@ interface Props {
 }
 
 interface SendConnectionRequestResult {
+  status: boolean
+  message: string
+}
+
+interface ConnectionStatusResult {
+  status: boolean
+  message?: string | null
+  connectionStatus?: string | null
+}
+
+interface RemoveConnectionResult {
   status: boolean
   message: string
 }
@@ -54,7 +69,8 @@ export default function ProfileView({
   // State
   const [connectOpen, setConnectOpen] = useState<boolean>(false)
   const [connectionMessage, setConnectionMessage] = useState<string>('')
-  const [connectionSent, setConnectionSent] = useState<boolean>(false)
+  const [connectionStatus, setConnectionStatus] =
+    useState<'none' | 'pending' | 'connected'>('none')
   const [connecting, setConnecting] = useState<boolean>(false)
 
   const [newPostTitle, setNewPostTitle] = useState<string>('')
@@ -67,6 +83,50 @@ export default function ProfileView({
   const [deleteConfirmed, setDeleteConfirmed] = useState<boolean>(false)
 
   // GraphQL
+  const { refetch: fetchGetConnectionStatusQuery } =
+    useQuery<{ getConnectionStatus: ConnectionStatusResult }>(
+      getConnectionStatusQuery, {
+      fetchPolicy: 'no-cache',
+      skip: true
+    })
+
+  const [sendRemoveConnectionMutation] =
+    useMutation<{
+      removeConnection: RemoveConnectionResult
+    }>(removeConnectionMutation, {
+      fetchPolicy: 'no-cache'
+    })
+
+  // Effects
+  useEffect(() => {
+
+    const fetchData = async () => {
+
+      if (viewerUserProfileId == null || viewerUserProfileId === '') {
+        return
+      }
+
+      // Query
+      const { data } = await
+        fetchGetConnectionStatusQuery({
+          userProfileId: viewerUserProfileId,
+          peerProfileId: profile.id
+        })
+
+      const results = data?.getConnectionStatus
+
+      if (results != null && results.status === true &&
+        results.connectionStatus != null) {
+        setConnectionStatus(
+          results.connectionStatus as 'none' | 'pending' | 'connected')
+      }
+    }
+
+    fetchData()
+      .catch(console.error)
+
+  }, [viewerUserProfileId, profile.id])
+
   const [sendSendConnectionRequestMutation] =
     useMutation<{
       sendConnectionRequest: SendConnectionRequestResult
@@ -113,10 +173,43 @@ export default function ProfileView({
       toast.error(`Failed to send the connection request`)
     } else if (sentData.status === true) {
       toast.success(sentData.message)
-      setConnectionSent(true)
+      setConnectionStatus('pending')
+      setConnectionMessage('')
       setConnectOpen(false)
     } else {
       toast.error(sentData.message)
+    }
+
+    // Done
+    setConnecting(false)
+  }
+
+  async function onRemoveConnection() {
+
+    if (viewerUserProfileId == null || viewerUserProfileId === '') {
+      return
+    }
+
+    setConnecting(true)
+
+    // Query
+    let removedData: RemoveConnectionResult | undefined
+
+    await sendRemoveConnectionMutation({
+      variables: {
+        userProfileId: viewerUserProfileId,
+        peerProfileId: profile.id
+      }
+    }).then(result => removedData = result.data?.removeConnection)
+
+    // Get results
+    if (removedData == null) {
+      toast.error(`Failed to remove the connection`)
+    } else if (removedData.status === true) {
+      toast.success(removedData.message)
+      setConnectionStatus('none')
+    } else {
+      toast.error(removedData.message)
     }
 
     // Done
@@ -394,60 +487,76 @@ export default function ProfileView({
         <></>
       }
 
-      {viewerUserProfileId != null && owner !== true && connectionSent !== true ?
-        <div style={{ marginBottom: '2em' }}>
-          {connectOpen === false ?
-            <Button
-              onClick={() => setConnectOpen(true)}
-              variant='contained'>
-              Connect
-            </Button>
-            :
-            <div>
-              <TextField
-                fullWidth
-                label='Message (optional)'
-                minRows={3}
-                multiline
-                onChange={(event) => setConnectionMessage(event.target.value)}
-                slotProps={{
-                  inputLabel: {
-                    shrink: Boolean(connectionMessage),
-                  }
-                }}
-                style={{ marginBottom: '1em', maxWidth: '30em' }}
-                value={connectionMessage} />
+      <div style={{ marginBottom: '2em' }}>
+        {viewerUserProfileId != null && owner !== true &&
+          connectionStatus === 'none' ?
+          <>
+            {connectOpen === false ?
+              <Button
+                onClick={() => setConnectOpen(true)}
+                variant='contained'>
+                Connect
+              </Button>
+              :
+              <div>
+                <TextField
+                  fullWidth
+                  label='Message (optional)'
+                  minRows={3}
+                  multiline
+                  onChange={(event) => setConnectionMessage(event.target.value)}
+                  slotProps={{
+                    inputLabel: {
+                      shrink: Boolean(connectionMessage),
+                    }
+                  }}
+                  style={{ marginBottom: '1em', maxWidth: '30em' }}
+                  value={connectionMessage} />
 
-              <div style={{ display: 'flex', gap: '0.75em' }}>
-                <Button
-                  disabled={connecting}
-                  onClick={onSendConnectionRequest}
-                  variant='contained'>
-                  Send request
-                </Button>
+                <div style={{ display: 'flex', gap: '0.75em' }}>
+                  <Button
+                    disabled={connecting}
+                    onClick={onSendConnectionRequest}
+                    variant='contained'>
+                    Send request
+                  </Button>
 
-                <Button
-                  disabled={connecting}
-                  onClick={() => setConnectOpen(false)}>
-                  Cancel
-                </Button>
+                  <Button
+                    disabled={connecting}
+                    onClick={() => setConnectOpen(false)}>
+                    Cancel
+                  </Button>
+                </div>
               </div>
-            </div>
-          }
-        </div>
-        :
-        <></>
-      }
+            }
+          </>
+          :
+          <></>
+        }
 
-      {viewerUserProfileId != null && owner !== true && connectionSent === true ?
-        <Typography
-          style={{ color: '#2c6e2c', marginBottom: '2em' }}
-          variant='body1'>
-          Connection request sent
-        </Typography>
-        :
-        <></>
-      }
+        {viewerUserProfileId != null && owner !== true &&
+          connectionStatus === 'connected' ?
+          <Button
+            disabled={connecting}
+            onClick={onRemoveConnection}
+            variant='outlined'>
+            Remove connection
+          </Button>
+          :
+          <></>
+        }
+
+        {viewerUserProfileId != null && owner !== true &&
+          connectionStatus === 'pending' ?
+          <Typography
+            style={{ color: '#2c6e2c', marginBottom: '2em' }}
+            variant='body1'>
+            Connection request pending
+          </Typography>
+          :
+          <></>
+        }
+      </div>
 
       {owner === true ?
         <div style={{ marginBottom: '2em' }}>

@@ -376,4 +376,66 @@ export class ConnectionsService {
         .filter(request => request != null)
     }
   }
+
+  // Get the connection status between the signed-in user's profile and a
+  // peer profile: 'none', 'pending' or 'connected'.
+  async getConnectionStatus(
+    prisma: PrismaClient,
+    userProfileId: string,
+    peerProfileId: string) {
+
+    // Resolve the viewer's profile
+    const viewerProfile = await
+      profileModel.getByUserProfileId(
+        prisma,
+        userProfileId)
+
+    if (viewerProfile == null || viewerProfile.id === peerProfileId) {
+      return {
+        status: true,
+        connectionStatus: 'none'
+      }
+    }
+
+    // Check for an existing edge in either direction
+    const forward = await
+      connectionModel.getByFromTo(
+        prisma,
+        viewerProfile.id,
+        peerProfileId)
+
+    if (forward != null && forward.status === this.activeStatus) {
+      return {
+        status: true,
+        connectionStatus: 'connected'
+      }
+    }
+
+    const reverse = await
+      connectionModel.getByFromTo(
+        prisma,
+        peerProfileId,
+        viewerProfile.id)
+
+    if (reverse != null && reverse.status === this.activeStatus) {
+      return {
+        status: true,
+        connectionStatus: 'connected'
+      }
+    }
+
+    if ((forward != null && forward.status === this.pendingStatus) ||
+        (reverse != null && reverse.status === this.pendingStatus)) {
+      return {
+        status: true,
+        connectionStatus: 'pending'
+      }
+    }
+
+    // Return
+    return {
+      status: true,
+      connectionStatus: 'none'
+    }
+  }
 }
