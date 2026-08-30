@@ -1,7 +1,8 @@
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { Toaster, toast } from 'sonner'
 import { useMutation } from '@apollo/client/react'
 import { deleteDiscussPostMutation } from '@/apollo/discussion'
+import DeleteDialog from '@/components/dialogs/delete-dialog'
 
 interface StatusAndMessage {
   status: boolean
@@ -26,7 +27,10 @@ export default function DeleteDiscussPost({
   setMessage
 }: Props) {
 
-  // GraphQL
+  // State
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState<boolean>(false)
+  const [deleteConfirmed, setDeleteConfirmed] = useState<boolean>(false)
+
   const [sendDeleteDiscussPostMutation] =
     useMutation<{
       deleteDiscussPost: StatusAndMessage
@@ -76,6 +80,22 @@ export default function DeleteDiscussPost({
       return
     }
 
+    // Ask for confirmation before deleting
+    setDeleteAction(false)
+    setDeleteDialogOpen(true)
+
+  }, [deleteAction])
+
+  // Run the delete once confirmed by the dialog
+  useEffect(() => {
+
+    // Return early if not confirmed
+    if (deleteConfirmed !== true) {
+      return
+    }
+
+    setDeleteConfirmed(false)
+
     const fetchData = async () => {
       await remove()
         .catch(console.error)
@@ -83,12 +103,20 @@ export default function DeleteDiscussPost({
 
     fetchData()
 
-  }, [deleteAction])
+  }, [deleteConfirmed])
 
   // Render
   return (
     <>
       <Toaster />
+
+      <DeleteDialog
+        open={deleteDialogOpen}
+        type='post'
+        name='post'
+        message='Are you sure? This will permanently delete the post and all of its comments. This cannot be undone.'
+        setOpen={setDeleteDialogOpen}
+        setDeleteConfirmed={setDeleteConfirmed} />
     </>
   )
 }

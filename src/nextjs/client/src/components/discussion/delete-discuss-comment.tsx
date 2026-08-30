@@ -1,4 +1,4 @@
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { Toaster, toast } from 'sonner'
 import { useMutation, useQuery } from '@apollo/client/react'
 import {
@@ -6,6 +6,7 @@ import {
   getDiscussCommentsByPostIdQuery
 } from '@/apollo/discussion'
 import type { DiscussCommentItem } from '@/types/client-only-types'
+import DeleteDialog from '@/components/dialogs/delete-dialog'
 
 interface StatusAndMessage {
   status: boolean
@@ -39,6 +40,10 @@ export default function DeleteDiscussComment({
   setAlertSeverity,
   setMessage
 }: Props) {
+
+  // State
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState<boolean>(false)
+  const [deleteConfirmed, setDeleteConfirmed] = useState<boolean>(false)
 
   // GraphQL
   const [sendDeleteDiscussCommentMutation] =
@@ -103,6 +108,22 @@ export default function DeleteDiscussComment({
       return
     }
 
+    // Ask for confirmation before deleting
+    setDeleteAction(false)
+    setDeleteDialogOpen(true)
+
+  }, [deleteAction])
+
+  // Run the delete once confirmed by the dialog
+  useEffect(() => {
+
+    // Return early if not confirmed
+    if (deleteConfirmed !== true) {
+      return
+    }
+
+    setDeleteConfirmed(false)
+
     const fetchData = async () => {
       await remove()
         .catch(console.error)
@@ -110,12 +131,20 @@ export default function DeleteDiscussComment({
 
     fetchData()
 
-  }, [deleteAction])
+  }, [deleteConfirmed])
 
   // Render
   return (
     <>
       <Toaster />
+
+      <DeleteDialog
+        open={deleteDialogOpen}
+        type='comment'
+        name='comment'
+        message='Are you sure? This will permanently delete the comment. This cannot be undone.'
+        setOpen={setDeleteDialogOpen}
+        setDeleteConfirmed={setDeleteConfirmed} />
     </>
   )
 }

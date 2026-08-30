@@ -15,6 +15,7 @@ import type { DiscussPostItem, Project } from '@/types/client-only-types'
 import DiscussPostListItem from '@/components/discussion/discuss-post-list-item'
 import { projectStageName } from '@/types/client-only-types'
 import { projectVisibilityName } from './project-card'
+import DeleteDialog from '@/components/dialogs/delete-dialog'
 
 // Human-readable names for typed project URLs:
 // W website, R repository, D docs, E demo, S social, X other
@@ -97,6 +98,11 @@ export default function ProjectView({
   const [toggling, setToggling] = useState<boolean>(false)
   const [creatingPost, setCreatingPost] = useState<boolean>(false)
 
+  // Post deletion confirmation state
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState<boolean>(false)
+  const [deletePendingPostId, setDeletePendingPostId] = useState<string | undefined>(undefined)
+  const [deleteConfirmed, setDeleteConfirmed] = useState<boolean>(false)
+
   // Functions
   async function toggleInterest() {
 
@@ -174,32 +180,53 @@ export default function ProjectView({
     }
   }
 
-  async function deletePost(postId: string) {
+  function requestDeletePost(postId: string) {
 
-    if (userProfileId == null || userProfileId === '') {
-      return
-    }
-
-    let deletedData: DeleteDiscussPostResult | undefined
-
-    await sendDeleteDiscussPostMutation({
-      variables: {
-        userProfileId: userProfileId,
-        id: postId
-      }
-    }).then(result => deletedData = result.data?.deleteDiscussPost)
-
-    if (deletedData == null) {
-      toast.error(`Failed to delete the post`)
-      return
-    }
-
-    toast(deletedData.message)
-
-    if (deletedData.status === true && onPostsChanged != null) {
-      onPostsChanged()
-    }
+    // Ask for confirmation before deleting
+    setDeletePendingPostId(postId)
+    setDeleteDialogOpen(true)
   }
+
+  // Run the delete once confirmed by the dialog
+  useEffect(() => {
+
+    // Return early if not confirmed
+    if (deleteConfirmed !== true || deletePendingPostId == null) {
+      return
+    }
+
+    setDeleteConfirmed(false)
+
+    const fetchData = async () => {
+
+      if (userProfileId == null || userProfileId === '') {
+        return
+      }
+
+      let deletedData: DeleteDiscussPostResult | undefined
+
+      await sendDeleteDiscussPostMutation({
+        variables: {
+          userProfileId: userProfileId,
+          id: deletePendingPostId
+        }
+      }).then(result => deletedData = result.data?.deleteDiscussPost)
+
+      if (deletedData == null) {
+        toast.error(`Failed to delete the post`)
+        return
+      }
+
+      toast(deletedData.message)
+
+      if (deletedData.status === true && onPostsChanged != null) {
+        onPostsChanged()
+      }
+    }
+
+    fetchData()
+
+  }, [deleteConfirmed])
 
   // Effects
   useEffect(() => {
@@ -214,6 +241,14 @@ export default function ProjectView({
   return (
     <>
       <Toaster />
+
+      <DeleteDialog
+        open={deleteDialogOpen}
+        type='post'
+        name='post'
+        message='Are you sure? This will permanently delete the post and all of its comments. This cannot be undone.'
+        setOpen={setDeleteDialogOpen}
+        setDeleteConfirmed={setDeleteConfirmed} />
 
       <div style={{ marginBottom: '2em' }}>
 
@@ -421,7 +456,7 @@ export default function ProjectView({
           posts.map(post => (
             <DiscussPostListItem
               key={post.id}
-              onDelete={() => deletePost(post.id)}
+              onDelete={() => requestDeletePost(post.id)}
               post={post}
               showDelete={signedIn === true &&
                 post.authorProfileId === userProfileId} />

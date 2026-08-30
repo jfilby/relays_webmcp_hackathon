@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Button, Chip, Link, TextField, Tooltip, Typography } from '@mui/material'
 import { Toaster, toast } from 'sonner'
 import { useMutation } from '@apollo/client/react'
@@ -6,6 +6,7 @@ import { createDiscussPostMutation, deleteDiscussPostMutation } from '@/apollo/d
 import { sendConnectionRequestMutation } from '@/apollo/connections'
 import { availabilityStatusName, skillLevelName } from '@/types/client-only-types'
 import DiscussPostListItem from '@/components/discussion/discuss-post-list-item'
+import DeleteDialog from '@/components/dialogs/delete-dialog'
 import type { DiscussPostItem, Endorsement, Profile, ProfileLink, ProfileSkill } from '@/types/client-only-types'
 import { profileTypeName } from './profile-card'
 
@@ -71,6 +72,11 @@ export default function ProfileView({
   const [newPostTitle, setNewPostTitle] = useState<string>('')
   const [newPostBody, setNewPostBody] = useState<string>('')
   const [posting, setPosting] = useState<boolean>(false)
+
+  // Post deletion confirmation state
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState<boolean>(false)
+  const [deletePendingPostId, setDeletePendingPostId] = useState<string | undefined>(undefined)
+  const [deleteConfirmed, setDeleteConfirmed] = useState<boolean>(false)
 
   // GraphQL
   const [sendSendConnectionRequestMutation] =
@@ -166,39 +172,68 @@ export default function ProfileView({
     setPosting(false)
   }
 
-  async function onDeletePost(postId: string) {
+  function onDeletePost(postId: string) {
 
-    if (viewerUserProfileId == null) {
+    // Ask for confirmation before deleting
+    setDeletePendingPostId(postId)
+    setDeleteDialogOpen(true)
+  }
+
+  // Run the delete once confirmed by the dialog
+  useEffect(() => {
+
+    // Return early if not confirmed
+    if (deleteConfirmed !== true || deletePendingPostId == null) {
       return
     }
 
-    // Query
-    let deletedData: DeleteDiscussPostResult | undefined
+    setDeleteConfirmed(false)
 
-    await sendDeleteDiscussPostMutation({
-      variables: {
-        userProfileId: viewerUserProfileId,
-        id: postId
-      }
-    }).then(result => deletedData = result.data?.deleteDiscussPost)
+    const fetchData = async () => {
 
-    // Get results and set fields
-    if (deletedData == null) {
-      toast.error(`Failed to delete the post`)
-    } else if (deletedData.status === true) {
-      toast.success(deletedData.message)
-      if (onPostsChanged != null) {
-        onPostsChanged()
+      if (viewerUserProfileId == null) {
+        return
       }
-    } else {
-      toast.error(deletedData.message)
+
+      // Query
+      let deletedData: DeleteDiscussPostResult | undefined
+
+      await sendDeleteDiscussPostMutation({
+        variables: {
+          userProfileId: viewerUserProfileId,
+          id: deletePendingPostId
+        }
+      }).then(result => deletedData = result.data?.deleteDiscussPost)
+
+      // Get results and set fields
+      if (deletedData == null) {
+        toast.error(`Failed to delete the post`)
+      } else if (deletedData.status === true) {
+        toast.success(deletedData.message)
+        if (onPostsChanged != null) {
+          onPostsChanged()
+        }
+      } else {
+        toast.error(deletedData.message)
+      }
     }
-  }
+
+    fetchData()
+
+  }, [deleteConfirmed])
 
   // Render
   return (
     <>
       <Toaster />
+
+      <DeleteDialog
+        open={deleteDialogOpen}
+        type='post'
+        name='post'
+        message='Are you sure? This will permanently delete the post and all of its comments. This cannot be undone.'
+        setOpen={setDeleteDialogOpen}
+        setDeleteConfirmed={setDeleteConfirmed} />
 
       <div style={{ marginBottom: '2em' }}>
 
