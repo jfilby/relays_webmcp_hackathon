@@ -17,5 +17,5 @@ Create the Prisma schema:
 pnpm prisma db push
 
 Run the search setup SQL script:
-server/prisma/search-setup.sql
+server/prisma/custom-migrations/search-setup.sql
 
