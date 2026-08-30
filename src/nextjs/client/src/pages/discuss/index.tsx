@@ -202,7 +202,8 @@ export default function DiscussPage({
                       <DiscussPostListItem
                         clampBody={true}
                         key={post.id}
-                        post={post} />
+                        post={post}
+                        userProfileId={signedIn ? userProfile.id : undefined} />
                     ))
                     :
                     <EmptyState message={searched === true ?

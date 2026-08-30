@@ -19,6 +19,7 @@ import SaveDiscussComment from '@/components/discussion/save-discuss-comment'
 import DeleteDiscussPost from '@/components/discussion/delete-discuss-post'
 import DeleteDiscussComment from '@/components/discussion/delete-discuss-comment'
 import LoadProfileByUserProfileId from '@/components/profiles/load-by-user-profile-id'
+import FlagContent from '@/components/discussion/flag-content'
 import type { GetServerSidePropsContext } from 'next'
 
 interface Props {
@@ -89,6 +90,9 @@ export default function DiscussPostPage({
   const [replyBody, setReplyBody] = useState<string>('')
   const [saveCommentAction, setSaveCommentAction] = useState<boolean>(false)
   const [deletePostAction, setDeletePostAction] = useState<boolean>(false)
+  const [flagPostAction, setFlagPostAction] = useState<boolean>(false)
+  const [flagCommentId, setFlagCommentId] = useState<string | undefined>(undefined)
+  const [flagCommentAction, setFlagCommentAction] = useState<boolean>(false)
 
   const [alertSeverity, setAlertSeverity] = useState<'success' | 'error' | undefined>(undefined)
   const [message, setMessage] = useState<string | undefined>(undefined)
@@ -130,6 +134,15 @@ export default function DiscussPostPage({
 
   function onDeleteComment() {
     setDeletePostAction(true)
+  }
+
+  function onFlagPost() {
+    setFlagPostAction(true)
+  }
+
+  function onFlagComment(commentId: string) {
+    setFlagCommentId(commentId)
+    setFlagCommentAction(true)
   }
 
   // Renders one comment, its inline reply form, and its nested replies.
@@ -189,6 +202,18 @@ export default function DiscussPostPage({
                 size='small'
                 style={{ marginTop: '0.25em' }}>
                 Reply
+              </Button>
+              :
+              <></>
+            }
+
+            {signedIn && viewerProfile != null &&
+              comment.authorProfileId !== viewerProfile.id ?
+              <Button
+                onClick={() => onFlagComment(comment.id)}
+                size='small'
+                style={{ marginTop: '0.25em' }}>
+                Flag
               </Button>
               :
               <></>
@@ -318,7 +343,15 @@ export default function DiscussPostPage({
                   Delete post
                 </Button>
                 :
-                <></>
+                signedIn && viewerProfile != null ?
+                  <Button
+                    onClick={onFlagPost}
+                    size='small'
+                    variant='outlined'>
+                    Flag
+                  </Button>
+                  :
+                  <></>
               }
 
               <Typography
@@ -451,6 +484,24 @@ export default function DiscussPostPage({
                   setAlertSeverity={setAlertSeverity}
                   setDeleteAction={setDeletePostAction}
                   setMessage={setMessage}
+                  userProfileId={userProfile.id ?? ''} />
+                :
+                <></>
+              }
+
+              <FlagContent
+                flagAction={flagPostAction}
+                refId={post.id}
+                refModel='DiscussPost'
+                setFlagAction={setFlagPostAction}
+                userProfileId={userProfile.id ?? ''} />
+
+              {flagCommentId != null ?
+                <FlagContent
+                  flagAction={flagCommentAction}
+                  refId={flagCommentId}
+                  refModel='DiscussComment'
+                  setFlagAction={setFlagCommentAction}
                   userProfileId={userProfile.id ?? ''} />
                 :
                 <></>

@@ -205,6 +205,29 @@ export const typeDefs = /* GraphQL */ `
     comments: [DiscussCommentItem]
   }
 
+  # Moderation
+
+  type ModerationFlagItem {
+    id: String!
+    refModel: String!
+    refId: String!
+    contentPublicId: String
+    postPublicId: String
+    title: String
+    excerpt: String!
+    authorName: String
+    authorProfilePublicId: String
+    flagCount: Int!
+    created: String!
+    updated: String
+  }
+
+  type ModerationQueueResults {
+    status: Boolean!
+    message: String
+    items: [ModerationFlagItem]
+  }
+
   # Connections
 
   type IncomingConnectionRequest {
@@ -465,6 +488,10 @@ export const typeDefs = /* GraphQL */ `
     getDiscussCommentsByPostId(
       postId: String!): DiscussCommentsResults!
 
+    # Moderation
+    getModerationQueue(
+      userProfileId: String!): ModerationQueueResults!
+
     # Collaboration plans
     searchCollaborationPlans(
       projectId: String,
@@ -637,6 +664,24 @@ export const typeDefs = /* GraphQL */ `
     markNotificationAsRead(
       userProfileId: String!,
       id: String!): StatusAndMessage!
+
+    # Moderation
+    flagContent(
+      userProfileId: String!,
+      refModel: String!,
+      refId: String!): StatusAndMessage!
+
+    setModerationFlagStatus(
+      userProfileId: String!,
+      refModel: String!,
+      refId: String!,
+      status: String!): StatusAndMessage!
+
+    deleteFlaggedContent(
+      userProfileId: String!,
+      refModel: String!,
+      refId: String!): StatusAndMessage!
+
 
     # Collaboration plans
     createPlan(

@@ -400,6 +400,26 @@ model DiscussComment {
   @@schema("public")
 }
 
+
+model ContentFlag {
+  // A moderation flag raised by a signed-in user against a piece of content
+  // (refModel/refId). One flag per user per item; pending flags form the
+  // admin moderation queue.
+  id                           String               @id @default(cuid())
+  refModel                     String
+  refId                        String
+  flaggerUserProfileId         String               @map("flagger_user_profile_id")
+  status                       String               @db.Char(1)
+  created                      DateTime             @default(now())
+  updated                      DateTime             @updatedAt
+
+  @@unique([refModel, refId, flaggerUserProfileId])
+  @@index([status])
+  @@index([refModel, refId])
+  @@map("content_flag")
+  @@schema("public")
+}
+
 model ProjectInterest {
   // Marks a profile as interested in / watching a project (stars analogue);
   // makes project promotion measurable and feeds recommendations.

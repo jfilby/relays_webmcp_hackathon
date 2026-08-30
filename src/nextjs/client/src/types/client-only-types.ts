@@ -238,6 +238,22 @@ export interface PlanStepItem {
   status: string   // P pending, A active, C completed, X skipped
 }
 
+// An item in the admin moderation queue
+export interface ModerationFlagItem {
+  id: string
+  refModel: string
+  refId: string
+  contentPublicId?: string | null
+  postPublicId?: string | null
+  title?: string | null
+  excerpt: string
+  authorName?: string | null
+  authorProfilePublicId?: string | null
+  flagCount: number
+  created: string
+  updated?: string | null
+}
+
 // Project stage options
 export const projectStages = [
   { value: 'I', name: 'Idea' },

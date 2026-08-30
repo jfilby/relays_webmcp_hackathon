@@ -1,7 +1,9 @@
+import { useState } from 'react'
 import { useRouter } from 'next/router'
 import { Link, Paper, Typography } from '@mui/material'
 import type { DiscussPostItem } from '@/types/client-only-types'
 import { formatSince } from '@/services/utils/dates'
+import FlagContent from '@/components/discussion/flag-content'
 
 interface Props {
   post: DiscussPostItem
@@ -10,6 +12,8 @@ interface Props {
   // Show a delete link (e.g. for the post's author)
   showDelete?: boolean
   onDelete?: () => void
+  // Signed-in users can flag posts for moderation
+  userProfileId?: string
 }
 
 // A single post card in a post listing. Clicking anywhere on the card opens
@@ -19,11 +23,15 @@ export default function DiscussPostListItem({
   post,
   clampBody,
   showDelete,
-  onDelete
+  onDelete,
+  userProfileId
 }: Props) {
 
   // Router
   const router = useRouter()
+
+  // State
+  const [flagAction, setFlagAction] = useState<boolean>(false)
 
   // Functions
   function onClickPost() {
@@ -36,8 +44,16 @@ export default function DiscussPostListItem({
     onDelete?.()
   }
 
+  function onClickFlag(event: React.MouseEvent) {
+    // Don't trigger the card click when flagging
+    event.stopPropagation()
+    setFlagAction(true)
+  }
+
+
   // Render
   return (
+    <>
     <Paper
       onClick={onClickPost}
       sx={{
@@ -94,6 +110,20 @@ export default function DiscussPostListItem({
           {post.commentCount === 1 ? 'comment' : 'comments'}
         </span>
 
+        {userProfileId != null && userProfileId !== '' ?
+          <>
+            <span> · </span>
+            <Link
+              component='button'
+              onClick={onClickFlag}
+              underline='hover'>
+              Flag
+            </Link>
+          </>
+          :
+          <></>
+        }
+
         {showDelete === true ?
           <>
             <span> · </span>
@@ -110,5 +140,17 @@ export default function DiscussPostListItem({
         }
       </Typography>
     </Paper>
+
+    {userProfileId != null && userProfileId !== '' ?
+      <FlagContent
+        flagAction={flagAction}
+        refId={post.id}
+        refModel='DiscussPost'
+        setFlagAction={setFlagAction}
+        userProfileId={userProfileId} />
+      :
+      <></>
+    }
+    </>
   )
 }

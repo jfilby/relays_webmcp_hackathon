@@ -28,6 +28,9 @@ import {
   getDiscussCommentsByPostId
 } from './queries/discussion'
 import {
+  getModerationQueue
+} from './queries/moderation'
+import {
   getNotifications
 } from './queries/notifications'
 import {
@@ -48,6 +51,11 @@ import {
   createDiscussComment,
   deleteDiscussComment
 } from './mutations/discussion'
+import {
+  flagContent,
+  setModerationFlagStatus,
+  deleteFlaggedContent
+} from './mutations/moderation'
 import {
   markNotificationAsRead
 } from './mutations/notifications'
@@ -135,6 +143,9 @@ const Query = {
   getDiscussPostByPublicId,
   getDiscussCommentsByPostId,
 
+  // Moderation
+  getModerationQueue,
+
   // Notifications
   getNotifications,
 
@@ -192,13 +203,17 @@ const Mutation = {
   // Connections
   sendConnectionRequest,
   respondToConnectionRequest,
-  removeConnection,
 
   // Discussion
   createDiscussPost,
   deleteDiscussPost,
   createDiscussComment,
   deleteDiscussComment,
+
+  // Moderation
+  flagContent,
+  setModerationFlagStatus,
+  deleteFlaggedContent,
 
   // Notifications
   markNotificationAsRead,
