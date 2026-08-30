@@ -1,13 +1,13 @@
 import { UsersService } from 'serene-core-server'
 import { PrismaClient } from '@/generated/prisma/client'
 import { ServerTestTypes } from '@/types/server-test-types'
-// import { BatchService } from '../batch/service'
+import { BatchService } from '../batch/service'
 import { DemoDataSetupService } from './demo-data/setup-service'
 import { SetupService } from './setup-service'
 // import { TestsService } from '../tests/tests-service'
 
 // Services
-// const batchService = new BatchService()
+const batchService = new BatchService()
 const demoDataSetupService = new DemoDataSetupService()
 const setupService = new SetupService()
 // const testsService = new TestsService()
@@ -25,6 +25,7 @@ export class CliService {
   testsCommand = 'tests'
 
   commands = [
+    this.batchCommand,
     this.setupCommand,
     this.testsCommand
   ]
@@ -57,11 +58,11 @@ export class CliService {
     // Handle command to run
     switch (command) {
 
-      /* case this.batchCommand: {
+      case this.batchCommand: {
 
         await batchService.run(prisma)
         break
-      } */
+      }
 
       case this.demoDataCommand: {
 

@@ -124,5 +124,5 @@ export async function backfillEmbeddings(
   // Backfill
   await backfillProfiles(prisma)
   await backfillProjects(prisma)
-  await reportRemainingNulls(prisma)
+  // await reportRemainingNulls(prisma)
 }

@@ -92,7 +92,7 @@ model Profile {
   availabilityStatus           String               @map("availability_status") @db.Char(1)   // A (available), B (busy), U (unavailable)
   isVerified                   Boolean              @map("is_verified")
   verifiedAt                   DateTime?            @map("verified_at")
-  embedding                    Unsupported("vector(1536)")?   // Search embedding (pgvector); written via raw SQL, see prisma/search-setup.sql
+  embedding                    Unsupported("vector(3072)")?   // Search embedding (pgvector); written via raw SQL, see prisma/search-setup.sql
   created                      DateTime             @default(now())
   updated                      DateTime             @updatedAt
 
@@ -102,13 +102,13 @@ model Profile {
   ofProjectMemberships         ProjectMember[]
   ofPlansCreated               CollaborationPlan[]  @relation("planCreatedBy")
   ofPlansTargeted              CollaborationPlan[]  @relation("planTargeted")
-  ofProfileLinks              ProfileLink[]
-  ofProfileSkills             ProfileSkill[]
-  ofEndorsementsGiven         Endorsement[]        @relation("endorsementFrom")
-  ofEndorsementsReceived      Endorsement[]        @relation("endorsementTo")
+  ofProfileLinks               ProfileLink[]
+  ofProfileSkills              ProfileSkill[]
+  ofEndorsementsGiven          Endorsement[]        @relation("endorsementFrom")
+  ofEndorsementsReceived       Endorsement[]        @relation("endorsementTo")
   ofDiscussPosts               DiscussPost[]
   ofDiscussComments            DiscussComment[]     @relation("discussCommentAuthor")
-  ofProjectInterests          ProjectInterest[]
+  ofProjectInterests           ProjectInterest[]
 
   @@map("profile")
   @@schema("public")
@@ -195,7 +195,7 @@ model Project {
   stage                        String?              @db.Char(1)   // I (idea), A (alpha), B (beta), G (generally available)
   isOpenToCollaborators        Boolean              @map("is_open_to_collaborators")
   isPromoted                   Boolean              @map("is_promoted")
-  embedding                    Unsupported("vector(1536)")?   // Search embedding (pgvector); written via raw SQL, see prisma/search-setup.sql
+  embedding                    Unsupported("vector(3072)")?   // Search embedding (pgvector); written via raw SQL, see prisma/search-setup.sql
   status                       String               @db.Char(1)
   created                      DateTime             @default(now())
   updated                      DateTime             @updatedAt
