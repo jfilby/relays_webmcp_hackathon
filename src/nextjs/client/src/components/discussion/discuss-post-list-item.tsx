@@ -95,13 +95,16 @@ export default function DiscussPostListItem({
         </span>
 
         {showDelete === true ?
-          <Link
-            component='button'
-            onClick={onClickDelete}
-            style={{ color: '#b91c1c' }}
-            underline='hover'>
-            Delete
-          </Link>
+          <>
+            <span> · </span>
+            <Link
+              component='button'
+              onClick={onClickDelete}
+              style={{ color: '#b91c1c' }}
+              underline='hover'>
+              Delete
+            </Link>
+          </>
           :
           <></>
         }
