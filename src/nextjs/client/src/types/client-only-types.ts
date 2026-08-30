@@ -106,6 +106,8 @@ export interface DiscussPostItem {
   publicId?: string
   authorProfileId: string
   authorName?: string | null
+  authorProfilePublicId?: string | null
+  authorProfileIsPublic?: boolean | null
   projectId?: string | null
   title: string
   body: string
@@ -122,6 +124,8 @@ export interface DiscussCommentItem {
   parentCommentId?: string | null
   authorProfileId: string
   authorName?: string | null
+  authorProfilePublicId?: string | null
+  authorProfileIsPublic?: boolean | null
   body: string
   created: string
   deleted?: string | null

@@ -61,6 +61,8 @@ export const getDiscussPostByPublicIdQuery = gql`
         publicId
         authorProfileId
         authorName
+        authorProfilePublicId
+        authorProfileIsPublic
         projectId
         title
         body
@@ -83,9 +85,10 @@ export const getDiscussCommentsByPostIdQuery = gql`
         id
         publicId
         postId
-        parentCommentId
         authorProfileId
         authorName
+        authorProfilePublicId
+        authorProfileIsPublic
         body
         created
         deleted

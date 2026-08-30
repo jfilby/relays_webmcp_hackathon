@@ -67,7 +67,8 @@ export class DiscussionQueryService {
         group._count._all)
     }
 
-    // Load each author's display name
+    // Load each author's profile for the display name, public id, and
+    // visibility
     const authorProfileIds =
       [...new Set(posts.map(post => post.authorProfileId))]
 
@@ -76,21 +77,27 @@ export class DiscussionQueryService {
         prisma,
         authorProfileIds)
 
-    const authorNames = new Map<string, string>(
-      authors.map(author => [author.id, author.displayName]))
+    const authorsById = new Map(
+      authors.map(author => [author.id, author]))
 
     // Return
-    return posts.map(post => ({
-      id: post.id,
-      publicId: post.publicId,
-      authorProfileId: post.authorProfileId,
-      authorName: authorNames.get(post.authorProfileId) ?? null,
-      projectId: post.projectId,
-      title: post.title,
-      body: post.body,
-      commentCount: commentCountMap.get(post.id) ?? 0,
-      created: post.created.toISOString()
-    }))
+    return posts.map(post => {
+      const author = authorsById.get(post.authorProfileId)
+
+      return {
+        id: post.id,
+        publicId: post.publicId,
+        authorProfileId: post.authorProfileId,
+        authorName: author?.displayName ?? null,
+        authorProfilePublicId: author?.publicId ?? null,
+        authorProfileIsPublic: author?.isPublic ?? null,
+        projectId: post.projectId,
+        title: post.title,
+        body: post.body,
+        commentCount: commentCountMap.get(post.id) ?? 0,
+        created: post.created.toISOString()
+      }
+    })
   }
 
   // Search active discussion posts, matching against both the posts
@@ -251,6 +258,8 @@ export class DiscussionQueryService {
         publicId: post.publicId,
         authorProfileId: post.authorProfileId,
         authorName: author?.displayName ?? null,
+        authorProfilePublicId: author?.publicId ?? null,
+        authorProfileIsPublic: author?.isPublic ?? null,
         projectId: post.projectId,
         title: post.title,
         body: post.body,
@@ -283,8 +292,8 @@ export class DiscussionQueryService {
         comments: []
       }
     }
-
-    // Load each author's display name
+    // Load each author's profile for the display name, public id, and
+    // visibility
     const authorProfileIds =
       [...new Set(comments.map(comment => comment.authorProfileId))]
 
@@ -293,23 +302,29 @@ export class DiscussionQueryService {
         prisma,
         authorProfileIds)
 
-    const authorNames = new Map<string, string>(
-      authors.map(author => [author.id, author.displayName]))
+    const authorsById = new Map(
+      authors.map(author => [author.id, author]))
 
     // Return
     return {
       status: true,
-      comments: comments.map(comment => ({
-        id: comment.id,
-        publicId: comment.publicId,
-        postId: comment.postId,
-        parentCommentId: comment.parentCommentId,
-        authorProfileId: comment.authorProfileId,
-        authorName: authorNames.get(comment.authorProfileId) ?? null,
-        body: comment.body,
-        created: comment.created.toISOString(),
-        deleted: comment.deleted?.toISOString() ?? null
-      }))
+      comments: comments.map(comment => {
+        const author = authorsById.get(comment.authorProfileId)
+
+        return {
+          id: comment.id,
+          publicId: comment.publicId,
+          postId: comment.postId,
+          parentCommentId: comment.parentCommentId,
+          authorProfileId: comment.authorProfileId,
+          authorName: author?.displayName ?? null,
+          authorProfilePublicId: author?.publicId ?? null,
+          authorProfileIsPublic: author?.isPublic ?? null,
+          body: comment.body,
+          created: comment.created.toISOString(),
+          deleted: comment.deleted?.toISOString() ?? null
+        }
+      })
     }
   }
 }

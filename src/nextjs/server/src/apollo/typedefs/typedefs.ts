@@ -164,6 +164,8 @@ export const typeDefs = /* GraphQL */ `
     publicId: String!
     authorProfileId: String!
     authorName: String
+    authorProfilePublicId: String
+    authorProfileIsPublic: Boolean
     projectId: String
     title: String!
     body: String!
@@ -190,6 +192,8 @@ export const typeDefs = /* GraphQL */ `
     parentCommentId: String
     authorProfileId: String!
     authorName: String
+    authorProfilePublicId: String
+    authorProfileIsPublic: Boolean
     body: String!
     created: String!
     deleted: String

@@ -1,7 +1,7 @@
 import Head from 'next/head'
 import { useState } from 'react'
 import { useRouter } from 'next/router'
-import { Button, Chip, IconButton, Paper, TextField, Typography } from '@mui/material'
+import { Button, Chip, IconButton, Link, Paper, TextField, Typography } from '@mui/material'
 import DeleteIcon from '@mui/icons-material/Delete'
 import { loadServerPage } from '@/services/page/load-server-page'
 import type {
@@ -152,10 +152,16 @@ export default function DiscussPostPage({
               style={{ color: '#5a5a5a', fontSize: '0.85rem' }}
               variant='body2'>
               {comment.authorName != null && comment.authorName !== '' ?
-                comment.authorName :
+                (comment.authorProfileIsPublic === true &&
+                  comment.authorProfilePublicId != null &&
+                  comment.authorProfilePublicId !== '' ?
+                  <Link
+                    href={`/profiles/${comment.authorProfilePublicId}`}>
+                    {comment.authorName}
+                  </Link>
+                  :
+                  comment.authorName) :
                 'Unknown'}
-              {' · '}
-              {formatSince(comment.created)}
             </Typography>
 
             {comment.deleted != null ?
@@ -276,8 +282,21 @@ export default function DiscussPostPage({
                   style={{ color: '#5a5a5a', marginTop: '0.5em', fontSize: '0.85rem' }}
                   variant='body2'>
                   {post.authorName != null && post.authorName !== '' ?
-                    `${post.authorName} · ` :
-                    ''}
+                    <>
+                      {post.authorProfileIsPublic === true &&
+                        post.authorProfilePublicId != null &&
+                        post.authorProfilePublicId !== '' ?
+                        <Link href={`/profiles/${post.authorProfilePublicId}`}>
+                          {post.authorName}
+                        </Link>
+                        :
+                        post.authorName
+                      }
+                      {' · '}
+                    </>
+                    :
+                    <></>
+                  }
                   {formatSince(post.created)} · {post.commentCount}{' '}
                   {post.commentCount === 1 ? 'comment' : 'comments'}
                 </Typography>
