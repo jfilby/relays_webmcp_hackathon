@@ -305,10 +305,10 @@ export class DiscussionMutateService {
     }
 
     // Collect the comment and all of its replies, then delete them together.
-    // Deletes happen at most 2 levels below the comment since nesting is
-    // capped at a max number of levels.
+    // Breadth-first: each pass only looks up the children of the current
+    // level, so the walk is capped by the max nesting depth.
     const idsToDelete = [comment.id]
-    const frontierIds = [comment.id]
+    let frontierIds = [comment.id]
 
     while (frontierIds.length > 0) {
       const children = await
@@ -316,10 +316,11 @@ export class DiscussionMutateService {
           prisma,
           frontierIds)
 
-      for (const child of children) {
-        idsToDelete.push(child.id)
-        frontierIds.push(child.id)
-      }
+      // The next frontier is only the newly found children. Keeping the
+      // previous ids here would re-fetch them every pass and never end.
+      frontierIds = children.map(child => child.id)
+
+      idsToDelete.push(...frontierIds)
     }
 
     await
