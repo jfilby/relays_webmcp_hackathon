@@ -192,6 +192,7 @@ export const typeDefs = /* GraphQL */ `
     authorName: String
     body: String!
     created: String!
+    deleted: String
   }
 
   type DiscussCommentsResults {

@@ -1,7 +1,7 @@
 import Head from 'next/head'
 import { useState } from 'react'
 import { useRouter } from 'next/router'
-import { Button, IconButton, Paper, TextField, Typography } from '@mui/material'
+import { Button, Chip, IconButton, Paper, TextField, Typography } from '@mui/material'
 import DeleteIcon from '@mui/icons-material/Delete'
 import { loadServerPage } from '@/services/page/load-server-page'
 import type {
@@ -158,11 +158,19 @@ export default function DiscussPostPage({
               {formatSince(comment.created)}
             </Typography>
 
-            <Typography
-              style={{ marginTop: '0.35em', whiteSpace: 'pre-wrap' }}
-              variant='body1'>
-              {comment.body}
-            </Typography>
+            {comment.deleted != null ?
+              <Chip
+                color='default'
+                label='Deleted'
+                size='small'
+                style={{ marginTop: '0.35em' }} />
+              :
+              <Typography
+                style={{ marginTop: '0.35em', whiteSpace: 'pre-wrap' }}
+                variant='body1'>
+                {comment.body}
+              </Typography>
+            }
 
             {signedIn && depth < maxCommentsLevel ?
               <Button

@@ -264,6 +264,32 @@ export class DiscussCommentModel {
     }
   }
 
+  // Soft delete: keep the record so replies stay attached, blank the text.
+  async setDeleted(
+    prisma: PrismaClient,
+    id: string,
+    deleted: Date) {
+
+    // Debug
+    const fnName = `${this.clName}.setDeleted()`
+
+    // Update record
+    try {
+      return await prisma.discussComment.update({
+        data: {
+          body: '',
+          deleted: deleted
+        },
+        where: {
+          id: id
+        }
+      })
+    } catch (error) {
+      console.error(`${fnName}: error: ${error}`)
+      throw 'Prisma error'
+    }
+  }
+
   async upsert(
     prisma: PrismaClient,
     id: string | undefined,

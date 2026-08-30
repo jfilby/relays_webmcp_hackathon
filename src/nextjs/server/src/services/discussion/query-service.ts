@@ -185,7 +185,8 @@ export class DiscussionQueryService {
         authorProfileId: comment.authorProfileId,
         authorName: authorNames.get(comment.authorProfileId) ?? null,
         body: comment.body,
-        created: comment.created.toISOString()
+        created: comment.created.toISOString(),
+        deleted: comment.deleted?.toISOString() ?? null
       }))
     }
   }

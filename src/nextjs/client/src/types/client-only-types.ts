@@ -124,6 +124,7 @@ export interface DiscussCommentItem {
   authorName?: string | null
   body: string
   created: string
+  deleted?: string | null
 }
 
 // An incoming pending connection request

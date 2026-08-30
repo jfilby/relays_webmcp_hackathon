@@ -388,6 +388,7 @@ model DiscussComment {
   ofDiscussCommentReplies      DiscussComment[]     @relation("discussCommentReplies")
   created                      DateTime             @default(now())
   updated                      DateTime             @updatedAt
+  deleted                      DateTime?
 
   @@index([postId])
   @@index([authorProfileId])

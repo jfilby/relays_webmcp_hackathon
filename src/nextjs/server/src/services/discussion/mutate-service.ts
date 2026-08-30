@@ -304,29 +304,26 @@ export class DiscussionMutateService {
       }
     }
 
-    // Collect the comment and all of its replies, then delete them together.
-    // Breadth-first: each pass only looks up the children of the current
-    // level, so the walk is capped by the max nesting depth.
-    const idsToDelete = [comment.id]
-    let frontierIds = [comment.id]
-
-    while (frontierIds.length > 0) {
-      const children = await
-        discussCommentModel.filterByParentCommentIds(
-          prisma,
-          frontierIds)
-
-      // The next frontier is only the newly found children. Keeping the
-      // previous ids here would re-fetch them every pass and never end.
-      frontierIds = children.map(child => child.id)
-
-      idsToDelete.push(...frontierIds)
-    }
-
-    await
-      discussCommentModel.deleteManyByIds(
+    // If the comment has replies, soft delete it so its replies stay attached
+    // to a parent. Otherwise remove the record entirely, as with no replies
+    // there is nothing to preserve.
+    const children = await
+      discussCommentModel.filterByParentCommentIds(
         prisma,
-        idsToDelete)
+        [comment.id])
+
+    if (children.length > 0) {
+      await
+        discussCommentModel.setDeleted(
+          prisma,
+          comment.id,
+          new Date())
+    } else {
+      await
+        discussCommentModel.deleteManyByIds(
+          prisma,
+          [comment.id])
+    }
 
     // Return
     return {

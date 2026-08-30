@@ -65,6 +65,7 @@ export const getDiscussCommentsByPostIdQuery = gql`
         authorName
         body
         created
+        deleted
       }
     }
   }
