@@ -896,6 +896,12 @@ export class DemoDataTypes {
 
   static readonly projectMembers: DemoProjectMemberData[] = [
     {
+      projectKey: 'demo-project-relays',
+      profileKey: 'jason-filby',
+      role: 'O',
+      status: 'A'
+    },
+    {
       projectKey: 'demo-project-specwright',
       profileKey: 'demo-profile-alice',
       role: 'O',

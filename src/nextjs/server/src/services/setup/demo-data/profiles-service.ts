@@ -140,10 +140,21 @@ export class ProfilesDemoDataSetupService {
     prisma: PrismaClient,
     key: string) {
 
+    // Keys outside the demo data refer to Relays profiles by publicId,
+    // e.g. a real user owning a demo project
     const data = DemoDataTypes.profiles.find(d => d.key === key)
 
     if (data == null) {
-      throw `${this.clName}: no demo profile data for key: ${key}`
+      const relaysProfile = await profileModel.getByPublicId(
+        prisma,
+        key)
+
+      if (relaysProfile == null) {
+        throw `${this.clName}: no demo profile data or Relays profile for ` +
+          `key: ${key}`
+      }
+
+      return relaysProfile
     }
 
     const profile = await profileModel.getByPublicId(
@@ -156,7 +167,6 @@ export class ProfilesDemoDataSetupService {
 
     return profile
   }
-
   async getSkillByKey(
     prisma: PrismaClient,
     key: string) {
