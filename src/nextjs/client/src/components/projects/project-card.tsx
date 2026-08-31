@@ -1,3 +1,4 @@
+import { useRouter } from 'next/router'
 import { Chip, Link, Paper, Typography } from '@mui/material'
 import type { Project } from '@/types/client-only-types'
 import { projectStageName } from '@/types/client-only-types'
@@ -15,14 +16,22 @@ export function projectVisibilityName(isPublic: boolean): string {
   return 'Private'
 }
 
+// A single project card in a project listing. Clicking anywhere on the card
+// opens the project; links on the card keep working without triggering the
+// card click.
 export default function ProjectCard({
   project
 }: Props) {
 
+  // Router
+  const router = useRouter()
+
   // Render
   return (
     <Paper
+      onClick={() => router.push(`/projects/${project.publicId}`)}
       sx={{
+        cursor: 'pointer',
         marginBottom: '1.25em',
         padding: '1.5em 1.75em',
         transition: 'transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease',
@@ -34,6 +43,7 @@ export default function ProjectCard({
       }}>
       <Link
         href={`/projects/${project.publicId}`}
+        onClick={(event) => event.stopPropagation()}
         underline='none'>
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.75em', flexWrap: 'wrap' }}>
           <Typography
@@ -102,6 +112,7 @@ export default function ProjectCard({
         {project.website != null && project.website !== '' ?
           <Link
             href={project.website}
+            onClick={(event) => event.stopPropagation()}
             target='_blank'
             rel='noopener noreferrer'
             underline='hover'

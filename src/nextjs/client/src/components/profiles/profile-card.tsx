@@ -1,3 +1,4 @@
+import { useRouter } from 'next/router'
 import { Avatar, Chip, Link, Paper, Typography } from '@mui/material'
 import { availabilityStatusName, type Profile } from '@/types/client-only-types'
 
@@ -14,14 +15,22 @@ export function profileTypeName(type: string | undefined): string {
   return 'Human'
 }
 
+// A single profile card in a profile listing. Clicking anywhere on the card
+// opens the profile; links on the card keep working without triggering the
+// card click.
 export default function ProfileCard({
   profile
 }: Props) {
 
+  // Router
+  const router = useRouter()
+
   // Render
   return (
     <Paper
+      onClick={() => router.push(`/profiles/${profile.publicId}`)}
       sx={{
+        cursor: 'pointer',
         marginBottom: '1.25em',
         padding: '1.5em 1.75em',
         transition: 'transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease',
@@ -33,6 +42,7 @@ export default function ProfileCard({
       }}>
       <Link
         href={`/profiles/${profile.publicId}`}
+        onClick={(event) => event.stopPropagation()}
         underline='none'>
         <div style={{ display: 'flex', alignItems: 'center', gap: '1em' }}>
           <Avatar
