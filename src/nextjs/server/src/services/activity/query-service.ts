@@ -1,5 +1,11 @@
 import { PrismaClient } from '@/generated/prisma/client'
-import type { Project, DiscussPost, DiscussComment } from '@/generated/prisma/client'
+import type {
+  Project,
+  ProjectUrl,
+  Instance,
+  DiscussPost,
+  DiscussComment
+} from '@/generated/prisma/client'
 
 // Models
 import { ProjectModel } from '@/models/projects/project-model'
@@ -26,6 +32,13 @@ const discussCommentModel = new DiscussCommentModel()
 const projectsQueryService = new ProjectsQueryService()
 const discussionQueryService = new DiscussionQueryService()
 
+
+// A project record with its instance and urls included (the project name
+// lives on the instance).
+type ProjectWithIncludes = Project & {
+  instance: Instance
+  ofProjectUrls: ProjectUrl[]
+}
 // Class
 export class ActivityQueryService {
 
@@ -53,18 +66,38 @@ export class ActivityQueryService {
       await this.getNetworkProfileIds(prisma, profile.id) :
       []
 
-    // Projects, posts, and comments
+    // Projects, posts, and comments. Personalized queries produce raw Prisma
+    // records; both paths map them into the GraphQL shapes via the shared
+    // project/discussion mappers.
     const projects = profile == null ?
       (await projectsQueryService.getLatestProjects(prisma, take)).projects :
-      await this.getProjectsForProfile(prisma, profile.id, networkProfileIds, take)
+      await this.toGraphQLProjects(
+        prisma,
+        await this.getProjectsForProfile(
+          prisma,
+          profile.id,
+          networkProfileIds,
+          take))
 
     const posts = profile == null ?
       (await discussionQueryService.getLatestPosts(prisma, take)).posts :
-      await this.getPostsForProfile(prisma, profile.id, networkProfileIds, take)
+      await discussionQueryService.toPostItems(
+        prisma,
+        await this.getPostsForProfile(
+          prisma,
+          profile.id,
+          networkProfileIds,
+          take))
 
     const comments = profile == null ?
       (await discussionQueryService.getLatestComments(prisma, take)).comments :
-      await this.getCommentsForProfile(prisma, profile.id, networkProfileIds, take)
+      await discussionQueryService.toCommentItems(
+        prisma,
+        await this.getCommentsForProfile(
+          prisma,
+          profile.id,
+          networkProfileIds,
+          take))
 
     // Return
     return {
@@ -123,7 +156,7 @@ export class ActivityQueryService {
     prisma: PrismaClient,
     profileId: string,
     networkProfileIds: string[],
-    take: number): Promise<Project[]> {
+    take: number): Promise<ProjectWithIncludes[]> {
 
     // The active memberships of the viewer and their network
     const memberProfileIds = [profileId, ...networkProfileIds]
@@ -139,11 +172,11 @@ export class ActivityQueryService {
 
     // Load the personalized projects (public instances only, matching the
     // visibility of the signed-out feed)
-    const personalized = personalizedIds.size > 0 ?
-      (await projectModel.filterByIds(
+    const personalized: ProjectWithIncludes[] = personalizedIds.size > 0 ?
+      ((await projectModel.filterByIds(
         prisma,
         [...personalizedIds],
-        true))  // withIncludes (instance, ofProjectUrls)
+        true)) as ProjectWithIncludes[])  // withIncludes (instance, ofProjectUrls)
         .filter(project =>
           project.status === 'A' &&
           project.instance.publicAccess != null)
@@ -159,6 +192,35 @@ export class ActivityQueryService {
 
     // Return
     return this.mergeLatest(personalized, fill, take)
+  }
+
+  // Map raw project records into the GraphQL shape, with batched interest
+  // counts and owner info (the project name lives on the project's instance).
+  private async toGraphQLProjects(
+    prisma: PrismaClient,
+    projects: ProjectWithIncludes[]) {
+
+    const countsByProjectId = await
+      projectsQueryService.getInterestCounts(
+        prisma,
+        projects.map(project => project.id))
+
+    const ownerInfosByProjectId = await
+      projectsQueryService.getOwnerInfosByProjectIds(
+        prisma,
+        projects.map(project => project.id))
+
+    // Return
+    return projects.map(project =>
+      projectsQueryService.toGraphQL(
+        project,
+        project.instance,
+        false,  // isOwner
+        project.ofProjectUrls,
+        countsByProjectId[project.id],
+        undefined,  // viewerIsInterested
+        ownerInfosByProjectId[project.id] ??
+          projectsQueryService.ownerInfoNone))
   }
 
   // Posts by the network and the viewer first (newest first), topped up
