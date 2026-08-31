@@ -1,6 +1,10 @@
+'use client'
+
 import Head from 'next/head'
 import type { GetServerSidePropsContext } from 'next'
 import { Link, Typography } from '@mui/material'
+import { useSession } from 'next-auth/react'
+import LaunchedIntro from '@/components/landing-pages/launched-intro'
 import LaunchedFeatures from '@/components/landing-pages/launched-features'
 import LaunchedHowItWorks from '@/components/landing-pages/launched-how-it-works'
 import { loadServerPage } from '@/services/page/load-server-page'
@@ -11,7 +15,10 @@ import styles from '@/components/landing-pages/landing.module.css'
 interface Props {
 }
 
-export default function AboutPage({}: Props) {
+export default function AboutPage({ }: Props) {
+
+  // Session
+  const { status } = useSession()
 
   // Render
   return (
@@ -24,13 +31,9 @@ export default function AboutPage({}: Props) {
 
           <LaunchedHeader />
 
-           <Typography
-            style={{ marginBottom: '0.5em' }}
-            variant='h3'>
-            About
-          </Typography>
+          <LaunchedIntro />
 
-         {/* Features */}
+          {/* Features */}
           <LaunchedFeatures />
 
           {/* How it works */}

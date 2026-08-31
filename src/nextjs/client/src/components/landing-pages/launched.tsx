@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useSession } from 'next-auth/react'
+import { Typography } from '@mui/material'
 import { pageBodyWidth } from '@/components/layouts/full-height-layout'
 import MoreInformation from '@/components/layouts/more-information'
 import type { PageProfile, UserProfile } from '@/types/client-only-types'
@@ -48,12 +49,36 @@ export default function LaunchedLandingPage({
 
       <div style={{ margin: '0 auto', maxWidth: pageBodyWidth, width: '100%', textAlign: 'left', verticalAlign: 'textTop' }}>
 
-        {/* Hero */}
-        <LaunchedHero
-          authSession={authSession}
-          profile={profile ?? null}
-          userProfile={userProfile ?? null} />
+        {/* Tag line */}
+          {authSession === null ?
+            <div className={styles.taglineStrip}>
+            <Typography
+              className={styles.eyebrow}
+              component='div'
+              variant='overline'>
+              {process.env.NEXT_PUBLIC_APP_NAME}
+            </Typography>
+            <Typography
+              className={styles.taglineText}
+              component='div'
+              sx={{ fontSize: '1.2em' }}
+              variant='h2'>
+              {process.env.NEXT_PUBLIC_TAG_LINE}
+            </Typography>
+          </div>
+            :
+            <></>
+          }
 
+        {/* Hero */}
+        {authSession === null ?
+          <></>
+          :
+          <LaunchedHero
+            authSession={authSession}
+            profile={profile ?? null}
+            userProfile={userProfile ?? null} />
+        }
         {/* Latest activity */}
         <LaunchedLatest />
 
