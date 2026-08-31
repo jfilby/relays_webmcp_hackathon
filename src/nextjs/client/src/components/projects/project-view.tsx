@@ -333,7 +333,7 @@ export default function ProjectView({
         }
 
         {signedIn === true ?
-          <div style={{ marginTop: '1em' }}>
+          <div style={{ alignItems: 'center', display: 'flex', gap: '0.75em', marginTop: '1em' }}>
             <Button
               disabled={toggling}
               onClick={toggleInterest}
@@ -342,6 +342,16 @@ export default function ProjectView({
               &nbsp;
               {`Interested (${interestCount})`}
             </Button>
+
+            {owner === true ?
+              <Button
+                onClick={() => window.location.href = '/project/edit'}
+                variant='outlined'>
+                Edit my project
+              </Button>
+              :
+              <></>
+            }
           </div>
           :
           <></>
@@ -409,18 +419,6 @@ export default function ProjectView({
               </Link>
             </Typography>
           ))}
-        </div>
-        :
-        <></>
-      }
-
-      {owner === true ?
-        <div style={{ marginBottom: '2em' }}>
-          <Button
-            onClick={() => window.location.href = '/project/edit'}
-            variant='outlined'>
-            Edit my project
-          </Button>
         </div>
         :
         <></>
