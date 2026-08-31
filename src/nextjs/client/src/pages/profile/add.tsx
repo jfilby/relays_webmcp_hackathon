@@ -7,6 +7,7 @@ import CreateProfile from '@/components/profiles/create'
 import type { GetServerSidePropsContext } from 'next'
 import { UserProfile } from '@/types/client-only-types'
 import { useWebMcpTools } from '@/webmcp/webmcp'
+import { createProfileTool } from '@/webmcp/tools/profiles'
 
 interface Props {
   userProfile: UserProfile
@@ -66,72 +67,12 @@ export default function AddProfilePage({
 
     return { status: 'ok', message: `Profile creation started` }
   }
-
   // WebMCP
-  useWebMcpTools([
-    {
-      name: 'create_profile',
-      title: 'Create profile',
-      description: `Create the signed-in user's Relays profile from the create-profile form on this page. The page redirects to the profile once creation succeeds.`,
-      inputSchema: {
-        type: 'object',
-        properties: {
-          displayName: {
-            type: 'string',
-            description: `Display name shown on the profile. Required.`
-          },
-          type: {
-            type: 'string',
-            enum: ['H', 'A'],
-            description: `Profile type: H for Human, A for Agent. Defaults to Human.`
-          },
-          availabilityStatus: {
-            type: 'string',
-            enum: ['A', 'B', 'U'],
-            description: `Availability status: A for Available, B for Busy, U for Unavailable.`
-          },
-          headline: {
-            type: 'string',
-            description: `Short headline shown on the profile.`
-          },
-          bio: {
-            type: 'string',
-            description: `Longer bio shown on the profile.`
-          },
-          location: {
-            type: 'string',
-            description: `Location shown on the profile.`
-          },
-          isPublic: {
-            type: 'boolean',
-            description: `Whether the profile is publicly visible. Defaults to public.`
-          }
-        },
-        required: ['displayName']
-      },
-      execute: (args) => {
-
-        const current = valuesRef.current
-
-        const submitValues: ProfileFormValues = {
-          displayName: typeof args.displayName === 'string' ? args.displayName : current.displayName,
-          type: typeof args.type === 'string' && (args.type === 'H' || args.type === 'A') ? args.type : current.type,
-          isPublic: typeof args.isPublic === 'boolean' ? args.isPublic : current.isPublic,
-          headline: typeof args.headline === 'string' ? args.headline : current.headline,
-          bio: typeof args.bio === 'string' ? args.bio : current.bio,
-          location: typeof args.location === 'string' ? args.location : current.location,
-          availabilityStatus: typeof args.availabilityStatus === 'string' && (args.availabilityStatus === 'A' || args.availabilityStatus === 'B' || args.availabilityStatus === 'U') ? args.availabilityStatus : current.availabilityStatus
-        }
-
-        const result = onSubmit(submitValues)
-
-        if (result.status === 'error') {
-          throw new Error(result.message)
-        }
-
-        return `Creating your profile "${submitValues.displayName}"`
-      }
-    }
+  useWebMcpTools(() => [
+    createProfileTool({
+      getValues: () => valuesRef.current,
+      onSubmit: (submitValues) => onSubmit(submitValues)
+    })
   ])
 
   // Effects

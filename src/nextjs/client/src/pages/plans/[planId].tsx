@@ -13,6 +13,7 @@ import UpdatePlanStep from '@/components/collaboration/update-plan-step'
 import DeletePlanStep from '@/components/collaboration/delete-plan-step'
 import PlanDetail from '@/components/collaboration/plan-detail'
 import { useWebMcpTools } from '@/webmcp/webmcp'
+import { addPlanStepTool, setPlanStepStatusTool } from '@/webmcp/tools/collaboration'
 import type {
   CollaborationPlanItem,
   PlanStepItem,
@@ -91,84 +92,17 @@ export default function PlanPage({
     setDeleteStepId(stepId)
     setDeleteStepAction(true)
   }
-
   // WebMCP
-  useWebMcpTools([
-    {
-      name: 'add_plan_step',
-      title: 'Add plan step',
-      description: `Add a new step to this collaboration plan. The step is saved and appears in the plan's steps list.`,
-      inputSchema: {
-        type: 'object',
-        properties: {
-          title: {
-            type: 'string',
-            description: `Short title for the step.`
-          },
-          description: {
-            type: 'string',
-            description: `What the step involves. Optional.`
-          }
-        },
-        required: ['title']
-      },
-      execute: (args) => {
-
-        if (!isCreator) {
-          throw new Error(`Only the plan creator can add steps`)
-        }
-
-        const title = typeof args.title === 'string' ? args.title.trim() : ''
-        const description = typeof args.description === 'string' ? args.description.trim() : ''
-
-        if (title === '') {
-          throw new Error(`Step title is required`)
-        }
-
-        onAddStep(title, description)
-
-        return `Adding step "${title}" to the plan`
-      }
-    },
-    {
-      name: 'set_plan_step_status',
-      title: 'Set plan step status',
-      description: `Set the status of one of this plan's steps, the same as changing the step's status select as the plan creator.`,
-      inputSchema: {
-        type: 'object',
-        properties: {
-          stepId: {
-            type: 'string',
-            description: `ID of the step to update.`
-          },
-          status: {
-            type: 'string',
-            enum: ['P', 'A', 'C', 'X'],
-            description: `Step status: P for pending, A for active, C for completed, X for skipped.`
-          }
-        },
-        required: ['stepId', 'status']
-      },
-      execute: (args) => {
-
-        if (!isCreator) {
-          throw new Error(`Only the plan creator can update step statuses`)
-        }
-
-        const stepId = typeof args.stepId === 'string' ? args.stepId : ''
-        const status = typeof args.status === 'string' ? args.status : ''
-
-        const step = (steps ?? []).find(candidate => candidate.id === stepId)
-
-        if (step == null) {
-          throw new Error(`No step found with id "${stepId}"`)
-        }
-
-        onUpdateStepStatus(stepId, status)
-
-        return `Setting step "${step.title}" to ${status}`
-      }
-    }
+  useWebMcpTools(() => [
+    addPlanStepTool({
+      isCreator: () => isCreator,
+      onAddStep: (title, description) => onAddStep(title, description)
+    }),
+    setPlanStepStatusTool({
+      isCreator: () => isCreator,
+      getSteps: () => steps,
+      onUpdateStepStatus: (stepId, status) => onUpdateStepStatus(stepId, status)
+    })
   ])
   // Render
   return (

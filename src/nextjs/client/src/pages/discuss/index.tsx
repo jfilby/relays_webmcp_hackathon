@@ -16,6 +16,7 @@ import SaveDiscussPost from '@/components/discussion/save-discuss-post'
 import EmptyState from '@/components/layouts/empty-state'
 import type { DiscussPostItem, UserProfile } from '@/types/client-only-types'
 import { useWebMcpTools } from '@/webmcp/webmcp'
+import { createDiscussPostTool, searchDiscussPostsTool } from '@/webmcp/tools/discuss'
 import type { GetServerSidePropsContext } from 'next'
 
 interface Props {
@@ -104,67 +105,20 @@ export default function DiscussPage({
   }
 
   // WebMCP
-  useWebMcpTools([
-    {
-      name: 'search_discuss_posts',
-      title: 'Search discussion posts',
-      description: `Search the Relays discussion forum for posts matching text. Results replace the list of posts shown on the page.`,
-      inputSchema: {
-        type: 'object',
-        properties: {
-          query: {
-            type: 'string',
-            description: `Text to match against discussion posts and comments. Empty to list all posts.`
-          }
-        }
-      },
-      execute: (args) => {
-
-        const query = typeof args.query === 'string' ? args.query : ''
+  useWebMcpTools(() => [
+    searchDiscussPostsTool({
+      onSearch: (query) => {
 
         setSearch(query)
         setSearched(true)
         setLoadAction(true)
-
-        return `Searching discussion posts${query.trim() !== '' ? ` matching "${query.trim()}"` : ''}`
       }
-    },
-    {
-      name: 'create_discuss_post',
-      title: 'Create discussion post',
-      description: `Publish a new discussion post to the Relays forum with the given title and body. The post appears in the list once saved.`,
-      inputSchema: {
-        type: 'object',
-        properties: {
-          title: {
-            type: 'string',
-            description: `Title of the discussion post.`
-          },
-          body: {
-            type: 'string',
-            description: `Body text of the discussion post.`
-          }
-        },
-        required: ['title', 'body']
-      },
-      execute: (args) => {
-
-        if (!signedIn) {
-          throw new Error(`Sign in to start a discussion`)
-        }
-
-        const title = typeof args.title === 'string' ? args.title : ''
-        const body = typeof args.body === 'string' ? args.body : ''
-
-        const result = onSubmit({ ...newPostValuesRef.current, title, body })
-
-        if (result.status === 'error') {
-          throw new Error(result.message)
-        }
-
-        return result.message
-      }
-    }
+    }),
+    createDiscussPostTool({
+      isSignedIn: () => signedIn,
+      getValues: () => newPostValuesRef.current,
+      onSubmit: (submitValues) => onSubmit(submitValues)
+    })
   ])
 
   // Render

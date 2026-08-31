@@ -21,6 +21,7 @@ import DeleteDiscussComment from '@/components/discussion/delete-discuss-comment
 import LoadProfileByUserProfileId from '@/components/profiles/load-by-user-profile-id'
 import FlagContent from '@/components/discussion/flag-content'
 import { useWebMcpTools } from '@/webmcp/webmcp'
+import { addDiscussCommentTool, addDiscussReplyTool } from '@/webmcp/tools/discuss'
 import type { GetServerSidePropsContext } from 'next'
 
 interface Props {
@@ -297,75 +298,17 @@ export default function DiscussPostPage({
   }
 
   // WebMCP
-  useWebMcpTools([
-    {
-      name: 'add_discuss_comment',
-      title: 'Add discussion comment',
-      description: `Post a top-level comment on this discussion post. The comment appears in the thread once saved.`,
-      inputSchema: {
-        type: 'object',
-        properties: {
-          body: {
-            type: 'string',
-            description: `Text of the comment.`
-          }
-        },
-        required: ['body']
-      },
-      execute: (args) => {
-
-        if (!signedIn) {
-          throw new Error(`Sign in to comment`)
-        }
-
-        const body = typeof args.body === 'string' ? args.body : ''
-
-        const result = onComment({ ...commentValuesRef.current, body })
-
-        if (result.status === 'error') {
-          throw new Error(result.message)
-        }
-
-        return result.message
-      }
-    },
-    {
-      name: 'add_discuss_reply',
-      title: 'Add discussion reply',
-      description: `Post a reply to the comment whose inline Reply box is currently open on this discussion post. Only works when a reply target is already open.`,
-      inputSchema: {
-        type: 'object',
-        properties: {
-          body: {
-            type: 'string',
-            description: `Text of the reply.`
-          }
-        },
-        required: ['body']
-      },
-      execute: (args) => {
-
-        if (!signedIn) {
-          throw new Error(`Sign in to reply`)
-        }
-
-        const targetCommentId = replyValuesRef.current.replyToCommentId
-
-        if (targetCommentId == null || targetCommentId === '') {
-          throw new Error(`No reply target is open. Ask the user to click Reply on the comment to reply to, then try again.`)
-        }
-
-        const body = typeof args.body === 'string' ? args.body : ''
-
-        const result = onReplySubmit(targetCommentId, { body })
-
-        if (result.status === 'error') {
-          throw new Error(result.message)
-        }
-
-        return result.message
-      }
-    }
+  useWebMcpTools(() => [
+    addDiscussCommentTool({
+      isSignedIn: () => signedIn,
+      getValues: () => commentValuesRef.current,
+      onComment: (submitValues) => onComment(submitValues)
+    }),
+    addDiscussReplyTool({
+      isSignedIn: () => signedIn,
+      getReplyTarget: () => replyValuesRef.current.replyToCommentId,
+      onReplySubmit: (commentId, submitValues) => onReplySubmit(commentId, submitValues)
+    })
   ])
 
   // Render

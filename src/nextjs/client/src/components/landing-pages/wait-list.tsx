@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useMutation } from '@apollo/client/react'
 import { useWebMcpTools } from '@/webmcp/webmcp'
+import { joinWaitlistTool } from '@/webmcp/tools/auth'
 import { signUpForUpdatesMutation } from '@/apollo/sign-ups'
 import { Alert, Button, TextField, Typography } from '@mui/material'
 import FullHeightLayout, { pageBodyWidth } from '@/components/layouts/full-height-layout'
@@ -87,36 +88,11 @@ export default function WaitListLandingPage() {
       return { status: 'error', message: result.message }
     }
   }
-
   // WebMCP
-  useWebMcpTools([
-    {
-      name: 'join_waitlist',
-      title: 'Join the waitlist',
-      description: `Submit the waitlist form to apply to join the private beta with the given email address. The outcome is shown in the page alert.`,
-      inputSchema: {
-        type: 'object',
-        properties: {
-          email: {
-            type: 'string',
-            format: 'email',
-            description: `Email address to apply with.`
-          }
-        },
-        required: ['email']
-      },
-      execute: async (args) => {
-
-        const submittedEmail = typeof args.email === 'string' ? args.email.trim() : ''
-        const result = await waitlistSignup(submittedEmail)
-
-        if (result.status === 'error') {
-          throw new Error(result.message)
-        }
-
-        return result.message
-      }
-    }
+  useWebMcpTools(() => [
+    joinWaitlistTool({
+      onSignup: (signupEmail) => waitlistSignup(signupEmail)
+    })
   ])
 
   // Render

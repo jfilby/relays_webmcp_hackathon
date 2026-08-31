@@ -13,6 +13,7 @@ import {
   Typography
 } from '@mui/material'
 import { useWebMcpTools } from '@/webmcp/webmcp'
+import { createLandingProfileTool } from '@/webmcp/tools/profiles'
 import styles from './landing.module.css'
 
 interface LandingProfile {
@@ -106,48 +107,18 @@ export default function LaunchedHero({
     }
 
   }, [createdAction])
-
   // WebMCP
-  useWebMcpTools([
-    {
-      name: 'create_profile',
-      title: 'Create profile',
-      description: `Create the signed-in user's Relays profile from the hero form using a display name and an optional email-updates preference. The page reloads once the profile is created; the outcome is shown in the page alert.`,
-      inputSchema: {
-        type: 'object',
-        properties: {
-          name: {
-            type: 'string',
-            description: `Display name for the new profile.`
-          },
-          updates: {
-            type: 'boolean',
-            description: `Whether to also sign up for email updates. Defaults to the current checkbox state.`
-          }
-        },
-        required: ['name']
-      },
-      execute: (args) => {
-
-        if (signedIn !== true || hasProfile) {
-          throw new Error(`The profile creation form is only available to signed-in users without a profile`)
-        }
-
-        const displayName = typeof args.name === 'string' ? args.name.trim() : ''
-
-        if (displayName === '') {
-          throw new Error(`A display name is required to create a profile`)
-        }
-
-        const updatesPreference = typeof args.updates === 'boolean' ? args.updates : updates
+  useWebMcpTools(() => [
+    createLandingProfileTool({
+      isAvailable: () => signedIn === true && !hasProfile,
+      getUpdates: () => updates,
+      onCreate: (displayName, updatesPreference) => {
 
         setName(displayName)
         setUpdates(updatesPreference)
         setCreateAction(true)
-
-        return `Creating profile "${displayName}"...`
       }
-    }
+    })
   ])
 
   // Render

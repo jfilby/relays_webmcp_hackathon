@@ -5,6 +5,7 @@ import type { GetServerSidePropsContext, InferGetServerSidePropsType } from 'nex
 import { getCsrfToken, signIn } from 'next-auth/react'
 import Layout from '@/components/layouts/layout'
 import { useWebMcpTools } from '@/webmcp/webmcp'
+import { sendSignUpLinkTool } from '@/webmcp/tools/auth'
 
 export default function SignIn({ csrfToken }: InferGetServerSidePropsType<typeof getServerSideProps>) {
 
@@ -27,28 +28,9 @@ export default function SignIn({ csrfToken }: InferGetServerSidePropsType<typeof
   }, [])
 
   // WebMCP
-  useWebMcpTools([
-    {
-      name: 'send_sign_up_link',
-      title: 'Send sign-up link',
-      description: `Submit the sign-up form, sending a magic sign-in link to the given email address. If the account does not exist yet, following the link creates it.`,
-      inputSchema: {
-        type: 'object',
-        properties: {
-          email: {
-            type: 'string',
-            description: `Email address to send the sign-up link to.`
-          }
-        },
-        required: ['email']
-      },
-      execute: (args) => {
-
-        const emailArg = typeof args.email === 'string' ? args.email.trim() : ''
-
-        if (emailArg === '') {
-          throw new Error(`Please provide the email address to send the sign-up link to.`)
-        }
+  useWebMcpTools(() => [
+    sendSignUpLinkTool({
+      onSend: (emailArg) => {
 
         // Update the controlled email input synchronously so the native form
         // posts the new value, then submit the form exactly like the button does.
@@ -56,10 +38,8 @@ export default function SignIn({ csrfToken }: InferGetServerSidePropsType<typeof
           setEmail(emailArg)
         })
         formRef.current?.requestSubmit()
-
-        return `Sending sign-up link to "${emailArg}"`
       }
-    }
+    })
   ])
 
   // Render

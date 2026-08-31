@@ -3,6 +3,7 @@ import { Alert, Button, TextField, Typography } from '@mui/material'
 import { useMutation } from '@apollo/client/react'
 import { signUpForUpdatesMutation } from '@/apollo/sign-ups'
 import { useWebMcpTools } from '@/webmcp/webmcp'
+import { signUpForUpdatesTool } from '@/webmcp/tools/auth'
 import type { UserProfile } from '@/types/client-only-types'
 import styles from './landing.module.css'
 
@@ -135,40 +136,12 @@ export default function LaunchedDetails({
       return { status: 'error', message: result.message }
     }
   }
-
   // WebMCP
-  useWebMcpTools([
-    {
-      name: 'sign_up_for_updates',
-      title: 'Sign up for updates',
-      description: `Submit the email-updates form to subscribe the current visitor to Relays updates. Signed-out visitors must pass an email address; signed-in users are subscribed against their account address. The outcome is shown in the page alert.`,
-      inputSchema: {
-        type: 'object',
-        properties: {
-          email: {
-            type: 'string',
-            format: 'email',
-            description: `Email address to subscribe. Required when signed out; ignored when signed in.`
-          }
-        }
-      },
-      execute: async (args) => {
-
-        const submittedEmail = typeof args.email === 'string' ? args.email.trim() : undefined
-
-        if (signedIn === false && (submittedEmail == null || submittedEmail === '')) {
-          throw new Error(`An email address is required to sign up for updates while signed out`)
-        }
-
-        const result = await updatesSignup(submittedEmail)
-
-        if (result.status === 'error') {
-          throw new Error(result.message)
-        }
-
-        return result.message
-      }
-    }
+  useWebMcpTools(() => [
+    signUpForUpdatesTool({
+      isSignedOut: () => signedIn === false,
+      onSignup: (signupEmail) => updatesSignup(signupEmail)
+    })
   ])
 
   // Render

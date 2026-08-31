@@ -7,6 +7,7 @@ import CreateProject from '@/components/projects/create'
 import type { GetServerSidePropsContext } from 'next'
 import { UserProfile } from '@/types/client-only-types'
 import { useWebMcpTools } from '@/webmcp/webmcp'
+import { createProjectTool } from '@/webmcp/tools/projects'
 
 interface Props {
   userProfile: UserProfile
@@ -79,104 +80,12 @@ export default function AddProjectPage({
     }
 
   }, [createdAction])
-
   // WebMCP
-  useWebMcpTools([
-    {
-      name: 'create_project',
-      title: 'Create project',
-      description: `Create a new project for the signed-in user by submitting the Add project form. On success the page redirects to the viewer's projects list.`,
-      inputSchema: {
-        type: 'object',
-        properties: {
-          name: {
-            type: 'string',
-            description: `Project name. Required.`
-          },
-          tagline: {
-            type: 'string',
-            description: `Short tagline for the project.`
-          },
-          description: {
-            type: 'string',
-            description: `Longer description of the project.`
-          },
-          website: {
-            type: 'string',
-            description: `Project website URL.`
-          },
-          imageUrl: {
-            type: 'string',
-            description: `URL of the project image.`
-          },
-          technologies: {
-            type: 'string',
-            description: `Comma-separated list of technologies, e.g. "React, Node.js".`
-          },
-          stage: {
-            type: 'string',
-            enum: ['I', 'A', 'B', 'G'],
-            description: `Project stage: I for Idea, A for Alpha, B for Beta, G for Generally available.`
-          },
-          isOpenToCollaborators: {
-            type: 'boolean',
-            description: `Whether the project is open to collaborators.`
-          },
-          isPromoted: {
-            type: 'boolean',
-            description: `Whether the project is showcased on Relays.`
-          },
-          isPublic: {
-            type: 'boolean',
-            description: `Whether the project is public.`
-          }
-        },
-        required: ['name']
-      },
-      execute: (args) => {
-
-        const sanitizedArgs: Partial<ProjectFormValues> = {}
-
-        if (typeof args.name === 'string') {
-          sanitizedArgs.name = args.name
-        }
-        if (typeof args.tagline === 'string') {
-          sanitizedArgs.tagline = args.tagline
-        }
-        if (typeof args.description === 'string') {
-          sanitizedArgs.description = args.description
-        }
-        if (typeof args.website === 'string') {
-          sanitizedArgs.website = args.website
-        }
-        if (typeof args.imageUrl === 'string') {
-          sanitizedArgs.image = args.imageUrl
-        }
-        if (typeof args.technologies === 'string') {
-          sanitizedArgs.techStack = args.technologies
-        }
-        if (typeof args.stage === 'string' && ['I', 'A', 'B', 'G'].includes(args.stage)) {
-          sanitizedArgs.stage = args.stage
-        }
-        if (typeof args.isOpenToCollaborators === 'boolean') {
-          sanitizedArgs.isOpenToCollaborators = args.isOpenToCollaborators
-        }
-        if (typeof args.isPromoted === 'boolean') {
-          sanitizedArgs.isPromoted = args.isPromoted
-        }
-        if (typeof args.isPublic === 'boolean') {
-          sanitizedArgs.isPublic = args.isPublic
-        }
-
-        const result = onSubmit({ ...valuesRef.current, ...sanitizedArgs })
-
-        if (result.status === 'error') {
-          throw new Error(result.message)
-        }
-
-        return result.message
-      }
-    }
+  useWebMcpTools(() => [
+    createProjectTool({
+      getValues: () => valuesRef.current,
+      onSubmit: (submitValues) => onSubmit(submitValues)
+    })
   ])
 
   // Render

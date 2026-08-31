@@ -36,6 +36,11 @@ import {
 } from '@/types/client-only-types'
 import type { Profile, ProfileLink, ProfileSkill, UserProfile } from '@/types/client-only-types'
 import { useWebMcpTools } from '@/webmcp/webmcp'
+import {
+  addProfileLinkTool,
+  addProfileSkillTool,
+  updateProfileTool
+} from '@/webmcp/tools/profiles'
 import type { GetServerSidePropsContext } from 'next'
 
 interface Props {
@@ -392,138 +397,19 @@ export default function EditProfilePage({
     onRemoveLink(linkDeletePendingId)
 
   }, [linkDeleteConfirmed])
-
   // WebMCP
-  useWebMcpTools([
-    {
-      name: 'update_profile',
-      title: 'Update profile',
-      description: `Update the signed-in user's Relays profile from the edit-profile form on this page. Fields omitted from the arguments keep their current values. The page redirects to the profile once the update succeeds.`,
-      inputSchema: {
-        type: 'object',
-        properties: {
-          displayName: {
-            type: 'string',
-            description: `Display name shown on the profile. Required.`
-          },
-          type: {
-            type: 'string',
-            enum: ['H', 'A'],
-            description: `Profile type: H for Human, A for Agent.`
-          },
-          availabilityStatus: {
-            type: 'string',
-            enum: ['A', 'B', 'U'],
-            description: `Availability status: A for Available, B for Busy, U for Unavailable.`
-          },
-          headline: {
-            type: 'string',
-            description: `Short headline shown on the profile.`
-          },
-          bio: {
-            type: 'string',
-            description: `Longer bio shown on the profile.`
-          },
-          location: {
-            type: 'string',
-            description: `Location shown on the profile.`
-          },
-          isPublic: {
-            type: 'boolean',
-            description: `Whether the profile is publicly visible.`
-          }
-        },
-        required: ['displayName']
-      },
-      execute: (args) => {
-
-        const current = valuesRef.current
-
-        const submitValues: ProfileFormValues = {
-          displayName: typeof args.displayName === 'string' ? args.displayName : current.displayName,
-          type: typeof args.type === 'string' && (args.type === 'H' || args.type === 'A') ? args.type : current.type,
-          isPublic: typeof args.isPublic === 'boolean' ? args.isPublic : current.isPublic,
-          headline: typeof args.headline === 'string' ? args.headline : current.headline,
-          bio: typeof args.bio === 'string' ? args.bio : current.bio,
-          location: typeof args.location === 'string' ? args.location : current.location,
-          availabilityStatus: typeof args.availabilityStatus === 'string' && (args.availabilityStatus === 'A' || args.availabilityStatus === 'B' || args.availabilityStatus === 'U') ? args.availabilityStatus : current.availabilityStatus
-        }
-
-        const result = onSubmit(submitValues)
-
-        if (result.status === 'error') {
-          throw new Error(result.message)
-        }
-
-        return `Updating your profile "${submitValues.displayName}"`
-      }
-    },
-    {
-      name: 'add_profile_skill',
-      title: 'Add profile skill',
-      description: `Add a skill with a proficiency level to the signed-in user's Relays profile. The skills list on this page refreshes once the skill is added.`,
-      inputSchema: {
-        type: 'object',
-        properties: {
-          name: {
-            type: 'string',
-            description: `Skill name, e.g. TypeScript. Required.`
-          },
-          level: {
-            type: 'string',
-            enum: ['B', 'I', 'A', 'E'],
-            description: `Proficiency level: B for Beginner, I for Intermediate, A for Advanced, E for Expert. Defaults to Intermediate.`
-          }
-        },
-        required: ['name']
-      },
-      execute: async (args) => {
-
-        const name = typeof args.name === 'string' ? args.name : ''
-        const level = typeof args.level === 'string' && (args.level === 'B' || args.level === 'I' || args.level === 'A' || args.level === 'E') ? args.level : 'I'
-
-        const result = await onAddSkill(name, level)
-
-        if (result.status === 'error') {
-          throw new Error(result.message)
-        }
-
-        return result.message
-      }
-    },
-    {
-      name: 'add_profile_link',
-      title: 'Add profile link',
-      description: `Add a link (website, GitHub, LinkedIn, repository, MCP endpoint, or other) to the signed-in user's Relays profile. The links list on this page refreshes once the link is added.`,
-      inputSchema: {
-        type: 'object',
-        properties: {
-          kind: {
-            type: 'string',
-            enum: ['W', 'G', 'L', 'R', 'M', 'X'],
-            description: `Link kind: W for Website, G for GitHub, L for LinkedIn, R for Repository, M for MCP endpoint, X for Other. Defaults to Website.`
-          },
-          url: {
-            type: 'string',
-            description: `Absolute URL starting with http:// or https://. Required.`
-          }
-        },
-        required: ['url']
-      },
-      execute: async (args) => {
-
-        const kind = typeof args.kind === 'string' && (args.kind === 'W' || args.kind === 'G' || args.kind === 'L' || args.kind === 'R' || args.kind === 'M' || args.kind === 'X') ? args.kind : newLinkKind
-        const url = typeof args.url === 'string' ? args.url : ''
-
-        const result = await onAddLink(kind, url)
-
-        if (result.status === 'error') {
-          throw new Error(result.message)
-        }
-
-        return result.message
-      }
-    }
+  useWebMcpTools(() => [
+    updateProfileTool({
+      getValues: () => valuesRef.current,
+      onSubmit: (submitValues) => onSubmit(submitValues)
+    }),
+    addProfileSkillTool({
+      onAddSkill: (submitName, submitLevel) => onAddSkill(submitName, submitLevel)
+    }),
+    addProfileLinkTool({
+      getKind: () => newLinkKind,
+      onAddLink: (submitKind, submitUrl) => onAddLink(submitKind, submitUrl)
+    })
   ])
 
   // Render

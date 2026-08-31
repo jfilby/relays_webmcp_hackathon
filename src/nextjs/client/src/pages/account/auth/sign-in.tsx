@@ -4,6 +4,7 @@ import type { GetServerSidePropsContext, InferGetServerSidePropsType } from 'nex
 import { getCsrfToken, signIn } from 'next-auth/react'
 import Layout from '@/components/layouts/layout'
 import { useWebMcpTools } from '@/webmcp/webmcp'
+import { sendSignInLinkTool } from '@/webmcp/tools/auth'
 
 export default function SignIn({
   csrfToken,
@@ -38,34 +39,10 @@ export default function SignIn({
   }
 
   // WebMCP
-  useWebMcpTools([
-    {
-      name: 'send_sign_in_link',
-      title: 'Send sign-in link',
-      description: `Submit the email sign-in form, sending a magic sign-in link to the given email address. The user follows the link in their email to sign in.`,
-      inputSchema: {
-        type: 'object',
-        properties: {
-          email: {
-            type: 'string',
-            description: `Email address of the account to send the sign-in link to.`
-          }
-        },
-        required: ['email']
-      },
-      execute: async (args) => {
-
-        const emailArg = typeof args.email === 'string' ? args.email.trim() : ''
-
-        if (emailArg === '') {
-          throw new Error(`Please provide the email address to send the sign-in link to.`)
-        }
-
-        handleEmailSignIn(emailArg)
-
-        return `Sending sign-in link to "${emailArg}"`
-      }
-    }
+  useWebMcpTools(() => [
+    sendSignInLinkTool({
+      onSend: (emailArg) => handleEmailSignIn(emailArg)
+    })
   ])
   // Render
   return (

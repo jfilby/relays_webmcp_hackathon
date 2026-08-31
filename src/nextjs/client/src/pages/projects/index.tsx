@@ -16,6 +16,7 @@ import ProjectCard from '@/components/projects/project-card'
 import type { Project, UserProfile } from '@/types/client-only-types'
 import { useWebMcpTools } from '@/webmcp/webmcp'
 import type { GetServerSidePropsContext } from 'next'
+import { searchProjectsTool } from '@/webmcp/tools/projects'
 
 interface Props {
   userProfile: UserProfile
@@ -66,38 +67,16 @@ export default function ProjectsPage({
     event.preventDefault()
     runSearch()
   }
-
   // WebMCP
-  useWebMcpTools([
-    {
-      name: 'search_projects',
-      title: 'Search projects',
-      description: `Search the Relays project directory by text, optionally limited to showcased projects. Returns matches rendered on the page.`,
-      inputSchema: {
-        type: 'object',
-        properties: {
-          query: {
-            type: 'string',
-            description: `Text to match against project names and details. Empty to list all projects.`
-          },
-          promoted: {
-            type: 'boolean',
-            description: `true to show showcased projects only. Omit to include all projects.`
-          }
-        }
-      },
-      execute: (args) => {
-
-        const query = typeof args.query === 'string' ? args.query : ''
-        const promoted = typeof args.promoted === 'boolean' ? args.promoted : false
+  useWebMcpTools(() => [
+    searchProjectsTool({
+      onSearch: (query, promoted) => {
 
         setSearch(query)
         setIsPromoted(promoted)
         runSearch()
-
-        return `Searching projects${query.trim() !== '' ? ` matching "${query.trim()}"` : ''}${promoted === true ? ' (showcased only)' : ''}`
       }
-    }
+    })
   ])
 
   // Render
