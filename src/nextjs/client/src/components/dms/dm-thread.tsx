@@ -80,7 +80,7 @@ export default function DmThread({
         display: 'flex',
         flexDirection: 'column',
         height: '100%',
-        borderRadius: 12,
+        borderRadius: 0,
         border: '1px solid #e4e4e4',
         overflow: 'hidden'
       }}>
@@ -138,9 +138,23 @@ export default function DmThread({
                     'flex-start',
                   maxWidth: '75%'
                 }}>
+                <Typography
+                  sx={{
+                    fontSize: '0.68rem',
+                    color: '#9a9a9a',
+                    textAlign: message.fromProfileId === myProfileId ?
+                      'right' :
+                      'left',
+                    marginBottom: '0.15em'
+                  }}
+                  variant='body2'>
+                  {message.fromProfileId === myProfileId ?
+                    'You' :
+                    peer?.displayName ?? 'Unknown'}
+                </Typography>
                 <Box sx={{
                   padding: '0.6em 0.9em',
-                  borderRadius: 10,
+                  borderRadius: 0,
                   backgroundColor: message.fromProfileId === myProfileId ?
                     '#111111' :
                     '#efefef',

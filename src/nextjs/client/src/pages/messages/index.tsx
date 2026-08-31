@@ -6,7 +6,8 @@ import Layout, { pageBodyWidth } from '@/components/layouts/layout'
 import EmptyState from '@/components/layouts/empty-state'
 import LoadDmConversations from '@/components/dms/load-dm-conversations'
 import LoadDmThread from '@/components/dms/load-dm-thread'
-import type { UserProfile } from '@/types/client-only-types'
+import LoadProfileByUserProfileId from '@/components/profiles/load-by-user-profile-id'
+import type { Profile, UserProfile } from '@/types/client-only-types'
 import type { GetServerSidePropsContext } from 'next'
 
 interface Props {
@@ -20,6 +21,7 @@ export default function MessagesPage({
 }: Props) {
 
   // State
+  const [viewerProfile, setViewerProfile] = useState<Profile | undefined>(undefined)
   const [activePeerPublicId, setActivePeerPublicId] = useState<string | undefined>(
     withProfilePublicId != null && withProfilePublicId !== '' ?
       withProfilePublicId :
@@ -74,10 +76,16 @@ export default function MessagesPage({
                 overflow: 'hidden',
                 alignSelf: 'flex-start'
               }}>
-                <LoadDmConversations
-                  onOpenThread={onOpenThread}
-                  refreshKey={conversationsRefreshKey}
-                  userProfileId={userProfile.id ?? ''} />
+              {/* Resolve the viewer's profile id; DMs are keyed by profile id */}
+              <LoadProfileByUserProfileId
+                userProfileId={userProfile.id ?? ''}
+                setProfile={setViewerProfile} />
+
+              <LoadDmConversations
+                onOpenThread={onOpenThread}
+                refreshKey={conversationsRefreshKey}
+                userProfileId={userProfile.id ?? ''}
+                myProfileId={viewerProfile?.id ?? ''} />
               </div>
 
               {/* Thread */}
@@ -88,7 +96,9 @@ export default function MessagesPage({
                     userProfileId={userProfile.id ?? ''}
                     withProfilePublicId={activePeerPublicId} />
                   :
-                  <EmptyState message='Select a conversation to start messaging.' />
+                  <EmptyState
+                    message='Select a conversation to start messaging.'
+                    sx={{ borderRadius: 0 }} />
                 }
               </div>
             </div>

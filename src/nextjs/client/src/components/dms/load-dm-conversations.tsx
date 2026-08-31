@@ -17,6 +17,7 @@ interface ConversationsResults {
 
 interface Props {
   userProfileId: string
+  myProfileId: string
   onOpenThread: (peerPublicId: string) => void
   refreshKey?: number
   onLoaded?: () => void
@@ -24,6 +25,7 @@ interface Props {
 
 export default function LoadDmConversations({
   userProfileId,
+  myProfileId,
   onOpenThread,
   refreshKey = 0,
   onLoaded
@@ -75,6 +77,8 @@ export default function LoadDmConversations({
       conversations={conversations}
       error={error != null}
       loading={loading}
-      onOpenThread={onOpenThread} />
+      myProfileId={myProfileId}
+      onOpenThread={onOpenThread}
+    />
   )
 }

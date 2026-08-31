@@ -1,13 +1,16 @@
 import { Box, CircularProgress, Typography } from '@mui/material'
+import type { SxProps, Theme } from '@mui/material'
 
 interface Props {
   message: string
   loading?: boolean
+  sx?: SxProps<Theme>
 }
 
 export default function EmptyState({
   message,
-  loading = false
+  loading = false,
+  sx
 }: Props) {
 
   // Render
@@ -20,8 +23,10 @@ export default function EmptyState({
         textAlign: 'center',
         border: '1px dashed #d9d9d9',
         borderRadius: 12,
-        backgroundColor: '#ffffff'
+        backgroundColor: '#ffffff',
+        ...sx
       }}>
+
       {loading === true ?
         <CircularProgress
           size={28}

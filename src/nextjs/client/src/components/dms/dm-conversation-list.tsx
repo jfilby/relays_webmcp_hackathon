@@ -8,6 +8,7 @@ interface Props {
   conversations: DmConversation[] | undefined
   loading: boolean
   error: boolean
+  myProfileId: string
   onOpenThread: (peerPublicId: string) => void
 }
 
@@ -15,6 +16,7 @@ export default function DmConversationList({
   conversations,
   loading,
   error,
+  myProfileId,
   onOpenThread
 }: Props) {
 
@@ -114,7 +116,9 @@ export default function DmConversationList({
               }}
               variant='body2'>
               {conversation.lastMessage != null ?
-                conversation.lastMessage.message :
+                (conversation.lastMessage.fromProfileId === myProfileId ?
+                  `You: ${conversation.lastMessage.message}` :
+                  conversation.lastMessage.message) :
                 ''}
             </Typography>
           </Box>

@@ -18,6 +18,7 @@ import {
   getDmMessagesQuery,
   markDmThreadReadMutation
 } from '@/apollo/dms'
+import { getProfileByUserProfileIdQuery } from '@/apollo/profiles'
 import type { DmConversation, DmMessageItem, DmPeer } from '@/types/dm-types'
 
 import {
@@ -46,6 +47,12 @@ interface MarkReadResult {
   status: boolean
   message: string
 }
+interface ProfileResults {
+  status: boolean
+  message?: string | null
+  profile?: { id: string } | null
+}
+
 
 interface Props {
   userProfileId?: string
@@ -107,17 +114,21 @@ export default function DmPopup({ userProfileId: userProfileIdProp }: Props) {
   const [sending, setSending] = useState(false)
   const [connected, setConnected] = useState(false)
   const [joined, setJoined] = useState(false)
+  const [myProfileId, setMyProfileId] = useState('')
 
   // Refs
   const socketRef = useRef<DmSocket | null>(null)
   const activePeerPublicIdRef = useRef<string | undefined>(undefined)
   const messagesEndRef = useRef<HTMLDivElement | null>(null)
   const threadBodyRef = useRef<HTMLDivElement | null>(null)
+  const myProfileIdRef = useRef('')
 
-  // Keep the ref in sync for socket callbacks
+  // Keep the refs in sync for socket callbacks
   useEffect(() => {
     activePeerPublicIdRef.current = activePeerPublicId
-  }, [activePeerPublicId])
+    myProfileIdRef.current = myProfileId
+  }, [activePeerPublicId, myProfileId])
+
 
   // GraphQL
   const { refetch: refetchConversations } =
@@ -136,6 +147,25 @@ export default function DmPopup({ userProfileId: userProfileIdProp }: Props) {
       },
       skip: true
     })
+
+  // The signed-in user's profile id; DM messages are keyed by profile id
+  const { data: profileData } =
+    useQuery<{ getProfileByUserProfileId: ProfileResults }>(
+      getProfileByUserProfileIdQuery, {
+        variables: {
+          userProfileId: userProfileId
+        },
+        skip: userProfileId === ''
+      })
+
+  useEffect(() => {
+
+    const results = profileData?.getProfileByUserProfileId
+
+    if (results?.status === true && results.profile != null) {
+      setMyProfileId(results.profile.id)
+    }
+  }, [profileData])
 
   const [sendMarkDmThreadReadMutation] =
     useMutation<{ markDmThreadRead: MarkReadResult }>(
@@ -291,7 +321,7 @@ export default function DmPopup({ userProfileId: userProfileIdProp }: Props) {
           loadConversations()
 
           // Ignore own messages (already shown optimistically)
-          if (dm.fromProfileId === userProfileId) {
+          if (dm.fromProfileId === myProfileIdRef.current) {
             return
           }
         })
@@ -492,25 +522,36 @@ export default function DmPopup({ userProfileId: userProfileIdProp }: Props) {
                 }}>
                 {messages != null ?
                   messages.map(message => {
-                    const isMine = message.fromProfileId === '' ||
-                      peer == null
-
                     return (
                       <Box
                         key={message.id}
                         sx={{
-                          alignSelf: message.fromProfileId === userProfileId ?
+                          alignSelf: message.fromProfileId === myProfileId ?
                             'flex-end' :
                             'flex-start',
                           maxWidth: '85%'
                         }}>
+                        <Typography
+                          sx={{
+                            fontSize: '0.68rem',
+                            color: '#9a9a9a',
+                            textAlign: message.fromProfileId === myProfileId ?
+                              'right' :
+                              'left',
+                            marginBottom: '0.15em'
+                          }}
+                          variant='body2'>
+                          {message.fromProfileId === myProfileId ?
+                            'You' :
+                            peer?.displayName ?? 'Unknown'}
+                        </Typography>
                         <Box sx={{
                           padding: '0.55em 0.8em',
                           borderRadius: 10,
-                          backgroundColor: message.fromProfileId === userProfileId ?
+                          backgroundColor: message.fromProfileId === myProfileId ?
                             '#111111' :
                             '#efefef',
-                          color: message.fromProfileId === userProfileId ?
+                          color: message.fromProfileId === myProfileId ?
                             '#ffffff' :
                             '#111111'
                         }}>
@@ -523,8 +564,7 @@ export default function DmPopup({ userProfileId: userProfileIdProp }: Props) {
                         <Typography
                           sx={{
                             fontSize: '0.68rem',
-                            color: '#9a9a9a',
-                            textAlign: message.fromProfileId === userProfileId ?
+                            textAlign: message.fromProfileId === myProfileId ?
                               'right' :
                               'left',
                             marginTop: '0.15em'
@@ -595,7 +635,8 @@ export default function DmPopup({ userProfileId: userProfileIdProp }: Props) {
             }}>
               <ConversationsList
                 onOpenThread={openThread}
-                userProfileId={userProfileId} />
+                userProfileId={userProfileId}
+                myProfileId={myProfileId} />
             </Box>
           }
         </Paper>
@@ -607,9 +648,11 @@ export default function DmPopup({ userProfileId: userProfileIdProp }: Props) {
 // The conversation list, backed by the GraphQL query cache
 function ConversationsList({
   userProfileId,
+  myProfileId,
   onOpenThread
 }: {
   userProfileId: string
+  myProfileId: string
   onOpenThread: (peerPublicId: string) => void
 }) {
 
@@ -719,7 +762,9 @@ function ConversationsList({
                 }}
                 variant='body2'>
                 {conversation.lastMessage != null ?
-                  conversation.lastMessage.message :
+                  (conversation.lastMessage.fromProfileId === myProfileId ?
+                    `You: ${conversation.lastMessage.message}` :
+                    conversation.lastMessage.message) :
                   ''}
               </Typography>
             </Box>

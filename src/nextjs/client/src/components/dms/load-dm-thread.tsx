@@ -4,7 +4,11 @@
 // realtime updates over Socket.io, and marks the thread as read.
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useMutation, useQuery } from '@apollo/client/react'
-import { getDmMessagesQuery, markDmThreadReadMutation } from '@/apollo/dms'
+import {
+  getDmMessagesQuery,
+  markDmThreadReadMutation
+} from '@/apollo/dms'
+import { getProfileByUserProfileIdQuery } from '@/apollo/profiles'
 import {
   getDmSocket,
   sendDm,
@@ -20,6 +24,12 @@ interface MessagesResults {
   message?: string | null
   peer?: DmPeer | null
   messages?: DmMessageItem[] | null
+}
+
+interface ProfileResults {
+  status: boolean
+  message?: string | null
+  profile?: { id: string } | null
 }
 
 interface MarkReadResult {
@@ -48,6 +58,9 @@ export default function LoadDmThread({
   const socketRef = useRef<DmSocket | null>(null)
   const pendingSendsRef = useRef(0)
 
+  // The signed-in user's profile id; DM messages are keyed by profile id
+  const [myProfileId, setMyProfileId] = useState('')
+
   // GraphQL
   const { data, refetch: refetchMessages } =
     useQuery<{ getDmMessages: MessagesResults }>(getDmMessagesQuery, {
@@ -56,6 +69,24 @@ export default function LoadDmThread({
         withProfilePublicId: withProfilePublicId
       }
     })
+
+  const { data: profileData } =
+    useQuery<{ getProfileByUserProfileId: ProfileResults }>(
+      getProfileByUserProfileIdQuery, {
+        variables: {
+          userProfileId: userProfileId
+        }
+      })
+
+  // Lift the viewer profile id into state
+  useEffect(() => {
+
+    const results = profileData?.getProfileByUserProfileId
+
+    if (results?.status === true && results.profile != null) {
+      setMyProfileId(results.profile.id)
+    }
+  }, [profileData])
 
   const [sendMarkDmThreadReadMutation] =
     useMutation<{ markDmThreadRead: MarkReadResult }>(
@@ -198,7 +229,7 @@ export default function LoadDmThread({
   return (
     <DmThread
       messages={messages}
-      myProfileId={userProfileId}
+      myProfileId={myProfileId}
       peer={peer}
       sending={sending}
       onSend={onSend} />
