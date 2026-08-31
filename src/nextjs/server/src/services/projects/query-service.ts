@@ -241,6 +241,45 @@ export class ProjectsQueryService {
     }
   }
 
+  // The newest public projects, for activity feeds.
+  async getLatestProjects(
+    prisma: PrismaClient,
+    take: number) {
+
+    // Query
+    const projects = await
+      projectModel.filterLatest(
+        prisma,
+        'A',  // status
+        true,  // isPublic (instance public access set)
+        take)
+
+    // Batch the interest counts and owner info for the result set
+    const countsByProjectId = await
+      this.getInterestCounts(
+        prisma,
+        projects.map(project => project.id))
+
+    const ownerInfosByProjectId = await
+      this.getOwnerInfosByProjectIds(
+        prisma,
+        projects.map(project => project.id))
+
+    // Return
+    return {
+      status: true,
+      projects: projects.map(project =>
+        this.toGraphQL(
+          project,
+          project.instance,
+          false,
+          project.ofProjectUrls,
+          countsByProjectId[project.id],
+          undefined,
+          ownerInfosByProjectId[project.id] ?? this.ownerInfoNone))
+    }
+  }
+
   // Get the projects a user owns (via their profile membership). Viewers
   // other than the profile owner only see the public projects.
   async getProjectsByUserProfileId(

@@ -3,10 +3,10 @@ import { useSession } from 'next-auth/react'
 import { pageBodyWidth } from '@/components/layouts/full-height-layout'
 import MoreInformation from '@/components/layouts/more-information'
 import type { PageProfile, UserProfile } from '@/types/client-only-types'
+import type { GetServerSidePropsContext } from 'next'
 import Layout from '../layouts/layout'
 import LaunchedHero from './launched-hero'
-import LaunchedFeatures from './launched-features'
-import LaunchedHowItWorks from './launched-how-it-works'
+import LaunchedLatest from './launched-latest'
 import LaunchedDetails from './launched-details'
 import LandingFooter from './landing-footer'
 import styles from './landing.module.css'
@@ -54,11 +54,8 @@ export default function LaunchedLandingPage({
           profile={profile ?? null}
           userProfile={userProfile ?? null} />
 
-        {/* Features */}
-        <LaunchedFeatures />
-
-        {/* How it works */}
-        <LaunchedHowItWorks />
+        {/* Latest activity */}
+        <LaunchedLatest />
 
 
         <div className={styles.sectionGap} />

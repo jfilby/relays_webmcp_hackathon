@@ -102,6 +102,60 @@ export class DiscussPostModel {
     }
   }
 
+  // The newest posts first.
+  async filterLatest(
+    prisma: PrismaClient,
+    status: string | undefined = undefined,
+    take: number = 10) {
+
+    // Debug
+    const fnName = `${this.clName}.filterLatest()`
+
+    // Query
+    try {
+      return await prisma.discussPost.findMany({
+        orderBy: {
+          created: 'desc'
+        },
+        take: take,
+        where: {
+          status: status
+        }
+      })
+    } catch (error) {
+      console.error(`${fnName}: error: ${error}`)
+      throw 'Prisma error'
+    }
+  }
+
+  // The newest posts from a set of author profiles first.
+  async filterByAuthorProfileIds(
+    prisma: PrismaClient,
+    authorProfileIds: string[],
+    status: string | undefined = undefined) {
+
+    // Debug
+    const fnName = `${this.clName}.filterByAuthorProfileIds()`
+
+    // Query
+    try {
+      return await prisma.discussPost.findMany({
+        where: {
+          authorProfileId: {
+            in: authorProfileIds
+          },
+          status: status
+        },
+        orderBy: {
+          created: 'desc'
+        }
+      })
+    } catch (error) {
+      console.error(`${fnName}: error: ${error}`)
+      throw 'Prisma error'
+    }
+  }
+
   async filterByIds(
     prisma: PrismaClient,
     ids: string[],

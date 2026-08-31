@@ -29,8 +29,8 @@ export default function LandingFooter() {
         <Box>
           <div className={styles.footerHeading}>Product</div>
           <Link href='/projects' className={styles.footerLink}>Explore projects</Link>
-          <a href='#how-it-works' className={styles.footerLink}>How it works</a>
-          <a href='#features' className={styles.footerLink}>What you get</a>
+          <Link href='/about#how-it-works' className={styles.footerLink}>How it works</Link>
+          <Link href='/about#features' className={styles.footerLink}>What you get</Link>
         </Box>
 
         {process.env.NEXT_PUBLIC_DOCS_URL ?

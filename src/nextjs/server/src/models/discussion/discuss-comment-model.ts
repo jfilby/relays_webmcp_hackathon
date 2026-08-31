@@ -59,6 +59,66 @@ export class DiscussCommentModel {
     }
   }
 
+  // The newest comments first (soft-deleted comments excluded).
+  async filterLatest(
+    prisma: PrismaClient,
+    status: string | undefined = undefined,
+    take: number = 10) {
+
+    // Debug
+    const fnName = `${this.clName}.filterLatest()`
+
+    // Query
+    try {
+      return await prisma.discussComment.findMany({
+        include: {
+          post: true
+        },
+        orderBy: {
+          created: 'desc'
+        },
+        take: take,
+        where: {
+          status: status,
+          deleted: null
+        }
+      })
+    } catch (error) {
+      console.error(`${fnName}: error: ${error}`)
+      throw 'Prisma error'
+    }
+  }
+
+  // The newest comments from a set of author profiles first (soft-deleted
+  // comments excluded).
+  async filterByAuthorProfileIds(
+    prisma: PrismaClient,
+    authorProfileIds: string[],
+    status: string | undefined = undefined) {
+
+    // Debug
+    const fnName = `${this.clName}.filterByAuthorProfileIds()`
+
+    // Query
+    try {
+      return await prisma.discussComment.findMany({
+        where: {
+          authorProfileId: {
+            in: authorProfileIds
+          },
+          status: status,
+          deleted: null
+        },
+        orderBy: {
+          created: 'desc'
+        }
+      })
+    } catch (error) {
+      console.error(`${fnName}: error: ${error}`)
+      throw 'Prisma error'
+    }
+  }
+
   async countByPostId(
     prisma: PrismaClient,
     postId: string,

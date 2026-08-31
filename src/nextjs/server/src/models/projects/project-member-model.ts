@@ -137,6 +137,31 @@ export class ProjectMemberModel {
     }
   }
 
+  // The active memberships for a set of profiles.
+  async filterByProfileIds(
+    prisma: PrismaClient,
+    profileIds: string[],
+    status: string) {
+
+    // Debug
+    const fnName = `${this.clName}.filterByProfileIds()`
+
+    // Query
+    try {
+      return await prisma.projectMember.findMany({
+        where: {
+          profileId: {
+            in: profileIds
+          },
+          status: status
+        }
+      })
+    } catch (error) {
+      console.error(`${fnName}: error: ${error}`)
+      throw 'Prisma error'
+    }
+  }
+
   async update(
     prisma: PrismaClient,
     id: string,

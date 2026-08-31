@@ -1,5 +1,5 @@
 import { Prisma, PrismaClient } from '@/generated/prisma/client'
-import type { DiscussPost } from '@/generated/prisma/client'
+import type { DiscussPost, DiscussComment } from '@/generated/prisma/client'
 import { SearchService } from '@/services/search/search-service'
 import { DiscussPostModel } from '@/models/discussion/discuss-post-model'
 import { DiscussCommentModel } from '@/models/discussion/discuss-comment-model'
@@ -43,7 +43,7 @@ export class DiscussionQueryService {
 
   // Enrich posts with comment counts and each author's display name,
   // preserving the given order.
-  private async toPostItems(
+  async toPostItems(
     prisma: PrismaClient,
     posts: DiscussPost[]) {
 
@@ -326,5 +326,99 @@ export class DiscussionQueryService {
         }
       })
     }
+  }
+
+  // The newest active posts, for activity feeds.
+  async getLatestPosts(
+    prisma: PrismaClient,
+    take: number) {
+
+    // Query
+    const posts = await
+      discussPostModel.filterLatest(
+        prisma,
+        BaseDataTypes.activeStatus,
+        take)
+
+    // Return
+    return {
+      status: true,
+      posts: await this.toPostItems(prisma, posts)
+    }
+  }
+
+  // The newest active comments (soft-deleted excluded), each enriched with
+  // its author's display name and the parent post's public id and title.
+  async getLatestComments(
+    prisma: PrismaClient,
+    take: number) {
+
+    // Query
+    const comments = await
+      discussCommentModel.filterLatest(
+        prisma,
+        BaseDataTypes.activeStatus,
+        take)
+
+    // Return
+    return {
+      status: true,
+      comments: await this.toCommentItems(prisma, comments)
+    }
+  }
+
+  // Enrich comment records with each author's display name and the parent
+  // post's public id and title, preserving the given order.
+  async toCommentItems(
+    prisma: PrismaClient,
+    comments: DiscussComment[]) {
+
+    // No comments, no authors to fetch
+    if (comments.length === 0) {
+      return []
+    }
+
+    // Load the parent posts for the public id and title
+    const posts = await
+      discussPostModel.filterByIds(
+        prisma,
+        [...new Set(comments.map(comment => comment.postId))])
+
+    const postsById = new Map(posts.map(post => [post.id, post]))
+
+    // Load each author's profile for the display name, public id, and
+    // visibility
+    const authorProfileIds =
+      [...new Set(comments.map(comment => comment.authorProfileId))]
+
+    const authors = await
+      profileModel.getByIds(
+        prisma,
+        authorProfileIds)
+
+    const authorsById = new Map(
+      authors.map(author => [author.id, author]))
+
+    // Return
+    return comments.map(comment => {
+      const author = authorsById.get(comment.authorProfileId)
+      const post = postsById.get(comment.postId)
+
+      return {
+        id: comment.id,
+        publicId: comment.publicId,
+        postId: comment.postId,
+        postPublicId: post?.publicId ?? null,
+        postTitle: post?.title ?? null,
+        parentCommentId: comment.parentCommentId,
+        authorProfileId: comment.authorProfileId,
+        authorName: author?.displayName ?? null,
+        authorProfilePublicId: author?.publicId ?? null,
+        authorProfileIsPublic: author?.isPublic ?? null,
+        body: comment.body,
+        created: comment.created.toISOString(),
+        deleted: comment.deleted?.toISOString() ?? null
+      }
+    })
   }
 }

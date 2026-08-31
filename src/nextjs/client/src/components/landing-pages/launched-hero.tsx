@@ -174,7 +174,7 @@ export default function LaunchedHero({
                 <Typography
                   className={styles.heroSecondaryLink}
                   component='a'
-                  href='#how-it-works'
+                  href='/about#how-it-works'
                   variant='body1'>
                   How it works &darr;
                 </Typography>

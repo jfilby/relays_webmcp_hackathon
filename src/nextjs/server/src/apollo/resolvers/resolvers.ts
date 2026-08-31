@@ -42,6 +42,9 @@ import {
   searchCollaborationPlans,
   getPlanStepsByPlanId
 } from './queries/collaboration'
+import {
+  getLatestActivity
+} from './queries/activity'
 
 // Relays mutations imports
 import {
@@ -132,7 +135,6 @@ const Query = {
   // ---
 
   // Profiles
-  getProfileByPublicId,
   getProfileByUserProfileId,
   searchProfiles,
   getNetwork,
@@ -171,6 +173,9 @@ const Query = {
   getProjectByPublicId,
   searchProjects,
   getProjectsByUserProfileId,
+
+  // Latest activity
+  getLatestActivity,
 }
 
 const Mutation = {

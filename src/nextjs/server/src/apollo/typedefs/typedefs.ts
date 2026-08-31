@@ -205,6 +205,33 @@ export const typeDefs = /* GraphQL */ `
     comments: [DiscussCommentItem]
   }
 
+  # Latest activity
+
+  type LatestCommentItem {
+    id: String!
+    publicId: String!
+    postId: String!
+    postPublicId: String
+    postTitle: String
+    parentCommentId: String
+    authorProfileId: String!
+    authorName: String
+    authorProfilePublicId: String
+    authorProfileIsPublic: Boolean
+    body: String!
+    created: String!
+    deleted: String
+  }
+
+  type LatestActivityResults {
+    status: Boolean!
+    message: String
+    projects: [Project]
+    posts: [DiscussPostItem]
+    comments: [LatestCommentItem]
+  }
+
+
   # Moderation
 
   type ModerationFlagItem {
@@ -568,6 +595,11 @@ export const typeDefs = /* GraphQL */ `
     getProjectsByUserProfileId(
       userProfileId: String!,
       viewerUserProfileId: String): ProjectsResults!
+
+    # Latest activity
+    getLatestActivity(
+      userProfileId: String,
+      take: Int): LatestActivityResults!
   }
 
   type Mutation {
@@ -625,7 +657,6 @@ export const typeDefs = /* GraphQL */ `
       isPublic: Boolean,
       headline: String,
       bio: String,
-      location: String,
       avatar: String,
       updates: Boolean,
       availabilityStatus: String): ProfileResults!

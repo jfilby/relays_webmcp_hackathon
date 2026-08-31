@@ -183,6 +183,42 @@ export class ProjectModel {
     }
   }
 
+  // The newest projects first, optionally limited to public ones.
+  async filterLatest(
+    prisma: PrismaClient,
+    status: string | undefined = undefined,
+    isPublic: boolean | undefined = undefined,
+    take: number = 10) {
+
+    // Debug
+    const fnName = `${this.clName}.filterLatest()`
+
+    // Query
+    try {
+      return await prisma.project.findMany({
+        include: {
+          instance: true,
+          ofProjectUrls: true
+        },
+        orderBy: {
+          created: 'desc'
+        },
+        take: take,
+        where: {
+          status: status,
+          instance: isPublic === true ?
+            {
+              publicAccess: { not: null }
+            } :
+            undefined,
+        }
+      })
+    } catch (error) {
+      console.error(`${fnName}: error: ${error}`)
+      throw 'Prisma error'
+    }
+  }
+
   // Store the search embedding (pgvector). An undefined embedding clears the
   // column. The vector column is managed outside the Prisma schema, so this
   // is raw SQL.
