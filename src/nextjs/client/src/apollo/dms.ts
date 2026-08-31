@@ -90,17 +90,3 @@ export const sendDmMutation = gql`
     }
   }
 `
-
-export const markDmThreadReadMutation = gql`
-  mutation markDmThreadRead(
-    $userProfileId: String!,
-    $withProfilePublicId: String!) {
-    markDmThreadRead(
-      userProfileId: $userProfileId,
-      withProfilePublicId: $withProfilePublicId) {
-
-      status
-      message
-    }
-  }
-`

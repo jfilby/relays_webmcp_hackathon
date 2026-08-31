@@ -64,8 +64,7 @@ import {
   deleteFlaggedContent
 } from './mutations/moderation'
 import {
-  sendDm,
-  markDmThreadRead
+  sendDm
 } from './mutations/dms'
 import {
   markNotificationAsRead,
@@ -237,7 +236,6 @@ const Mutation = {
 
   // Direct messages
   sendDm,
-  markDmThreadRead,
 
   // Collaboration plans
   createPlan,

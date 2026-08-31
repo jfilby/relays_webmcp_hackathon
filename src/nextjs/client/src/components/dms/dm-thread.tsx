@@ -4,6 +4,7 @@
 // plus a compose box. Pure visual + local state; data is passed in.
 import { useEffect, useRef, useState } from 'react'
 import { Avatar, Box, IconButton, Paper, TextField, Typography } from '@mui/material'
+import CheckIcon from '@mui/icons-material/Check'
 import SendIcon from '@mui/icons-material/Send'
 import type { DmMessageItem, DmPeer } from '@/types/dm-types'
 
@@ -168,18 +169,33 @@ export default function DmThread({
                     {message.message}
                   </Typography>
                 </Box>
-                <Typography
-                  sx={{
-                    fontSize: '0.68rem',
-                    color: '#9a9a9a',
-                    textAlign: message.fromProfileId === myProfileId ?
-                      'right' :
-                      'left',
-                    marginTop: '0.15em'
-                  }}
-                  variant='body2'>
-                  {formatTime(message.created)}
-                </Typography>
+                <Box sx={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: message.fromProfileId === myProfileId ?
+                    'flex-end' :
+                    'flex-start',
+                  gap: '0.3em',
+                  marginTop: '0.15em'
+                }}>
+                  <Typography
+                    sx={{
+                      fontSize: '0.68rem',
+                      color: '#9a9a9a',
+                      textAlign: message.fromProfileId === myProfileId ?
+                        'right' :
+                        'left'
+                    }}
+                    variant='body2'>
+                    {formatTime(message.created)}
+                  </Typography>
+                  {message.fromProfileId === myProfileId &&
+                    message.readAt != null &&
+                    <CheckIcon
+                      aria-label='Seen'
+                      sx={{ fontSize: '0.85rem', color: '#4caf50' }} />
+                  }
+                </Box>
               </Box>
             ))
             :

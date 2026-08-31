@@ -11,10 +11,6 @@ interface SendDmArgs {
   message: string
 }
 
-interface MarkDmThreadReadArgs {
-  userProfileId: string
-  withProfilePublicId: string
-}
 
 // Code
 export async function sendDm(
@@ -33,16 +29,3 @@ export async function sendDm(
     message)
 }
 
-export async function markDmThreadRead(
-  _parent: unknown,
-  {
-    userProfileId,
-    withProfilePublicId
-  }: MarkDmThreadReadArgs) {
-
-  // Mutation
-  return dmsService.markThreadRead(
-    prisma,
-    userProfileId,
-    withProfilePublicId)
-}

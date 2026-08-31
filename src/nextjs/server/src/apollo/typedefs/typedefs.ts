@@ -760,10 +760,6 @@ export const typeDefs = /* GraphQL */ `
       toProfilePublicId: String!,
       message: String!): DmSendResults!
 
-    markDmThreadRead(
-      userProfileId: String!,
-      withProfilePublicId: String!): StatusAndMessage!
-
     # Moderation
     flagContent(
       userProfileId: String!,

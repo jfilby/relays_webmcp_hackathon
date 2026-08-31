@@ -3,14 +3,14 @@
 // Data component: loads a DM thread for a peer over GraphQL, subscribes to
 // realtime updates over Socket.io, and marks the thread as read.
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { useMutation, useQuery } from '@apollo/client/react'
+import { useQuery } from '@apollo/client/react'
 import {
-  getDmMessagesQuery,
-  markDmThreadReadMutation
+  getDmMessagesQuery
 } from '@/apollo/dms'
 import { getProfileByUserProfileIdQuery } from '@/apollo/profiles'
 import {
   getDmSocket,
+  markDmThreadRead as markDmThreadReadSocket,
   sendDm,
   type DmMessageEvent,
   type DmReadEvent,
@@ -35,10 +35,6 @@ interface ProfileResults {
   profile?: { id: string } | null
 }
 
-interface MarkReadResult {
-  status: boolean
-  message: string
-}
 
 interface Props {
   userProfileId: string
@@ -63,6 +59,7 @@ export default function LoadDmThread({
 
   // The signed-in user's profile id; DM messages are keyed by profile id
   const [myProfileId, setMyProfileId] = useState('')
+  const myProfileIdRef = useRef('')
 
   // GraphQL
   const { data, refetch: refetchMessages } =
@@ -83,19 +80,14 @@ export default function LoadDmThread({
 
   // Lift the viewer profile id into state
   useEffect(() => {
-
     const results = profileData?.getProfileByUserProfileId
 
     if (results?.status === true && results.profile != null) {
       setMyProfileId(results.profile.id)
+      myProfileIdRef.current = results.profile.id
     }
   }, [profileData])
 
-  const [sendMarkDmThreadReadMutation] =
-    useMutation<{ markDmThreadRead: MarkReadResult }>(
-      markDmThreadReadMutation, {
-        fetchPolicy: 'no-cache'
-      })
 
   // Lift query data into state
   useEffect(() => {
@@ -200,15 +192,19 @@ export default function LoadDmThread({
       return
     }
 
-    // Mark as read when the thread opens
-    sendMarkDmThreadReadMutation({
-      variables: {
-        userProfileId: userProfileId,
-        withProfilePublicId: withProfilePublicId
+    const markRead = async () => {
+      try {
+        // The socket path persists the read state and emits dm:read to both
+        // personal rooms, so the sender's tick updates in realtime
+        const socket = await getDmSocket()
+        await markDmThreadReadSocket(socket, userProfileId, withProfilePublicId)
+      } catch (error) {
+        console.error('LoadDmThread: markRead failed: ' + error)
       }
-    }).catch((error: unknown) => {
-      console.error('LoadDmThread: markRead failed: ' + error)
-    })
+    }
+
+    // Mark as read when the thread opens
+    markRead()
 
     // Realtime updates
     let disposed = false
@@ -221,7 +217,15 @@ export default function LoadDmThread({
 
         socketRef.current = socket
 
-        socket.on('dm:message', (_payload: DmMessageEvent) => {
+        socket.on('dm:message', async (payload: DmMessageEvent) => {
+          const dm = payload.dm
+
+          // The thread is open and visible, so an incoming message has been
+          // seen: remember it as read so the sender's tick updates
+          if (dm.fromProfileId !== myProfileIdRef.current) {
+            await markRead()
+          }
+
           reload()
           onConversationsChanged?.()
         })
@@ -237,7 +241,7 @@ export default function LoadDmThread({
     return () => {
       disposed = true
     }
-  }, [withProfilePublicId, userProfileId, sendMarkDmThreadReadMutation, reload, onConversationsChanged])
+  }, [withProfilePublicId, userProfileId, reload, onConversationsChanged])
 
   // WebMCP
   useWebMcpTools(() => [

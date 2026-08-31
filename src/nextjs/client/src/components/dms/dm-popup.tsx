@@ -8,15 +8,15 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { getCookie } from 'cookies-next'
 import { useRouter } from 'next/router'
 import { Avatar, Badge, Box, Button, Chip, IconButton, Paper, TextField, Typography } from '@mui/material'
+import CheckIcon from '@mui/icons-material/Check'
 import CloseIcon from '@mui/icons-material/Close'
 import ForumIcon from '@mui/icons-material/Forum'
 import MinimizeIcon from '@mui/icons-material/Minimize'
 import SendIcon from '@mui/icons-material/Send'
-import { useMutation, useQuery } from '@apollo/client/react'
+import { useQuery } from '@apollo/client/react'
 import {
   getDmConversationsQuery,
-  getDmMessagesQuery,
-  markDmThreadReadMutation
+  getDmMessagesQuery
 } from '@/apollo/dms'
 import { getProfileByUserProfileIdQuery } from '@/apollo/profiles'
 import type { DmConversation, DmMessageItem, DmPeer } from '@/types/dm-types'
@@ -43,10 +43,6 @@ interface MessagesResults {
   messages?: DmMessageItem[] | null
 }
 
-interface MarkReadResult {
-  status: boolean
-  message: string
-}
 interface ProfileResults {
   status: boolean
   message?: string | null
@@ -122,12 +118,16 @@ export default function DmPopup({ userProfileId: userProfileIdProp }: Props) {
   const messagesEndRef = useRef<HTMLDivElement | null>(null)
   const threadBodyRef = useRef<HTMLDivElement | null>(null)
   const myProfileIdRef = useRef('')
+  const openRef = useRef(false)
+  const peerRef = useRef<DmPeer | undefined>(undefined)
 
   // Keep the refs in sync for socket callbacks
   useEffect(() => {
     activePeerPublicIdRef.current = activePeerPublicId
     myProfileIdRef.current = myProfileId
-  }, [activePeerPublicId, myProfileId])
+    openRef.current = open
+    peerRef.current = peer
+  }, [activePeerPublicId, myProfileId, open, peer])
 
 
   // GraphQL
@@ -167,11 +167,6 @@ export default function DmPopup({ userProfileId: userProfileIdProp }: Props) {
     }
   }, [profileData])
 
-  const [sendMarkDmThreadReadMutation] =
-    useMutation<{ markDmThreadRead: MarkReadResult }>(
-      markDmThreadReadMutation, {
-        fetchPolicy: 'no-cache'
-      })
 
   // Functions
   const loadConversations = useCallback(async () => {
@@ -211,16 +206,14 @@ export default function DmPopup({ userProfileId: userProfileIdProp }: Props) {
 
   const markThreadRead = useCallback(async (withProfilePublicId: string) => {
     try {
-      await sendMarkDmThreadReadMutation({
-        variables: {
-          userProfileId: userProfileId,
-          withProfilePublicId: withProfilePublicId
-        }
-      })
+      // The socket path persists the read state and emits dm:read to both
+      // personal rooms, so the sender's tick updates in realtime
+      const socket = await getDmSocket()
+      await markDmThreadReadSocket(socket, userProfileId, withProfilePublicId)
     } catch (error) {
       console.error('DmPopup.markThreadRead: error: ' + error)
     }
-  }, [sendMarkDmThreadReadMutation, userProfileId])
+  }, [userProfileId])
 
   const openThread = useCallback(async (peerPublicId: string) => {
     setActivePeerPublicId(peerPublicId)
@@ -307,23 +300,26 @@ export default function DmPopup({ userProfileId: userProfileIdProp }: Props) {
         })
 
         // A persisted message arrived (for any of the user's conversations)
-        socket.on('dm:message', (payload: DmMessageEvent) => {
+        socket.on('dm:message', async (payload: DmMessageEvent) => {
           const dm = payload.dm
-
-          // Update the open thread if the message belongs to it
           const currentPeerPublicId = activePeerPublicIdRef.current
 
+          // A message arriving in the open, visible thread has been seen:
+          // remember it as read so the sender's tick updates
+          if (openRef.current === true &&
+              currentPeerPublicId != null &&
+              dm.fromProfileId !== myProfileIdRef.current &&
+              peerRef.current?.id === dm.fromProfileId) {
+            await markThreadRead(currentPeerPublicId)
+          }
+
+          // Update the open thread if the message belongs to it
           if (currentPeerPublicId != null) {
             loadThread(currentPeerPublicId)
           }
 
           // Refresh the conversation list (unread counts, ordering)
           loadConversations()
-
-          // Ignore own messages (already shown optimistically)
-          if (dm.fromProfileId === myProfileIdRef.current) {
-            return
-          }
         })
 
         // The peer read our messages
@@ -333,6 +329,9 @@ export default function DmPopup({ userProfileId: userProfileIdProp }: Props) {
           if (currentPeerPublicId != null) {
             loadThread(currentPeerPublicId)
           }
+
+          // Read state changed; refresh unread counts
+          loadConversations()
         })
 
         setJoined(false)
@@ -342,7 +341,7 @@ export default function DmPopup({ userProfileId: userProfileIdProp }: Props) {
     return () => {
       disposed = true
     }
-  }, [userProfileId, loadConversations, loadThread])
+  }, [userProfileId, loadConversations, loadThread, markThreadRead])
 
   // Join the personal room once connected
   useEffect(() => {
@@ -561,17 +560,33 @@ export default function DmPopup({ userProfileId: userProfileIdProp }: Props) {
                             {message.message}
                           </Typography>
                         </Box>
-                        <Typography
-                          sx={{
-                            fontSize: '0.68rem',
-                            textAlign: message.fromProfileId === myProfileId ?
-                              'right' :
-                              'left',
-                            marginTop: '0.15em'
-                          }}
-                          variant='body2'>
-                          {formatTime(message.created)}
-                        </Typography>
+                        <Box sx={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: message.fromProfileId === myProfileId ?
+                            'flex-end' :
+                            'flex-start',
+                          gap: '0.3em',
+                          marginTop: '0.15em'
+                        }}>
+                          <Typography
+                            sx={{
+                              fontSize: '0.68rem',
+                              color: '#9a9a9a',
+                              textAlign: message.fromProfileId === myProfileId ?
+                                'right' :
+                                'left'
+                            }}
+                            variant='body2'>
+                            {formatTime(message.created)}
+                          </Typography>
+                          {message.fromProfileId === myProfileId &&
+                            message.readAt != null &&
+                            <CheckIcon
+                              aria-label='Seen'
+                              sx={{ fontSize: '0.85rem', color: '#4caf50' }} />
+                          }
+                        </Box>
                       </Box>
                     )
                   })
