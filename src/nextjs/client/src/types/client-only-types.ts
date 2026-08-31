@@ -127,6 +127,8 @@ export interface DiscussPostItem {
   authorProfilePublicId?: string | null
   authorProfileIsPublic?: boolean | null
   projectId?: string | null
+  projectPublicId?: string | null
+  projectName?: string | null
   title: string
   body: string
   commentCount: number

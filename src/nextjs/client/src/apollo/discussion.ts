@@ -16,6 +16,8 @@ export const getDiscussPostsQuery = gql`
         authorProfileId
         authorName
         projectId
+        projectPublicId
+        projectName
         title
         body
         commentCount
@@ -39,6 +41,8 @@ export const searchDiscussPostsQuery = gql`
         authorProfileId
         authorName
         projectId
+        projectPublicId
+        projectName
         title
         body
         commentCount
@@ -64,6 +68,8 @@ export const getDiscussPostByPublicIdQuery = gql`
         authorProfilePublicId
         authorProfileIsPublic
         projectId
+        projectPublicId
+        projectName
         title
         body
         commentCount

@@ -363,6 +363,16 @@ export default function DiscussPostPage({
                   }
                   {formatSince(post.created)} · {post.commentCount}{' '}
                   {post.commentCount === 1 ? 'comment' : 'comments'}
+                  {post.projectPublicId != null && post.projectName != null ?
+                    <>
+                      {' · '}on{' '}
+                      <Link href={`/projects/${post.projectPublicId}`}>
+                        {post.projectName}
+                      </Link>
+                    </>
+                    :
+                    <></>
+                  }
                 </Typography>
               </div>
 

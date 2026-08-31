@@ -109,6 +109,19 @@ export default function DiscussPostListItem({
           {formatSince(post.created)} · {post.commentCount}{' '}
           {post.commentCount === 1 ? 'comment' : 'comments'}
         </span>
+        {post.projectPublicId != null && post.projectName != null ?
+          <>
+            <span> · </span>
+            <Link
+              href={`/projects/${post.projectPublicId}`}
+              onClick={(event) => event.stopPropagation()}
+              underline='hover'>
+              {post.projectName}
+            </Link>
+          </>
+          :
+          <></>
+        }
 
         {userProfileId != null && userProfileId !== '' ?
           <>

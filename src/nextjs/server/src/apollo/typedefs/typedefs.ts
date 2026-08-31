@@ -167,6 +167,8 @@ export const typeDefs = /* GraphQL */ `
     authorProfilePublicId: String
     authorProfileIsPublic: Boolean
     projectId: String
+    projectPublicId: String
+    projectName: String
     title: String!
     body: String!
     commentCount: Int!

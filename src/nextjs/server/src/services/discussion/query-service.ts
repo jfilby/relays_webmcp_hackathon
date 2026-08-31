@@ -4,12 +4,14 @@ import { SearchService } from '@/services/search/search-service'
 import { DiscussPostModel } from '@/models/discussion/discuss-post-model'
 import { DiscussCommentModel } from '@/models/discussion/discuss-comment-model'
 import { ProfileModel } from '@/models/profiles/profile-model'
+import { ProjectModel } from '@/models/projects/project-model'
 import { BaseDataTypes } from '@/types/base-data-types'
 
 // Models
 const discussPostModel = new DiscussPostModel()
 const discussCommentModel = new DiscussCommentModel()
 const profileModel = new ProfileModel()
+const projectModel = new ProjectModel()
 const searchService = new SearchService()
 
 // Class
@@ -67,6 +69,14 @@ export class DiscussionQueryService {
         group._count._all)
     }
 
+    // Load each attached project for its public id and name (the project
+    // name lives on the project's instance)
+    const projectIds =
+      [...new Set(posts.map(post => post.projectId).filter(id => id != null))]
+
+    const projectInfoById =
+      await this.getProjectInfoByIds(prisma, projectIds)
+
     // Load each author's profile for the display name, public id, and
     // visibility
     const authorProfileIds =
@@ -84,6 +94,10 @@ export class DiscussionQueryService {
     return posts.map(post => {
       const author = authorsById.get(post.authorProfileId)
 
+      const projectInfo = post.projectId != null ?
+        projectInfoById.get(post.projectId) :
+        undefined
+
       return {
         id: post.id,
         publicId: post.publicId,
@@ -92,6 +106,8 @@ export class DiscussionQueryService {
         authorProfilePublicId: author?.publicId ?? null,
         authorProfileIsPublic: author?.isPublic ?? null,
         projectId: post.projectId,
+        projectPublicId: projectInfo?.publicId ?? null,
+        projectName: projectInfo?.name ?? null,
         title: post.title,
         body: post.body,
         commentCount: commentCountMap.get(post.id) ?? 0,
@@ -250,6 +266,12 @@ export class DiscussionQueryService {
         post.id,
         BaseDataTypes.activeStatus)
 
+    // Load the attached project, if any, for its public id and name
+    const projectInfo = post.projectId != null ?
+      (await this.getProjectInfoByIds(prisma, [post.projectId]))
+        .get(post.projectId) :
+      undefined
+
     // Return
     return {
       status: true,
@@ -261,6 +283,8 @@ export class DiscussionQueryService {
         authorProfilePublicId: author?.publicId ?? null,
         authorProfileIsPublic: author?.isPublic ?? null,
         projectId: post.projectId,
+        projectPublicId: projectInfo?.publicId ?? null,
+        projectName: projectInfo?.name ?? null,
         title: post.title,
         body: post.body,
         commentCount: commentCount,
@@ -421,4 +445,36 @@ export class DiscussionQueryService {
       }
     })
   }
+
+  // Load the public id and name for each of the given active project ids
+  // (the project name lives on the project's instance). Inactive projects
+  // are left out so their references are not shown.
+  async getProjectInfoByIds(
+    prisma: PrismaClient,
+    projectIds: string[]) {
+
+    if (projectIds.length === 0) {
+      return new Map<string, ProjectInfo>()
+    }
+
+    const projects = await
+      projectModel.filterByIds(
+        prisma,
+        projectIds,
+        true)
+
+    return new Map<string, ProjectInfo>(
+      projects
+        .filter(project => project.status === BaseDataTypes.activeStatus)
+        .map(project => [project.id, {
+          publicId: project.publicId,
+          name: project.instance.name
+        }]))
+  }
+}
+
+// Display info for the project a discuss post is attached to
+interface ProjectInfo {
+  publicId: string
+  name: string
 }
