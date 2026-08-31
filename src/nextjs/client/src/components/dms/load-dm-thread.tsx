@@ -17,6 +17,9 @@ import {
   type DmSocket
 } from '@/services/dms/dm-socket-service'
 import type { DmMessageItem, DmPeer } from '@/types/dm-types'
+import type { SubmitResult } from '@/webmcp/tools/types'
+import { sendDmMessageTool } from '@/webmcp/tools/dms'
+import { useWebMcpTools } from '@/webmcp/webmcp'
 import DmThread from './dm-thread'
 
 interface MessagesResults {
@@ -127,7 +130,7 @@ export default function LoadDmThread({
   }, [refetchMessages, userProfileId, withProfilePublicId])
 
   // Functions: send
-  async function onSend(message: string) {
+  async function onSend(message: string): Promise<SubmitResult> {
 
     // Consts
     const optimisticMessage: DmMessageItem = {
@@ -153,23 +156,34 @@ export default function LoadDmThread({
     try {
       const socket = socketRef.current
 
-      if (socket != null) {
-        const results = await sendDm(
-          socket,
-          userProfileId,
-          withProfilePublicId,
-          message)
+      if (socket == null) {
+        setMessages(prevMessages =>
+          (prevMessages ?? []).filter(m => m.id !== optimisticMessage.id))
 
-        if (results.status !== true) {
-          console.error(`LoadDmThread.onSend: ${results.message}`)
-          setMessages(prevMessages =>
-            (prevMessages ?? []).filter(m => m.id !== optimisticMessage.id))
-        }
+        return { status: 'error', message: `Messaging is not connected yet. Try again in a moment.` }
       }
+
+      const results = await sendDm(
+        socket,
+        userProfileId,
+        withProfilePublicId,
+        message)
+
+      if (results.status !== true) {
+        console.error(`LoadDmThread.onSend: ${results.message}`)
+        setMessages(prevMessages =>
+          (prevMessages ?? []).filter(m => m.id !== optimisticMessage.id))
+
+        return { status: 'error', message: results.message ?? `The message could not be sent` }
+      }
+
+      return { status: 'ok', message: `Message sent to ${peer?.displayName ?? withProfilePublicId}` }
     } catch (error) {
       console.error('LoadDmThread.onSend: error: ' + error)
       setMessages(prevMessages =>
         (prevMessages ?? []).filter(m => m.id !== optimisticMessage.id))
+
+      return { status: 'error', message: `The message could not be sent` }
     } finally {
       pendingSendsRef.current -= 1
 
@@ -224,6 +238,14 @@ export default function LoadDmThread({
       disposed = true
     }
   }, [withProfilePublicId, userProfileId, sendMarkDmThreadReadMutation, reload, onConversationsChanged])
+
+  // WebMCP
+  useWebMcpTools(() => [
+    sendDmMessageTool({
+      hasPeer: () => peer != null,
+      onSend
+    })
+  ])
 
   // Render
   return (

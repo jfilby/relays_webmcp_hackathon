@@ -20,7 +20,7 @@ interface Props {
   myProfileId: string
   onOpenThread: (peerPublicId: string) => void
   refreshKey?: number
-  onLoaded?: () => void
+  setConversations?: (conversations: DmConversation[]) => void
 }
 
 export default function LoadDmConversations({
@@ -28,7 +28,7 @@ export default function LoadDmConversations({
   myProfileId,
   onOpenThread,
   refreshKey = 0,
-  onLoaded
+  setConversations
 }: Props) {
 
   // GraphQL
@@ -40,7 +40,7 @@ export default function LoadDmConversations({
     })
 
   // State
-  const [conversations, setConversations] = useState<DmConversation[] | undefined>(undefined)
+  const [conversations, setConversationsState] = useState<DmConversation[] | undefined>(undefined)
 
   // Lift query data into state
   useEffect(() => {
@@ -52,10 +52,10 @@ export default function LoadDmConversations({
     const resultsData = data.getDmConversations
 
     if (resultsData.status === true) {
-      setConversations(resultsData.conversations ?? [])
-      onLoaded?.()
+      setConversationsState(resultsData.conversations ?? [])
+      setConversations?.(resultsData.conversations ?? [])
     }
-  }, [data, onLoaded])
+  }, [data, setConversations])
 
   // External refresh trigger
   useEffect(() => {

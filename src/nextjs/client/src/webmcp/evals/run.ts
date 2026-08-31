@@ -8,6 +8,7 @@ import './profiles-evals'
 import './projects-evals'
 import './discuss-evals'
 import './collaboration-evals'
+import './dms-evals'
 import './auth-evals'
 import { runEvals } from './harness'
 

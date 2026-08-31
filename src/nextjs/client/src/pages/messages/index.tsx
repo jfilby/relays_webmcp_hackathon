@@ -7,7 +7,10 @@ import EmptyState from '@/components/layouts/empty-state'
 import LoadDmConversations from '@/components/dms/load-dm-conversations'
 import LoadDmThread from '@/components/dms/load-dm-thread'
 import LoadProfileByUserProfileId from '@/components/profiles/load-by-user-profile-id'
+import type { DmConversation } from '@/types/dm-types'
 import type { Profile, UserProfile } from '@/types/client-only-types'
+import { listDmConversationsTool, openDmThreadTool } from '@/webmcp/tools/dms'
+import { useWebMcpTools } from '@/webmcp/webmcp'
 import type { GetServerSidePropsContext } from 'next'
 
 interface Props {
@@ -27,6 +30,7 @@ export default function MessagesPage({
       withProfilePublicId :
       undefined)
   const [conversationsRefreshKey, setConversationsRefreshKey] = useState(0)
+  const [conversations, setConversations] = useState<DmConversation[] | undefined>(undefined)
 
   // Functions
   const onOpenThread = useCallback((peerPublicId: string) => {
@@ -36,6 +40,19 @@ export default function MessagesPage({
   const onConversationsChanged = useCallback(() => {
     setConversationsRefreshKey(key => key + 1)
   }, [])
+
+  // WebMCP
+  useWebMcpTools(() => [
+    listDmConversationsTool({
+      isSignedIn: () => userProfile.id != null && userProfile.id !== '',
+      getConversations: () => conversations
+    }),
+    openDmThreadTool({
+      isSignedIn: () => userProfile.id != null && userProfile.id !== '',
+      getConversations: () => conversations,
+      onOpenThread: onOpenThread
+    })
+  ])
 
   // Render
   return (
@@ -85,7 +102,8 @@ export default function MessagesPage({
                 onOpenThread={onOpenThread}
                 refreshKey={conversationsRefreshKey}
                 userProfileId={userProfile.id ?? ''}
-                myProfileId={viewerProfile?.id ?? ''} />
+                myProfileId={viewerProfile?.id ?? ''}
+                setConversations={setConversations} />
               </div>
 
               {/* Thread */}
