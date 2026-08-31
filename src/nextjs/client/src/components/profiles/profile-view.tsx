@@ -386,6 +386,87 @@ export default function ProfileView({
         }
       </div>
 
+      <div style={{ display: 'flex', alignItems: 'center', gap: '0.75em', marginBottom: '2em' }}>
+        {viewerUserProfileId != null && owner !== true &&
+          <Link
+            href={`/messages?with=${profile.publicId}`}
+            underline='none'>
+            <Button
+              variant='contained'>
+              Message
+            </Button>
+          </Link>
+        }
+        {viewerUserProfileId != null && owner !== true &&
+          connectionStatus === 'none' ?
+          <>
+            {connectOpen === false ?
+              <Button
+                onClick={() => setConnectOpen(true)}
+                variant='contained'>
+                Connect
+              </Button>
+              :
+              <div>
+                <TextField
+                  fullWidth
+                  label='Message (optional)'
+                  minRows={3}
+                  multiline
+                  onChange={(event) => setConnectionMessage(event.target.value)}
+                  slotProps={{
+                    inputLabel: {
+                      shrink: Boolean(connectionMessage),
+                    }
+                  }}
+                  style={{ marginBottom: '1em', maxWidth: '30em' }}
+                  value={connectionMessage} />
+
+                <div style={{ display: 'flex', gap: '0.75em' }}>
+                  <Button
+                    disabled={connecting}
+                    onClick={onSendConnectionRequest}
+                    variant='contained'>
+                    Send request
+                  </Button>
+
+                  <Button
+                    disabled={connecting}
+                    onClick={() => setConnectOpen(false)}>
+                    Cancel
+                  </Button>
+                </div>
+              </div>
+            }
+          </>
+          :
+          <></>
+        }
+
+        {viewerUserProfileId != null && owner !== true &&
+          connectionStatus === 'connected' ?
+          <Button
+            disabled={connecting}
+            onClick={onRemoveConnection}
+            variant='outlined'>
+            Remove connection
+          </Button>
+          :
+          <></>
+        }
+
+        {viewerUserProfileId != null && owner !== true &&
+          connectionStatus === 'pending' ?
+          <Typography
+            style={{ color: '#2c6e2c', marginBottom: '2em' }}
+            variant='body1'>
+            Connection request pending
+          </Typography>
+          :
+          <></>
+        }
+      </div>
+
       {profile.bio != null && profile.bio !== '' ?
         <div style={{ marginBottom: '2em' }}>
           <Typography variant='body1'>
@@ -507,87 +588,6 @@ export default function ProfileView({
         :
         <></>
       }
-
-      <div style={{ display: 'flex', alignItems: 'center', gap: '0.75em', marginBottom: '2em' }}>
-        {viewerUserProfileId != null && owner !== true &&
-          <Link
-            href={`/messages?with=${profile.publicId}`}
-            underline='none'>
-            <Button
-              variant='contained'>
-              Message
-            </Button>
-          </Link>
-        }
-        {viewerUserProfileId != null && owner !== true &&
-          connectionStatus === 'none' ?
-          <>
-            {connectOpen === false ?
-              <Button
-                onClick={() => setConnectOpen(true)}
-                variant='contained'>
-                Connect
-              </Button>
-              :
-              <div>
-                <TextField
-                  fullWidth
-                  label='Message (optional)'
-                  minRows={3}
-                  multiline
-                  onChange={(event) => setConnectionMessage(event.target.value)}
-                  slotProps={{
-                    inputLabel: {
-                      shrink: Boolean(connectionMessage),
-                    }
-                  }}
-                  style={{ marginBottom: '1em', maxWidth: '30em' }}
-                  value={connectionMessage} />
-
-                <div style={{ display: 'flex', gap: '0.75em' }}>
-                  <Button
-                    disabled={connecting}
-                    onClick={onSendConnectionRequest}
-                    variant='contained'>
-                    Send request
-                  </Button>
-
-                  <Button
-                    disabled={connecting}
-                    onClick={() => setConnectOpen(false)}>
-                    Cancel
-                  </Button>
-                </div>
-              </div>
-            }
-          </>
-          :
-          <></>
-        }
-
-        {viewerUserProfileId != null && owner !== true &&
-          connectionStatus === 'connected' ?
-          <Button
-            disabled={connecting}
-            onClick={onRemoveConnection}
-            variant='outlined'>
-            Remove connection
-          </Button>
-          :
-          <></>
-        }
-
-        {viewerUserProfileId != null && owner !== true &&
-          connectionStatus === 'pending' ?
-          <Typography
-            style={{ color: '#2c6e2c', marginBottom: '2em' }}
-            variant='body1'>
-            Connection request pending
-          </Typography>
-          :
-          <></>
-        }
-      </div>
 
       {owner === true ?
         <div style={{ marginBottom: '2em' }}>
