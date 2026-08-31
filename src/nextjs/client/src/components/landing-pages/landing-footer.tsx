@@ -36,7 +36,7 @@ export default function LandingFooter() {
         {process.env.NEXT_PUBLIC_DOCS_URL ?
           <Box>
             <div className={styles.footerHeading}>Resources</div>
-            <a href={process.env.NEXT_PUBLIC_DOCS_URL} className={styles.footerLink}>Docs</a>
+            {/* <a href={process.env.NEXT_PUBLIC_DOCS_URL} className={styles.footerLink}>Docs</a> */}
             <Link href='/about' className={styles.footerLink}>About</Link>
           </Box>
           :
