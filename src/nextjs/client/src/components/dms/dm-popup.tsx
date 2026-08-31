@@ -417,7 +417,7 @@ export default function DmPopup({ userProfileId: userProfileIdProp }: Props) {
             height: '30em',
             display: 'flex',
             flexDirection: 'column',
-            borderRadius: 12,
+            borderRadius: 0,
             overflow: 'hidden'
           }}>
           {/* Header */}
