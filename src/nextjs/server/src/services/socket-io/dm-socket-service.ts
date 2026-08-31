@@ -2,6 +2,7 @@ import http from 'node:http'
 import { Server } from 'socket.io'
 import { z } from 'zod'
 import { prisma } from '@/db'
+import { promptGuardService } from '@/services/generating/prompt-guard/prompt-guard-service'
 import { DmsService } from '@/services/dms/service'
 
 // Payload schemas (socket.io payloads are unvalidated external input)
@@ -154,6 +155,40 @@ export function getDmSocketIo(): Server {
       }
 
       const { userProfileId, toProfilePublicId, message } = parsed.data
+
+      // Sanitize the message before it is stored (an agent may read or act
+      // on DM content)
+      try {
+        const guard = await promptGuardService.sanitize(
+          prisma,
+          message,
+          {
+            createdById: userProfileId,
+            source: `socket:dm:send`
+          })
+
+        if (guard.blocked === true) {
+          console.error(`dm:send: blocked input: ` + guard.reason)
+          if (typeof ack === 'function') {
+            ack({
+              status: false,
+              message: guard.reason ?? 'Input rejected'
+            })
+          }
+          return
+        }
+      } catch (error: unknown) {
+        // A misconfigured guard (env var unset) must not take down the
+        // socket handler; the error is logged and the send is rejected
+        console.error(`dm:send: prompt guard error: ` + error)
+        if (typeof ack === 'function') {
+          ack({
+            status: false,
+            message: 'Input rejected'
+          })
+        }
+        return
+      }
 
       // Persist the message
       try {

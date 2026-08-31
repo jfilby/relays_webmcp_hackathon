@@ -1,4 +1,5 @@
 import { prisma } from '@/db'
+import { promptGuardService } from '@/services/generating/prompt-guard/prompt-guard-service'
 import { DiscussionMutateService } from '@/services/discussion/mutate-service'
 
 // Services
@@ -39,6 +40,29 @@ export async function createDiscussPost(
     projectId
   }: CreateDiscussPostArgs) {
 
+  // Sanitize the user-supplied text before it is stored (agents consume this
+  // content, so an injected prompt here would reach any LLM that reads it)
+  for (const [source, text] of [
+    [`graphql:createDiscussPost:title`, title],
+    [`graphql:createDiscussPost:body`, body]]) {
+
+    const guard = await promptGuardService.sanitize(
+      prisma,
+      text,
+      {
+        createdById: userProfileId,
+        source: source
+      })
+
+    if (guard.blocked === true) {
+      console.error(`createDiscussPost: blocked input: ` + guard.reason)
+      return {
+        status: false,
+        message: guard.reason ?? 'Input rejected'
+      }
+    }
+  }
+
   // Mutation
   return discussionMutateService.createDiscussPost(
     prisma,
@@ -67,6 +91,24 @@ export async function createDiscussComment(
     body,
     parentCommentId
   }: CreateDiscussCommentArgs) {
+
+  // Mutation
+  // Sanitize the user-supplied text before it is stored
+  const guard = await promptGuardService.sanitize(
+    prisma,
+    body,
+    {
+      createdById: userProfileId,
+      source: `graphql:createDiscussComment:body`
+    })
+
+  if (guard.blocked === true) {
+    console.error(`createDiscussComment: blocked input: ` + guard.reason)
+    return {
+      status: false,
+      message: guard.reason ?? 'Input rejected'
+    }
+  }
 
   // Mutation
   return discussionMutateService.createDiscussComment(

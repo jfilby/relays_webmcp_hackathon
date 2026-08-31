@@ -497,3 +497,24 @@ model Notification {
   @@map("notification")
   @@schema("public")
 }
+
+// Relays: Prompt guard
+
+model FlaggedInput {
+  // A user-supplied input that the prompt guard (Llama Prompt Guard 2 86M)
+  // classified as malicious. Persisted for audit/review; createdById follows
+  // the same plain-reference convention as ContentFlag.
+  id                           String               @id @default(cuid())
+  createdById                  String               @map("created_by_id")
+  instanceId                   String?              @map("instance_id")
+  status                       String
+  source                       String
+  input                        String?              @db.Text
+  confidence                   Float
+  created                      DateTime             @default(now())
+  updated                      DateTime             @updatedAt
+
+  @@index([createdById])
+  @@map("flagged_input")
+  @@schema("public")
+}

@@ -1,4 +1,5 @@
 import { prisma } from '@/db'
+import { promptGuardService } from '@/services/generating/prompt-guard/prompt-guard-service'
 import { ProjectsMutateService } from '@/services/projects/mutate-service'
 
 // Services
@@ -61,6 +62,36 @@ export async function createProject(
     isOpenToCollaborators
   }: CreateProjectArgs) {
 
+  // Sanitize the agent-readable free text before it is stored (projects are
+  // promoted to AI agents browsing Relays)
+  const guardedFields = [
+    [`graphql:createProject:name`, name],
+    [`graphql:createProject:tagline`, tagline],
+    [`graphql:createProject:description`, description]] as
+    [string, string | null | undefined][]
+
+  for (const [source, text] of guardedFields) {
+    if (text == null || text.trim() === '') {
+      continue
+    }
+
+    const guard = await promptGuardService.sanitize(
+      prisma,
+      text,
+      {
+        createdById: userProfileId,
+        source: source
+      })
+
+    if (guard.blocked === true) {
+      console.error(`createProject: blocked input: ` + guard.reason)
+      return {
+        status: false,
+        message: guard.reason ?? 'Input rejected'
+      }
+    }
+  }
+
   // Mutation
   return projectsMutateService.create(
     prisma,
@@ -93,6 +124,35 @@ export async function updateProject(
     stage,
     isOpenToCollaborators
   }: UpdateProjectArgs) {
+
+  // Sanitize the agent-readable free text before it is stored
+  const guardedFields = [
+    [`graphql:updateProject:name`, name],
+    [`graphql:updateProject:tagline`, tagline],
+    [`graphql:updateProject:description`, description]] as
+    [string, string | null | undefined][]
+
+  for (const [source, text] of guardedFields) {
+    if (text == null || text.trim() === '') {
+      continue
+    }
+
+    const guard = await promptGuardService.sanitize(
+      prisma,
+      text,
+      {
+        createdById: userProfileId,
+        source: source
+      })
+
+    if (guard.blocked === true) {
+      console.error(`updateProject: blocked input: ` + guard.reason)
+      return {
+        status: false,
+        message: guard.reason ?? 'Input rejected'
+      }
+    }
+  }
 
   // Mutation
   return projectsMutateService.update(

@@ -1,4 +1,5 @@
 import { prisma } from '@/db'
+import { promptGuardService } from '@/services/generating/prompt-guard/prompt-guard-service'
 import { CollaborationMutateService } from '@/services/collaboration/mutate-service'
 
 // Services
@@ -72,6 +73,36 @@ export async function createPlan(
     startBy
   }: CreatePlanArgs) {
 
+  // Sanitize the agent-readable free text before it is stored (plans are
+  // read by AI agents looking for collaboration opportunities)
+  const guardedFields = [
+    [`graphql:createPlan:title`, title],
+    [`graphql:createPlan:description`, description],
+    [`graphql:createPlan:deliverables`, deliverables]] as
+    [string, string | null | undefined][]
+
+  for (const [source, text] of guardedFields) {
+    if (text == null || text.trim() === '') {
+      continue
+    }
+
+    const guard = await promptGuardService.sanitize(
+      prisma,
+      text,
+      {
+        createdById: userProfileId,
+        source: source
+      })
+
+    if (guard.blocked === true) {
+      console.error(`createPlan: blocked input: ` + guard.reason)
+      return {
+        status: false,
+        message: guard.reason ?? 'Input rejected'
+      }
+    }
+  }
+
   // Mutation
   return collaborationMutateService.createPlan(
     prisma,
@@ -100,6 +131,35 @@ export async function updatePlan(
     deliverables,
     startBy
   }: UpdatePlanArgs) {
+
+  // Sanitize the agent-readable free text before it is stored
+  const guardedFields = [
+    [`graphql:updatePlan:title`, title],
+    [`graphql:updatePlan:description`, description],
+    [`graphql:updatePlan:deliverables`, deliverables]] as
+    [string, string | null | undefined][]
+
+  for (const [source, text] of guardedFields) {
+    if (text == null || text.trim() === '') {
+      continue
+    }
+
+    const guard = await promptGuardService.sanitize(
+      prisma,
+      text,
+      {
+        createdById: userProfileId,
+        source: source
+      })
+
+    if (guard.blocked === true) {
+      console.error(`updatePlan: blocked input: ` + guard.reason)
+      return {
+        status: false,
+        message: guard.reason ?? 'Input rejected'
+      }
+    }
+  }
 
   // Mutation
   return collaborationMutateService.updatePlan(
@@ -140,6 +200,34 @@ export async function addPlanStep(
     description
   }: AddPlanStepArgs) {
 
+  // Sanitize the step free text before it is stored
+  const guardedFields = [
+    [`graphql:addPlanStep:title`, title],
+    [`graphql:addPlanStep:description`, description]] as
+    [string, string | null | undefined][]
+
+  for (const [source, text] of guardedFields) {
+    if (text == null || text.trim() === '') {
+      continue
+    }
+
+    const guard = await promptGuardService.sanitize(
+      prisma,
+      text,
+      {
+        createdById: userProfileId,
+        source: source
+      })
+
+    if (guard.blocked === true) {
+      console.error(`addPlanStep: blocked input: ` + guard.reason)
+      return {
+        status: false,
+        message: guard.reason ?? 'Input rejected'
+      }
+    }
+  }
+
   // Mutation
   return collaborationMutateService.addPlanStep(
     prisma,
@@ -158,6 +246,34 @@ export async function updatePlanStep(
     description,
     status
   }: UpdatePlanStepArgs) {
+
+  // Sanitize the step free text before it is stored
+  const guardedFields = [
+    [`graphql:updatePlanStep:title`, title],
+    [`graphql:updatePlanStep:description`, description]] as
+    [string, string | null | undefined][]
+
+  for (const [source, text] of guardedFields) {
+    if (text == null || text.trim() === '') {
+      continue
+    }
+
+    const guard = await promptGuardService.sanitize(
+      prisma,
+      text,
+      {
+        createdById: userProfileId,
+        source: source
+      })
+
+    if (guard.blocked === true) {
+      console.error(`updatePlanStep: blocked input: ` + guard.reason)
+      return {
+        status: false,
+        message: guard.reason ?? 'Input rejected'
+      }
+    }
+  }
 
   // Mutation
   return collaborationMutateService.updatePlanStep(

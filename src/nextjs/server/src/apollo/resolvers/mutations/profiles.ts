@@ -1,4 +1,5 @@
 import { prisma } from '@/db'
+import { promptGuardService } from '@/services/generating/prompt-guard/prompt-guard-service'
 import { ProfilesMutateService } from '@/services/profiles/mutate-service'
 
 // Services
@@ -86,6 +87,36 @@ export async function createProfile(
     availabilityStatus
   }: CreateProfileArgs) {
 
+  // Sanitize the agent-readable free text before it is stored (profiles are
+  // served to AI agents browsing Relays)
+  const guardedFields = [
+    [`graphql:createProfile:displayName`, displayName],
+    [`graphql:createProfile:headline`, headline],
+    [`graphql:createProfile:bio`, bio]] as
+    [string, string][]
+
+  for (const [source, text] of guardedFields) {
+    if (text == null || text.trim() === '') {
+      continue
+    }
+
+    const guard = await promptGuardService.sanitize(
+      prisma,
+      text,
+      {
+        createdById: userProfileId,
+        source: source
+      })
+
+    if (guard.blocked === true) {
+      console.error(`createProfile: blocked input: ` + guard.reason)
+      return {
+        status: false,
+        message: guard.reason ?? 'Input rejected'
+      }
+    }
+  }
+
   // Mutation
   return profilesMutateService.create(
     prisma,
@@ -115,6 +146,35 @@ export async function updateProfile(
     avatar,
     availabilityStatus
   }: UpdateProfileArgs) {
+
+  // Sanitize the agent-readable free text before it is stored
+  const guardedFields = [
+    [`graphql:updateProfile:displayName`, displayName],
+    [`graphql:updateProfile:headline`, headline],
+    [`graphql:updateProfile:bio`, bio]] as
+    [string, string | null | undefined][]
+
+  for (const [source, text] of guardedFields) {
+    if (text == null || text.trim() === '') {
+      continue
+    }
+
+    const guard = await promptGuardService.sanitize(
+      prisma,
+      text,
+      {
+        createdById: userProfileId,
+        source: source
+      })
+
+    if (guard.blocked === true) {
+      console.error(`updateProfile: blocked input: ` + guard.reason)
+      return {
+        status: false,
+        message: guard.reason ?? 'Input rejected'
+      }
+    }
+  }
 
   // Mutation
   return profilesMutateService.update(
@@ -202,6 +262,25 @@ export async function deleteProfileLink(
 export async function endorseSkill(
   _parent: unknown,
   { userProfileId, toProfileId, skillId, comment }: EndorseSkillArgs) {
+
+  // Sanitize the endorsement comment before it is stored
+  if (comment != null && comment.trim() !== '') {
+    const guard = await promptGuardService.sanitize(
+      prisma,
+      comment,
+      {
+        createdById: userProfileId,
+        source: `graphql:endorseSkill:comment`
+      })
+
+    if (guard.blocked === true) {
+      console.error(`endorseSkill: blocked input: ` + guard.reason)
+      return {
+        status: false,
+        message: guard.reason ?? 'Input rejected'
+      }
+    }
+  }
 
   // Mutation
   return profilesMutateService.endorseSkill(
