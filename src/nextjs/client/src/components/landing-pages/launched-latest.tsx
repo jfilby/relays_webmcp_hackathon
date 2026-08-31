@@ -40,7 +40,6 @@ export default function LaunchedLatest() {
         setLatestActivity={setLatestActivity} />
 
       <div style={{ textAlign: 'center' }}>
-        <div className={styles.sectionLabel}>Latest activity</div>
         <Typography
           className={styles.sectionTitle}
           variant='h5'>
