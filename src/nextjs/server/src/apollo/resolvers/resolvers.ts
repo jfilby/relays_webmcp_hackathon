@@ -134,6 +134,7 @@ const Query = {
   // ---
 
   // Profiles
+  getProfileByPublicId,
   getProfileByUserProfileId,
   searchProfiles,
   getNetwork,
