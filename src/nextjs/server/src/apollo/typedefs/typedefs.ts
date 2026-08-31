@@ -718,6 +718,9 @@ export const typeDefs = /* GraphQL */ `
       userProfileId: String!,
       id: String!): StatusAndMessage!
 
+    markAllNotificationsAsRead(
+      userProfileId: String!): StatusAndMessage!
+
     # Direct messages
     sendDm(
       userProfileId: String!,

@@ -29,7 +29,9 @@ function notificationTypeName(type: string): string {
       return 'A plan changed status'
   }
 
-  return type
+  // Unknown type: humanize it (e.g. 'plan_targeted' -> 'Plan targeted')
+  const words = type.replace(/_/g, ' ').replace(/([a-z])([A-Z])/g, '$1 $2')
+  return words.charAt(0).toUpperCase() + words.slice(1)
 }
 
 function formatDate(value: string | undefined | null): string {
@@ -61,6 +63,7 @@ export default function NotificationsPage({
   const [notifications, setNotifications] = useState<NotificationItem[] | undefined>(undefined)
   const [markReadNotificationId, setMarkReadNotificationId] = useState<string | undefined>(undefined)
   const [markReadAction, setMarkReadAction] = useState<boolean>(false)
+  const [markAllAction, setMarkAllAction] = useState<boolean>(false)
   const [markingRead, setMarkingRead] = useState<string | undefined>(undefined)
   const [alertSeverity, setAlertSeverity] = useState<'success' | 'error' | undefined>(undefined)
   const [message, setMessage] = useState<string | undefined>(undefined)
@@ -105,13 +108,25 @@ export default function NotificationsPage({
             :
             <></>
           }
-
           {userProfile.id == null || userProfile.id === '' ?
             <Typography variant='body1'>
               Sign in to see your notifications.
             </Typography>
             :
             <>
+              {notifications != null && notifications.some(notification => notification.readAt == null) ?
+                <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '0.75em' }}>
+                  <Button
+                    disabled={markingRead != null || markAllAction}
+                    onClick={() => setMarkAllAction(true)}
+                    size='small'
+                    variant='outlined'>
+                    Mark all as read
+                  </Button>
+                </div>
+                :
+                <></>
+              }
               {notifications != null ?
                 <>
                   {notifications.length > 0 ?
@@ -195,6 +210,8 @@ export default function NotificationsPage({
           markReadNotificationId={markReadNotificationId}
           markReadAction={markReadAction}
           setMarkReadAction={setMarkReadAction}
+          markAllAction={markAllAction}
+          setMarkAllAction={setMarkAllAction}
           setMarkingRead={setMarkingRead}
           setNotifications={setNotifications}
           setAlertSeverity={setAlertSeverity}

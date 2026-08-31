@@ -861,7 +861,7 @@ export class DemoDataTypes {
     {
       key: 'demo-notification-plan-targeted',
       userProfileKey: 'demo-user-ben',
-      type: 'planTargeted',
+      type: 'plan_targeted',
       read: false
     }
   ]

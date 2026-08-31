@@ -10,6 +10,11 @@ interface MarkNotificationAsReadArgs {
   userProfileId: string
 }
 
+interface MarkAllNotificationsAsReadArgs {
+  userProfileId: string
+}
+
+
 // Code
 export async function markNotificationAsRead(
   _parent: unknown,
@@ -20,4 +25,14 @@ export async function markNotificationAsRead(
     prisma,
     userProfileId,
     id)
+}
+
+export async function markAllNotificationsAsRead(
+  _parent: unknown,
+  { userProfileId }: MarkAllNotificationsAsReadArgs) {
+
+  // Mutation
+  return notificationsService.markAllNotificationsAsRead(
+    prisma,
+    userProfileId)
 }

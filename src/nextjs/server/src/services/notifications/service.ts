@@ -112,4 +112,31 @@ export class NotificationsService {
       message: `Marked as read`
     }
   }
+
+  // Mark all of the signed-in user's notifications as read
+  async markAllNotificationsAsRead(
+    prisma: PrismaClient,
+    userProfileId: string) {
+
+    // Validate
+    if (userProfileId == null || userProfileId === '') {
+      return {
+        status: false,
+        message: `User profile not found`
+      }
+    }
+
+    // Update
+    await
+      notificationModel.markAllAsRead(
+        prisma,
+        userProfileId,
+        new Date())
+
+    // Return
+    return {
+      status: true,
+      message: `Marked all as read`
+    }
+  }
 }

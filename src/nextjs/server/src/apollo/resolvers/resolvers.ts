@@ -65,7 +65,8 @@ import {
   markDmThreadRead
 } from './mutations/dms'
 import {
-  markNotificationAsRead
+  markNotificationAsRead,
+  markAllNotificationsAsRead
 } from './mutations/notifications'
 import {
   createPlan,
@@ -226,9 +227,8 @@ const Mutation = {
   flagContent,
   setModerationFlagStatus,
   deleteFlaggedContent,
-
-  // Notifications
   markNotificationAsRead,
+  markAllNotificationsAsRead,
 
   // Direct messages
   sendDm,

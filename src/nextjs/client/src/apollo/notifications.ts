@@ -36,3 +36,16 @@ export const markNotificationAsReadMutation = gql`
     }
   }
 `
+
+export const markAllNotificationsAsReadMutation = gql`
+  mutation markAllNotificationsAsRead(
+    $userProfileId: String!)
+  {
+    markAllNotificationsAsRead(
+      userProfileId: $userProfileId) {
+
+      status
+      message
+    }
+  }
+`

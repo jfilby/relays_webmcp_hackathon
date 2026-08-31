@@ -1,7 +1,7 @@
 import { useEffect } from 'react'
 import { Toaster, toast } from 'sonner'
 import { useMutation, useQuery } from '@apollo/client/react'
-import { getNotificationsQuery, markNotificationAsReadMutation } from '@/apollo/notifications'
+import { getNotificationsQuery, markNotificationAsReadMutation, markAllNotificationsAsReadMutation } from '@/apollo/notifications'
 import type { NotificationItem } from '@/types/client-only-types'
 
 interface NotificationsResults {
@@ -20,17 +20,20 @@ interface Props {
   markReadNotificationId?: string
   markReadAction: boolean
   setMarkReadAction: (value: boolean) => void
+  markAllAction: boolean
+  setMarkAllAction: (value: boolean) => void
   setMarkingRead: (value: string | undefined) => void
   setNotifications: (notifications: NotificationItem[] | undefined) => void
   setAlertSeverity: (severity: 'success' | 'error' | undefined) => void
   setMessage: (message: string | undefined) => void
 }
-
 export default function LoadNotifications({
   userProfileId,
   markReadNotificationId,
   markReadAction,
   setMarkReadAction,
+  markAllAction,
+  setMarkAllAction,
   setMarkingRead,
   setNotifications,
   setAlertSeverity,
@@ -49,6 +52,13 @@ export default function LoadNotifications({
     useMutation<{
       markNotificationAsRead: MarkReadResult
     }>(markNotificationAsReadMutation, {
+      fetchPolicy: 'no-cache'
+    })
+
+  const [sendMarkAllNotificationsAsReadMutation] =
+    useMutation<{
+      markAllNotificationsAsRead: MarkReadResult
+    }>(markAllNotificationsAsReadMutation, {
       fetchPolicy: 'no-cache'
     })
 
@@ -111,6 +121,37 @@ export default function LoadNotifications({
     setMarkReadAction(false)
   }
 
+  async function markAllNotificationsAsRead() {
+
+    // Mutation
+    let markedData: MarkReadResult | undefined
+
+    await sendMarkAllNotificationsAsReadMutation({
+      variables: {
+        userProfileId: userProfileId
+      }
+    }).then(result => markedData = result.data?.markAllNotificationsAsRead)
+
+    // Get results and surface messages
+    if (markedData == null) {
+      setAlertSeverity('error')
+      setMessage(`Failed to mark all notifications as read`)
+    } else if (markedData.status === true) {
+      setAlertSeverity('success')
+      setMessage(markedData.message)
+      toast(markedData.message)
+    } else {
+      setAlertSeverity('error')
+      setMessage(markedData.message)
+    }
+
+    // Refresh the notifications list
+    await getNotifications()
+
+    // Done
+    setMarkAllAction(false)
+  }
+
   // Effects
   useEffect(() => {
 
@@ -144,6 +185,22 @@ export default function LoadNotifications({
     fetchData()
 
   }, [markReadAction])
+
+  useEffect(() => {
+
+    // Return early if no mark all as read action requested
+    if (markAllAction !== true) {
+      return
+    }
+
+    const fetchData = async () => {
+      await markAllNotificationsAsRead()
+        .catch(console.error)
+    }
+
+    fetchData()
+
+  }, [markAllAction])
 
   // Render
   return (

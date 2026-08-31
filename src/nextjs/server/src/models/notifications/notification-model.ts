@@ -115,6 +115,32 @@ export class NotificationModel {
     }
   }
 
+  // Mark all of a user's notifications as read
+  async markAllAsRead(
+    prisma: PrismaClient,
+    userProfileId: string,
+    readAt: Date) {
+
+    // Debug
+    const fnName = `${this.clName}.markAllAsRead()`
+
+    // Update records
+    try {
+      return await prisma.notification.updateMany({
+        data: {
+          readAt: readAt
+        },
+        where: {
+          userProfileId: userProfileId,
+          readAt: null
+        }
+      })
+    } catch (error) {
+      console.error(`${fnName}: error: ${error}`)
+      throw 'Prisma error'
+    }
+  }
+
   async deleteById(
     prisma: PrismaClient,
     id: string) {
@@ -127,6 +153,30 @@ export class NotificationModel {
       return await prisma.notification.delete({
         where: {
           id: id
+        }
+      })
+    } catch (error) {
+      console.error(`${fnName}: error: ${error}`)
+      throw 'Prisma error'
+    }
+  }
+
+  // Delete all notifications of the given types (used by demo data cleanup
+  // to remove rows written with legacy type names)
+  async deleteByTypes(
+    prisma: PrismaClient,
+    types: string[]) {
+
+    // Debug
+    const fnName = `${this.clName}.deleteByTypes()`
+
+    // Delete
+    try {
+      return await prisma.notification.deleteMany({
+        where: {
+          type: {
+            in: types
+          }
         }
       })
     } catch (error) {

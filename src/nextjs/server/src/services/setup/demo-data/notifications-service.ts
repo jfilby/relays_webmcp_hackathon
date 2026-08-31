@@ -26,6 +26,12 @@ export class NotificationsDemoDataSetupService {
     // Debug
     const fnName = `${this.clName}.setup()`
 
+    // Remove legacy demo notifications that used camelCase type names
+    // (e.g. 'planTargeted'). The upsert below only matches snake_case
+    // types, so stale rows would otherwise linger and show raw type
+    // names in the UI.
+    await notificationModel.deleteByTypes(prisma, ['planTargeted'])
+
     // Upsert notifications
     for (const data of DemoDataTypes.notifications) {
       const userProfile = await coreDemoDataService.getUserProfileByKey(
