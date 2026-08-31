@@ -269,6 +269,52 @@ export const typeDefs = /* GraphQL */ `
     notifications: [NotificationItem]
   }
 
+  # Direct messages
+
+  type DmPeer {
+    id: String!
+    publicId: String!
+    displayName: String!
+    avatar: String
+    type: String!
+  }
+
+  type DmMessageItem {
+    id: String!
+    fromProfileId: String!
+    toProfileId: String!
+    message: String!
+    readAt: String
+    created: String!
+  }
+
+  type DmConversation {
+    peer: DmPeer!
+    lastMessage: DmMessageItem
+    unreadCount: Int!
+    created: String!
+  }
+
+  type DmConversationsResults {
+    status: Boolean!
+    message: String
+    conversations: [DmConversation]
+  }
+
+  type DmMessagesResults {
+    status: Boolean!
+    message: String
+    peer: DmPeer
+    messages: [DmMessageItem]
+  }
+
+  type DmSendResults {
+    status: Boolean!
+    message: String
+    messageItem: DmMessageItem
+    peer: DmPeer
+  }
+
   # Projects
 
   type ProjectUrl {
@@ -469,12 +515,6 @@ export const typeDefs = /* GraphQL */ `
       userProfileId: String!,
       peerProfileId: String!): ConnectionStatusResults!
 
-    # Notifications
-    getNotifications(
-      userProfileId: String!,
-      unreadOnly: Boolean): NotificationsResults!
-
-    # Discussion
     getDiscussPosts(
       profileId: String,
       projectId: String): DiscussPostsResults!
@@ -487,6 +527,19 @@ export const typeDefs = /* GraphQL */ `
 
     getDiscussCommentsByPostId(
       postId: String!): DiscussCommentsResults!
+
+    # Notifications
+    getNotifications(
+      userProfileId: String!,
+      unreadOnly: Boolean): NotificationsResults!
+
+    # Direct messages
+    getDmConversations(
+      userProfileId: String!): DmConversationsResults!
+
+    getDmMessages(
+      userProfileId: String!,
+      withProfilePublicId: String!): DmMessagesResults!
 
     # Moderation
     getModerationQueue(
@@ -664,6 +717,16 @@ export const typeDefs = /* GraphQL */ `
     markNotificationAsRead(
       userProfileId: String!,
       id: String!): StatusAndMessage!
+
+    # Direct messages
+    sendDm(
+      userProfileId: String!,
+      toProfilePublicId: String!,
+      message: String!): DmSendResults!
+
+    markDmThreadRead(
+      userProfileId: String!,
+      withProfilePublicId: String!): StatusAndMessage!
 
     # Moderation
     flagContent(

@@ -508,7 +508,17 @@ export default function ProfileView({
         <></>
       }
 
-      <div style={{ marginBottom: '2em' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '0.75em', marginBottom: '2em' }}>
+        {viewerUserProfileId != null && owner !== true &&
+          <Link
+            href={`/messages?with=${profile.publicId}`}
+            underline='none'>
+            <Button
+              variant='contained'>
+              Message
+            </Button>
+          </Link>
+        }
         {viewerUserProfileId != null && owner !== true &&
           connectionStatus === 'none' ?
           <>

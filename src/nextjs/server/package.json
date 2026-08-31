@@ -22,7 +22,9 @@
     "react": "19.2.8",
     "react-dom": "19.2.8",
     "serene-core-server": "^0.1.17",
-    "tsx": "^4.23.12"
+    "socket.io": "^4.8.3",
+    "tsx": "^4.23.12",
+    "zod": "^4.5.4"
   },
   "devDependencies": {
     "@apollo/server": "^5.5.1",

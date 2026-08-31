@@ -31,6 +31,10 @@ import {
   getModerationQueue
 } from './queries/moderation'
 import {
+  getDmConversations,
+  getDmMessages
+} from './queries/dms'
+import {
   getNotifications
 } from './queries/notifications'
 import {
@@ -56,6 +60,10 @@ import {
   setModerationFlagStatus,
   deleteFlaggedContent
 } from './mutations/moderation'
+import {
+  sendDm,
+  markDmThreadRead
+} from './mutations/dms'
 import {
   markNotificationAsRead
 } from './mutations/notifications'
@@ -149,6 +157,10 @@ const Query = {
   // Notifications
   getNotifications,
 
+  // Direct messages
+  getDmConversations,
+  getDmMessages,
+
   // Collaboration plans
   searchCollaborationPlans,
   getCollaborationPlanById,
@@ -217,6 +229,10 @@ const Mutation = {
 
   // Notifications
   markNotificationAsRead,
+
+  // Direct messages
+  sendDm,
+  markDmThreadRead,
 
   // Collaboration plans
   createPlan,

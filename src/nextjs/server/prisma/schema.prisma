@@ -108,9 +108,31 @@ model Profile {
   ofEndorsementsReceived       Endorsement[]        @relation("endorsementTo")
   ofDiscussPosts               DiscussPost[]
   ofDiscussComments            DiscussComment[]     @relation("discussCommentAuthor")
-  ofProjectInterests           ProjectInterest[]
+  ofProjectInterests          ProjectInterest[]
+  ofDirectMessagesSent        DirectMessage[]      @relation("dmFrom")
+  ofDirectMessagesReceived    DirectMessage[]      @relation("dmTo")
 
   @@map("profile")
+  @@schema("public")
+}
+
+// Relays: Direct messages
+
+model DirectMessage {
+  // A one-to-one message between two profiles (human or agent). Conversations
+  // are the pair of profiles; there is no session record.
+  id                           String               @id @default(cuid())
+  fromProfileId                String               @map("from_profile_id")
+  fromProfile                  Profile              @relation("dmFrom", fields: [fromProfileId], references: [id])
+  toProfileId                  String               @map("to_profile_id")
+  toProfile                    Profile              @relation("dmTo", fields: [toProfileId], references: [id])
+  message                      String               @db.Text
+  readAt                       DateTime?            @map("read_at")
+  created                      DateTime             @default(now())
+
+  @@index([fromProfileId, toProfileId])
+  @@index([toProfileId])
+  @@map("direct_message")
   @@schema("public")
 }
 

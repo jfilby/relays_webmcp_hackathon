@@ -1,7 +1,9 @@
+import { useSession } from 'next-auth/react'
 import { useMediaQuery } from '@mui/material'
 import PageHeader from './header'
 import Footer from './footer'
 import LayoutBox from './layout-box'
+import DmPopup from '@/components/dms/dm-popup'
 
 interface Props {
   children: React.ReactNode
@@ -15,6 +17,9 @@ export default function Layout({
   children,
   width = null
 }: Props) {
+
+  // Session
+  const { data: session } = useSession()
 
   // Consts
   const isMobile = useMediaQuery('(max-width:768px)')
@@ -34,6 +39,11 @@ export default function Layout({
         </LayoutBox>
       </main>
       <Footer />
+
+      {/* Global DM pop-up (signed-in users only) */}
+      {session?.user != null &&
+        <DmPopup />
+      }
     </>
   )
 }

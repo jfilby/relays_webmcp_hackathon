@@ -90,6 +90,10 @@ export function HeaderMobile({ highLevelLink }: Props) {
               <>
                 <Divider />
                 <HeaderMobileLink
+                  name='Messages'
+                  linkName='messages'
+                  highLevelLink={highLevelLink} />
+                <HeaderMobileLink
                   name='Notifications'
                   linkName='notifications'
                   highLevelLink={highLevelLink} />

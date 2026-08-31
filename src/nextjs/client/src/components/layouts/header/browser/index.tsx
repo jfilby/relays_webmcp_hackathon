@@ -52,6 +52,10 @@ export function HeaderBrowser({
           {session &&
             <>
               <HeaderBrowserLink
+                name='Messages'
+                linkName='messages'
+                highLevelLink={highLevelLink} />
+              <HeaderBrowserLink
                 name='Notifications'
                 linkName='notifications'
                 highLevelLink={highLevelLink} />
