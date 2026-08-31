@@ -1,9 +1,10 @@
 import Head from 'next/head'
 import { useEffect, useRef, useState } from 'react'
+import { useRouter } from 'next/router'
 import { Button, Typography } from '@mui/material'
 import { loadServerPage } from '@/services/page/load-server-page'
 import Layout, { pageBodyWidth } from '@/components/layouts/layout'
-import LoadProjectsByUserProfileId from '@/components/projects/load-by-user-profile-id'
+import LoadProjectByPublicId from '@/components/projects/load-by-id'
 import ProjectForm, { ProjectFormValues } from '@/components/projects/project-form'
 import UpdateProject from '@/components/projects/update'
 import DeleteProject from '@/components/projects/delete'
@@ -19,13 +20,16 @@ interface Props {
 export default function EditProjectPage({
   userProfile
 }: Props) {
+  // Router
+  const router = useRouter()
+  const projectPublicId = typeof router.query.id === 'string' ?
+    router.query.id :
+    undefined
 
   // State
-  const [projects, setProjects] = useState<Project[] | undefined>(undefined)
   const [notFound, setNotFound] = useState<boolean>(false)
 
   const [project, setProject] = useState<Project | undefined>(undefined)
-
   const [values, setValues] = useState<ProjectFormValues>({
     name: '',
     tagline: '',
@@ -52,19 +56,15 @@ export default function EditProjectPage({
   const [deleteAction, setDeleteAction] = useState<boolean>(false)
   const [deletedAction, setDeletedAction] = useState<boolean>(false)
 
-  // Functions
-  function onProjectChange(event: React.ChangeEvent<HTMLSelectElement>) {
-
-    const projectId = event.target.value
-
-    const found = (projects ?? []).find(project => project.id === projectId)
-
-    setProject(found ?? undefined)
-    setAlertSeverity(undefined)
-    setMessage(undefined)
-  }
-
   // Effects
+  useEffect(() => {
+
+    // No project specified: go back to the projects list
+    if (router.isReady === true && projectPublicId == null) {
+      router.replace('/project')
+    }
+  }, [router, projectPublicId])
+
   useEffect(() => {
 
     // Populate the form once a project is selected
@@ -160,99 +160,74 @@ export default function EditProjectPage({
 
         <div style={{ margin: '0 auto', width: pageBodyWidth, textAlign: 'left', verticalAlign: 'textTop' }}>
 
-          {notFound === true && (projects == null || projects.length === 0) ?
+          {project != null && project.isOwner !== true ?
             <div>
               <Typography
                 style={{ marginBottom: '0.5em' }}
                 variant='h3'>
-                No projects to edit
+                Project not found
               </Typography>
-              <Typography
-                style={{ marginBottom: '1em' }}
-                variant='body1'>
-                You don&apos;t own any projects yet.
+              <Typography variant='body1'>
+                This project doesn&apos;t exist or you don&apos;t own it.
               </Typography>
-
-              <Button
-                onClick={() => window.location.href = '/project/add'}
-                variant='contained'>
-                Create a project
-              </Button>
             </div>
             :
             <></>
           }
 
-          {projects != null && projects.length > 0 ?
+          {project != null && project.isOwner === true ?
             <>
               <Typography
-                style={{ marginBottom: '0.5em' }}
+                style={{ marginBottom: '1em' }}
                 variant='h3'>
                 Edit project
               </Typography>
 
-              <Typography
-                style={{ marginBottom: '1em' }}
-                variant='body1'>
-                Select a project to edit.
-              </Typography>
+              <ProjectForm
+                title=''
+                values={values}
+                onChange={onFieldChange}
+                onSubmit={onSubmit}
+                submitLabel='Save changes'
+                saving={updateAction}
+                alertSeverity={alertSeverity}
+                message={message} />
 
-              <div style={{ marginBottom: '1em' }}>
-                <select
-                  onChange={onProjectChange}
-                  style={{ minWidth: '20em', padding: '0.5em' }}
-                  value={project?.id ?? ''}>
-                  <option value=''>
-                    Select a project...
-                  </option>
-                  {projects.map(project => (
-                    <option
-                      key={project.id}
-                      value={project.id}>
-                      {project.name}
-                    </option>
-                  ))}
-                </select>
+              <div style={{ marginTop: '2em' }}>
+                <Typography
+                  style={{ marginBottom: '0.5em' }}
+                  variant='h6'>
+                  Danger zone
+                </Typography>
+                <Button
+                  disabled={deleteAction}
+                  onClick={onDelete}
+                  variant='outlined'
+                  color='error'>
+                  Delete this project
+                </Button>
               </div>
-
-              {project != null ?
-                <ProjectForm
-                  title=''
-                  values={values}
-                  onChange={onFieldChange}
-                  onSubmit={onSubmit}
-                  submitLabel='Save changes'
-                  saving={updateAction}
-                  alertSeverity={alertSeverity}
-                  message={message} />
-                :
-                <></>
-              }
-
-              {project != null ?
-                <div style={{ marginTop: '2em' }}>
-                  <Typography
-                    style={{ marginBottom: '0.5em' }}
-                    variant='h6'>
-                    Danger zone
-                  </Typography>
-                  <Button
-                    disabled={deleteAction}
-                    onClick={onDelete}
-                    variant='outlined'
-                    color='error'>
-                    Delete this project
-                  </Button>
-                </div>
-                :
-                <></>
-              }
             </>
             :
             <></>
           }
 
-          {projects == null && notFound === false ?
+          {project == null && notFound === true ?
+            <div>
+              <Typography
+                style={{ marginBottom: '0.5em' }}
+                variant='h3'>
+                Project not found
+              </Typography>
+              <Typography variant='body1'>
+                This project doesn&apos;t exist or you don&apos;t own it.
+              </Typography>
+            </div>
+            :
+            <></>
+          }
+
+          {project == null && notFound === false ?
             <Typography variant='body1'>
               Loading..
             </Typography>
@@ -262,13 +237,17 @@ export default function EditProjectPage({
         </div>
       </Layout>
 
-      <LoadProjectsByUserProfileId
-        userProfileId={userProfile.id}
-        viewerUserProfileId={userProfile.id}
-        setProjects={setProjects}
-        setNotFound={setNotFound} />
+      {projectPublicId != null ?
+        <LoadProjectByPublicId
+          publicId={projectPublicId}
+          userProfileId={userProfile.id}
+          setProject={setProject}
+          setNotFound={setNotFound} />
+        :
+        <></>
+      }
 
-      {project != null ?
+      {project != null && project.isOwner === true ?
         <>
           <UpdateProject
             id={project.id}

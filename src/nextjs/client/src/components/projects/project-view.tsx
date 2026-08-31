@@ -345,7 +345,7 @@ export default function ProjectView({
 
             {owner === true ?
               <Button
-                onClick={() => window.location.href = '/project/edit'}
+                onClick={() => window.location.href = `/project/edit?id=${project.publicId}`}
                 variant='outlined'>
                 Edit my project
               </Button>
