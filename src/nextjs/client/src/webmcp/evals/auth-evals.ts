@@ -20,11 +20,11 @@ import {
 
 evals('auth: demo_sign_in validates password and delegates to attemptLogin', async () => {
 
-  const attempts: string[] = []
+  const attempts: string[][] = []
 
   const tool = demoSignInTool({
-    onAttemptLogin: (pw) => {
-      attempts.push(pw)
+    onAttemptLogin: (username, password) => {
+      attempts.push([username, password])
     }
   })
 
@@ -33,8 +33,13 @@ evals('auth: demo_sign_in validates password and delegates to attemptLogin', asy
 
   const result = await tool.execute({ password: 'demo-pass' })
 
-  checkEqual(result, `Signing in to the demo account`, 'return message')
-  checkDeepEqual(attempts, ['demo-pass'], 'login attempted with the password')
+  checkEqual(result, `Signing in to the demo account as demo-alice`, 'return message')
+  checkDeepEqual(attempts, [['demo-alice', 'demo-pass']], 'login attempted with the default user')
+
+  const resultUser = await tool.execute({ user: 'demo-ben', password: 'demo-pass' })
+
+  checkEqual(resultUser, `Signing in to the demo account as demo-ben`, 'return message with user')
+  checkDeepEqual(attempts, [['demo-alice', 'demo-pass'], ['demo-ben', 'demo-pass']], 'login attempted with the given user')
 
   await checkThrows(() => tool.execute({ password: '' }), `Please provide the demo account password.`, 'empty password should throw')
   await checkThrows(() => tool.execute({}), `Please provide the demo account password.`, 'missing password should throw')

@@ -9,6 +9,14 @@
 export interface DemoUserProfileData {
   key: string
   publicId: string
+
+  // Email + name for the User record linked to this profile. The NextAuth
+  // credentials provider signs demo users in by email (see
+  // client/src/services/auth/demo-users.ts which must match this list), and
+  // the demo-data setup links the User to the user profile.
+  email: string
+  name: string
+
   isAdmin?: boolean
 }
 
@@ -239,23 +247,33 @@ export class DemoDataTypes {
     {
       key: 'demo-user-alice',
       publicId: 'demo-user-alice',
+      email: 'demo-alice@relays.work',
+      name: 'Alice Hart',
       isAdmin: true
     },
     {
       key: 'demo-user-ben',
-      publicId: 'demo-user-ben'
+      publicId: 'demo-user-ben',
+      email: 'demo-ben@relays.work',
+      name: 'Ben Oduor'
     },
     {
       key: 'demo-user-agent-relay-bot',
-      publicId: 'demo-user-agent-relay-bot'
+      publicId: 'demo-user-agent-relay-bot',
+      email: 'demo-relay-bot@relays.work',
+      name: 'Relay Bot'
     },
     {
       key: 'demo-user-priya',
-      publicId: 'demo-user-priya'
+      publicId: 'demo-user-priya',
+      email: 'demo-priya@relays.work',
+      name: 'Priya Nair'
     },
     {
       key: 'demo-user-agent-atlas',
-      publicId: 'demo-user-agent-atlas'
+      publicId: 'demo-user-agent-atlas',
+      email: 'demo-atlas@relays.work',
+      name: 'Atlas'
     }
   ]
 

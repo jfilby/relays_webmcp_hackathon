@@ -1,15 +1,28 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { Alert, Button, FormControl, TextField, Typography } from '@mui/material'
+import {
+  Alert,
+  Button,
+  FormControl,
+  InputLabel,
+  MenuItem,
+  Select,
+  SelectChangeEvent,
+  TextField,
+  Typography
+} from '@mui/material'
 import type { GetServerSidePropsContext, InferGetServerSidePropsType } from 'next'
 import { signIn } from 'next-auth/react'
 import Layout from '@/components/layouts/layout'
 import { useWebMcpTools } from '@/webmcp/webmcp'
 import { demoSignInTool } from '@/webmcp/tools/auth'
+import { defaultDemoUsername, demoUsers } from '@/services/auth/demo-users'
 
-// https://<host>/account/auth/demo-login?password=<demo password>
-// signs them straight into the demo account. Without the password in the URL
-// the page shows a password field which they must fill in and submit.
+// https://<host>/account/auth/demo-login?user=<username>&password=<demo password>
+// signs them straight into the selected demo user. Without the password in
+// the URL the page shows a demo user selector and a password field which
+// they must fill in and submit.
 export default function DemoLogin({
+  urlUser,
   urlPassword
 }: InferGetServerSidePropsType<typeof getServerSideProps>) {
 
@@ -17,6 +30,7 @@ export default function DemoLogin({
   const callbackUrl = '/'
 
   // State
+  const [username, setUsername] = useState(urlUser ?? defaultDemoUsername)
   const [password, setPassword] = useState(urlPassword ?? '')
   const [alertSeverity, setAlertSeverity] = useState<'success' | 'error' | undefined>(undefined)
   const [message, setMessage] = useState<string | undefined>(undefined)
@@ -26,17 +40,17 @@ export default function DemoLogin({
   const urlLoginRun = useRef(false)
 
   // Functions
-  const attemptLogin = useCallback(async (pw: string) => {
+  const attemptLogin = useCallback(async (user: string, pw: string) => {
 
     // Set
     setLoggingIn(true)
     setAlertSeverity(undefined)
     setMessage(undefined)
 
-    // Sign in with the demo user credentials. The credentials provider
-    // validates username 'demo' / the given password.
+    // Sign in as the selected demo user. The credentials provider validates
+    // the username against the demo user list and the shared demo password.
     const result = await signIn('credentials', {
-      username: 'demo',
+      username: user,
       password: pw,
       redirect: false,
       callbackUrl: callbackUrl,
@@ -63,19 +77,19 @@ export default function DemoLogin({
   // Events
   useEffect(() => {
 
-    // Automatically log in with the URL password, once
+    // Automatically log in with the URL user and password, once
     if (urlPassword != null &&
         !urlLoginRun.current) {
       urlLoginRun.current = true
-      attemptLogin(urlPassword)
+      attemptLogin(urlUser ?? defaultDemoUsername, urlPassword)
     }
 
-  }, [urlPassword, attemptLogin])
+  }, [urlUser, urlPassword, attemptLogin])
 
   // WebMCP
   useWebMcpTools(() => [
     demoSignInTool({
-      onAttemptLogin: (pw) => attemptLogin(pw)
+      onAttemptLogin: (user, pw) => attemptLogin(user, pw)
     })
   ])
 
@@ -102,7 +116,7 @@ export default function DemoLogin({
         <Typography
           variant='body1'
           style={{ marginBottom: '1em' }}>
-          This is a demo account for experimenting with Relays.
+          Select a demo user to login as and experiment with Relays.
         </Typography>
 
         {alertSeverity != null &&
@@ -114,15 +128,38 @@ export default function DemoLogin({
         <form
           onSubmit={(e) => {
             e.preventDefault()
-            attemptLogin(password)
+            attemptLogin(username, password)
           }}>
+
+          <FormControl style={{ marginBottom: '2em', width: '20em', display: 'flex', marginLeft: 'auto', marginRight: 'auto' }}>
+            <InputLabel id='demo-user'>Demo user</InputLabel>
+            <Select
+              labelId='demo-user'
+              id='demo-user'
+              label='Demo user'
+              name='demo-user'
+              autoFocus={urlPassword == null && urlUser == null}
+              disabled={loggingIn}
+              onChange={(event: SelectChangeEvent) => setUsername(event.target.value as string)}
+              value={username}>
+              {demoUsers.map(user => (
+                <MenuItem
+                  key={user.username}
+                  value={user.username}>
+                  {user.name}{user.type === 'A' ? ' (agent)' : ''}
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+          <br />
+
           <FormControl style={{ marginBottom: '2em', width: '20em', marginLeft: 'auto', marginRight: 'auto' }}>
             <TextField
               id='password'
               label='Password'
               name='password'
               type='password'
-              autoFocus={urlPassword == null}
+              autoFocus={urlUser != null && urlPassword == null}
               disabled={loggingIn}
               onChange={(e) => setPassword(e.target.value)}
               value={password}
@@ -144,7 +181,7 @@ export default function DemoLogin({
         <center>
           <div style={{ width: '50%' }}>
             <Typography variant='body1'>
-              Enter the demo password, then click Login.
+              Select a demo user, enter the demo password, then click Login.
             </Typography>
           </div>
         </center>
@@ -156,8 +193,14 @@ export default function DemoLogin({
 
 export async function getServerSideProps(context: GetServerSidePropsContext) {
 
-  // Get the password from the URL (?password=..) so demo login links can
-  // include it. The page signs the user in automatically when it's present.
+  // Get the user and password from the URL (?user=..&password=..) so demo
+  // login links can include them. The page signs the user in automatically
+  // when the password is present; the user defaults to the first demo user.
+  const urlUser =
+    typeof context.query.user === 'string'
+      ? context.query.user
+      : null
+
   const urlPassword =
     typeof context.query.password === 'string'
       ? context.query.password
@@ -166,6 +209,7 @@ export async function getServerSideProps(context: GetServerSidePropsContext) {
   // Return
   return {
     props: {
+      urlUser,
       urlPassword
     }
   }

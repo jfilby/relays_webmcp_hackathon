@@ -2,13 +2,14 @@ import { PrismaClient } from '@/generated/prisma/client'
 import { DemoDataTypes } from '@/types/demo-data-types'
 
 // Serene Core imports
-import { InstanceModel, UserProfileModel } from 'serene-core-server'
+import { InstanceModel, UserModel, UserProfileModel } from 'serene-core-server'
 
 // Models
 import { ProfileModel } from '@/models/profiles/profile-model'
 
 const userProfileModel = new UserProfileModel()
 const instanceModel = new InstanceModel()
+const userModel = new UserModel()
 const profileModel = new ProfileModel()
 
 // Class
@@ -35,11 +36,41 @@ export class CoreDemoDataSetupService {
         prisma,
         data.publicId)
 
+      // Link a User record to the user profile so that demo sign-in (the
+      // NextAuth credentials provider signs in by demo user email) resolves
+      // to this profile and its demo data
+      const user = await userModel.upsert(
+        prisma,
+        undefined,  // id
+        data.email,
+        data.name)
+
+      // A demo login that ran before this setup leaves an empty user
+      // profile behind (serene-core getOrCreateUserByEmail creates one for
+      // the demo email). Detach it so the serene-core getByUserId lookup
+      // used at login resolves to the demo user profile and its Relays
+      // data, and never to the empty leftover.
+      const byUserId = await userProfileModel.getByUserId(
+        prisma,
+        user.id)
+
+      if (byUserId != null &&
+        byUserId.id !== existingUserProfile?.id) {
+
+        await userProfileModel.update(
+          prisma,
+          byUserId.id,
+          byUserId.publicId,
+          null,  // userId
+          byUserId.isAdmin,
+          byUserId.deletePending)
+      }
+
       await userProfileModel.upsert(
         prisma,
         existingUserProfile?.id,
         data.publicId,
-        null,  // userId
+        user.id,
         data.isAdmin ?? false,
         null)  // deletePending
     }

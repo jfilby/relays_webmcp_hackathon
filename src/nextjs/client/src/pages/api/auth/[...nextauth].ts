@@ -8,6 +8,7 @@ import Email from 'next-auth/providers/email'
 import EmailProvider from 'next-auth/providers/email'
 import { PrismaAdapter } from '@auth/prisma-adapter'
 import { getResend } from '@/services/email/resend'
+import { demoUsers } from '@/services/auth/demo-users'
 // import { customSendVerificationRequest } from '@/services/email/nextauth-custom'
 
 const resend = getResend()
@@ -59,21 +60,22 @@ export default NextAuth({
 
         if (!credentials) return null
 
-        const demoUser = {
-          id: '1',
-          name: 'Demo user',
-          email: 'demo@relays.work',
-          username: 'demo',
-          password: process.env.DEMO_USER_PASSWORD
-        }
+        // Demo login: the username selects which demo user to sign in as
+        // (see /account/auth/demo-login). All demo users share the single
+        // demo password. The returned name/email map to the User records
+        // created by the server demo-data setup.
+        const demoUser = demoUsers.find(
+          user => user.username === credentials.username)
 
-        if (credentials.username === demoUser.username &&
-          credentials.password === demoUser.password) {
+        if (demoUser != null &&
+          credentials.password === process.env.DEMO_USER_PASSWORD) {
 
-          console.log(`CredentialsProvider.authorize: logging in demo user..`)
+          console.log(
+            `CredentialsProvider.authorize: logging in demo user ` +
+            `${demoUser.username}..`)
 
           return {
-            id: demoUser.id,  // Required field
+            id: '1',  // Required field
             name: demoUser.name,
             email: demoUser.email,
           }

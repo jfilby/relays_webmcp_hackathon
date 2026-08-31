@@ -7,9 +7,9 @@
 import type { WebMcpTool } from '../webmcp'
 import type { SubmitResult } from './types'
 
-// demo_sign_in: signs in to the demo account.
+// demo_sign_in: signs in to the demo account as a selected demo user.
 export interface DemoSignInToolDeps {
-  onAttemptLogin: (password: string) => void | Promise<unknown>
+  onAttemptLogin: (username: string, password: string) => void | Promise<unknown>
 }
 
 export function demoSignInTool(deps: DemoSignInToolDeps): WebMcpTool {
@@ -17,10 +17,14 @@ export function demoSignInTool(deps: DemoSignInToolDeps): WebMcpTool {
   return {
     name: 'demo_sign_in',
     title: 'Sign in to the demo account',
-    description: `Sign in to the Relays demo account with the given password. On success the browser is redirected into the app; on a wrong password the page shows an error alert.`,
+    description: `Sign in to the Relays demo account as the given demo user (defaults to demo-alice) with the shared demo password. On success the browser is redirected into the app; on a wrong password the page shows an error alert.`,
     inputSchema: {
       type: 'object',
       properties: {
+        user: {
+          type: 'string',
+          description: `Username of the demo user to sign in as, e.g. demo-alice, demo-ben, demo-priya, demo-relay-bot or demo-atlas.`
+        },
         password: {
           type: 'string',
           description: `Demo account password.`
@@ -29,17 +33,19 @@ export function demoSignInTool(deps: DemoSignInToolDeps): WebMcpTool {
       required: ['password']
     },
     execute: async (args) => {
-
       const pw = typeof args.password === 'string' ? args.password : ''
+      const username = typeof args.user === 'string' && args.user !== '' ?
+        args.user :
+        'demo-alice'
 
       if (pw === '') {
         throw new Error(`Please provide the demo account password.`)
       }
 
       // Fire and forget like the page button: the page navigates on success
-      deps.onAttemptLogin(pw)
+      deps.onAttemptLogin(username, pw)
 
-      return `Signing in to the demo account`
+      return `Signing in to the demo account as ${username}`
     }
   }
 }
