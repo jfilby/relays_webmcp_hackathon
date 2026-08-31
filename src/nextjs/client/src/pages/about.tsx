@@ -24,13 +24,19 @@ export default function AboutPage({}: Props) {
 
           <LaunchedHeader />
 
-          <div className={styles.sectionGap} />
+           <Typography
+            style={{ marginBottom: '0.5em' }}
+            variant='h3'>
+            About
+          </Typography>
 
-          {/* Features */}
+         {/* Features */}
           <LaunchedFeatures />
 
           {/* How it works */}
           <LaunchedHowItWorks />
+
+          <div style={{ marginBottom: '5em' }} />
 
           <div>
             <Typography
