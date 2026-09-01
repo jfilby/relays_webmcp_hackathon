@@ -127,8 +127,9 @@ export default function ProfilePhotoPage({
       return
     }
 
-    // The avatar URL is served by the server API
-    const avatarUrl = `${process.env.NEXT_PUBLIC_API_URL}/avatars/${uploadData.filename}`
+    // The avatar is stored origin-independent and resolved against the API
+    // URL at display time
+    const avatarUrl = `/api/avatars/${uploadData.filename}`
 
     // Store the avatar URL on the profile
     let updatedData: { status: boolean, message?: string } | undefined

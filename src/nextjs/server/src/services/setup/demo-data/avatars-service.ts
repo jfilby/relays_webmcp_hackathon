@@ -135,7 +135,7 @@ export class AvatarsDemoDataSetupService {
       await profileModel.updateAvatar(
         prisma,
         profile.id,
-        `${this.avatarUrlBase()}/avatars/${filename}`)
+        `${avatarStorageService.urlPath}/${filename}`)
 
       // Remove the replaced avatar file, if it still exists
       if (currentExists === true && currentFilename != null) {
@@ -144,13 +144,4 @@ export class AvatarsDemoDataSetupService {
     }
   }
 
-  // Helpers
-
-  // Base URL the avatars are served from, matching the client's
-  // NEXT_PUBLIC_API_URL convention
-  avatarUrlBase(): string {
-
-    return process.env.NEXT_PUBLIC_API_URL ??
-      `http://localhost:${process.env.NEXT_PUBLIC_SERVER_PORT ?? 3000}/api`
-  }
 }

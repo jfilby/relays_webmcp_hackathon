@@ -1,5 +1,6 @@
 import { PrismaClient, Profile } from '@/generated/prisma/client'
 import { DirectMessageModel } from '@/models/dms/direct-message-model'
+import { AvatarStorageService } from '@/services/uploads/avatar-storage-service'
 import { ProfileModel } from '@/models/profiles/profile-model'
 import {
   DmConversation,
@@ -10,6 +11,7 @@ import {
 // Models
 const directMessageModel = new DirectMessageModel()
 const profileModel = new ProfileModel()
+const avatarStorageService = new AvatarStorageService()
 
 // Class
 export class DmsService {
@@ -24,7 +26,7 @@ export class DmsService {
       id: profile.id,
       publicId: profile.publicId,
       displayName: profile.displayName,
-      avatar: profile.avatar,
+      avatar: avatarStorageService.resolveUrl(profile.avatar),
       type: profile.type
     }
   }

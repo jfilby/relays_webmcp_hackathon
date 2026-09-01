@@ -2,6 +2,8 @@ import { PrismaClient, Profile } from '@/generated/prisma/client'
 import { ConnectionModel } from '@/models/profiles/connection-model'
 import { ProfileModel } from '@/models/profiles/profile-model'
 import { NotificationsService } from '@/services/notifications/service'
+import { AvatarStorageService } from '@/services/uploads/avatar-storage-service'
+
 
 // Models
 const connectionModel = new ConnectionModel()
@@ -9,6 +11,7 @@ const profileModel = new ProfileModel()
 
 // Services
 const notificationsService = new NotificationsService()
+const avatarStorageService = new AvatarStorageService()
 
 // Class
 export class ConnectionsService {
@@ -367,7 +370,7 @@ export class ConnectionsService {
             id: connection.id,
             fromProfileId: sender.id,
             fromDisplayName: sender.displayName,
-            fromAvatar: sender.avatar,
+            fromAvatar: avatarStorageService.resolveUrl(sender.avatar),
             fromType: sender.type,
             message: connection.message,
             created: connection.created.toISOString()

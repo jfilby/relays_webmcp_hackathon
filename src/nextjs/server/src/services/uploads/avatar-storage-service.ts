@@ -5,6 +5,9 @@ import { randomUUID } from 'node:crypto'
 // Avatars are stored on the local filesystem and served through the
 // /api/avatars routes. Only small image files are accepted; the filename is
 // generated here so it is always safe (no user-supplied path components).
+// Profiles store origin-independent avatar URLs (/api/avatars/<filename>);
+// the absolute URL is resolved at display time, so stored values never bake
+// in a host.
 
 // Class
 export class AvatarStorageService {
@@ -22,6 +25,9 @@ export class AvatarStorageService {
     'image/webp': 'webp',
     'image/gif': 'gif'
   }
+
+  // Path the avatars are served from
+  urlPath = '/api/avatars'
 
   // Directory the avatars are stored in (created on demand)
   directory = process.env.AVATARS_PATH ?? `${process.cwd()}/uploads/avatars`
@@ -134,6 +140,35 @@ export class AvatarStorageService {
     }
 
     return filename
+  }
+
+
+  // Resolve a stored avatar value into an absolute URL for display. Values
+  // are stored origin-independent (/api/avatars/<filename>); legacy rows
+  // holding an absolute URL from another origin (e.g. localhost) are rebuilt
+  // against the current base.
+  resolveUrl(avatar: string | null | undefined): string | null {
+
+    // Validate
+    if (avatar == null || avatar === '') {
+      return null
+    }
+
+    const filename = this.filenameFromUrl(avatar)
+
+    // Rebuild the absolute URL against the current origin, derived from the
+    // client's NEXT_PUBLIC_API_URL convention
+    if (filename != null) {
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL ??
+        `http://localhost:${process.env.NEXT_PUBLIC_SERVER_PORT ?? 3000}/api`
+
+      const origin = apiUrl.replace(/\/api\/?$/, '')
+
+      return `${origin}${this.urlPath}/${filename}`
+    }
+
+    // Not an avatar API URL (e.g. an external URL): pass through unchanged
+    return avatar
   }
 
   isValidFilename(filename: string): boolean {

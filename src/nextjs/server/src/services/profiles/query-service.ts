@@ -7,6 +7,7 @@ import { ProfileLinkModel } from '@/models/profiles/profile-link-model'
 import { EndorsementModel } from '@/models/profiles/endorsement-model'
 import { ConnectionModel } from '@/models/profiles/connection-model'
 import { SearchService } from '@/services/search/search-service'
+import { AvatarStorageService } from '@/services/uploads/avatar-storage-service'
 
 // Models
 const profileModel = new ProfileModel()
@@ -16,6 +17,7 @@ const profileLinkModel = new ProfileLinkModel()
 const endorsementModel = new EndorsementModel()
 const connectionModel = new ConnectionModel()
 const searchService = new SearchService()
+const avatarStorageService = new AvatarStorageService()
 
 // Class
 export class ProfilesQueryService {
@@ -296,7 +298,7 @@ export class ProfilesQueryService {
       headline: profile.headline,
       bio: profile.bio,
       location: profile.location,
-      avatar: profile.avatar,
+      avatar: avatarStorageService.resolveUrl(profile.avatar),
       isPublic: profile.isPublic,
       availabilityStatus: profile.availabilityStatus,
       isVerified: profile.isVerified,
