@@ -659,6 +659,7 @@ export const typeDefs = /* GraphQL */ `
       isPublic: Boolean,
       headline: String,
       bio: String,
+      location: String,
       avatar: String,
       updates: Boolean,
       availabilityStatus: String): ProfileResults!
