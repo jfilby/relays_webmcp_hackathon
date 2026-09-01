@@ -625,6 +625,7 @@ export default function ProfileView({
 
               {endorsement.comment != null && endorsement.comment !== '' ?
                 <Typography
+                  component='span'
                   style={{ color: 'gray' }}
                   variant='body2'>
                   {endorsement.comment}
