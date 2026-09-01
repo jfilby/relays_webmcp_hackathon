@@ -295,3 +295,101 @@ export function createLandingProfileTool(deps: CreateLandingProfileToolDeps): We
     }
   }
 }
+
+// connect_profile: sends a connection request to the viewed profile.
+export interface ConnectProfileToolDeps {
+  isSignedIn: () => boolean
+  isOwner: () => boolean
+  // 'none' when no connection exists, 'pending' when a request is awaiting a
+  // response, 'connected' when the profiles are connected.
+  getConnectionStatus: () => 'none' | 'pending' | 'connected'
+  onConnect: (submitMessage?: string) => Promise<SubmitResult>
+}
+
+export function connectProfileTool(deps: ConnectProfileToolDeps): WebMcpTool {
+
+  return {
+    name: 'connect_profile',
+    title: 'Connect with profile',
+    description: `Send a connection request to this Relays profile, with an optional message. The connection becomes pending until the recipient accepts.`,
+    inputSchema: {
+      type: 'object',
+      properties: {
+        message: {
+          type: 'string',
+          description: `Optional message included with the connection request.`
+        }
+      }
+    },
+    execute: async (args) => {
+
+      if (deps.isSignedIn() !== true) {
+        throw new Error(`Sign in to connect with profiles`)
+      }
+
+      if (deps.isOwner() === true) {
+        throw new Error(`You cannot connect with your own profile`)
+      }
+
+      const status = deps.getConnectionStatus()
+
+      if (status === 'pending') {
+        throw new Error(`A connection request is already pending for this profile`)
+      }
+
+      if (status === 'connected') {
+        throw new Error(`You are already connected with this profile`)
+      }
+
+      const message = typeof args.message === 'string' && args.message.trim() !== '' ?
+        args.message :
+        undefined
+
+      const result = await deps.onConnect(message)
+
+      if (result.status === 'error') {
+        throw new Error(result.message)
+      }
+
+      return result.message
+    }
+  }
+}
+
+// remove_profile_connection: removes the connection with the viewed profile.
+export interface RemoveProfileConnectionToolDeps {
+  isSignedIn: () => boolean
+  getConnectionStatus: () => 'none' | 'pending' | 'connected'
+  onRemove: () => Promise<SubmitResult>
+}
+
+export function removeProfileConnectionTool(deps: RemoveProfileConnectionToolDeps): WebMcpTool {
+
+  return {
+    name: 'remove_profile_connection',
+    title: 'Remove profile connection',
+    description: `Remove the connection between the signed-in user and this Relays profile.`,
+    inputSchema: {
+      type: 'object',
+      properties: {}
+    },
+    execute: async () => {
+
+      if (deps.isSignedIn() !== true) {
+        throw new Error(`Sign in to manage connections`)
+      }
+
+      if (deps.getConnectionStatus() !== 'connected') {
+        throw new Error(`You are not connected with this profile`)
+      }
+
+      const result = await deps.onRemove()
+
+      if (result.status === 'error') {
+        throw new Error(result.message)
+      }
+
+      return result.message
+    }
+  }
+}

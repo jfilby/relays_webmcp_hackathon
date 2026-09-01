@@ -13,8 +13,10 @@ import {
 import {
   addProfileLinkTool,
   addProfileSkillTool,
+  connectProfileTool,
   createLandingProfileTool,
   createProfileTool,
+  removeProfileConnectionTool,
   searchProfilesTool,
   updateProfileTool
 } from '../tools/profiles'
@@ -339,4 +341,87 @@ evals('profiles: tools expose descriptions for agent discoverability', () => {
     check(tool.inputSchema.type === 'object', `${tool.name} has an object input schema`)
     check(typeof tool.execute === 'function', `${tool.name} has an execute function`)
   }
+})
+
+evals('profiles: connect_profile sends an optional message', async () => {
+
+  const sent: Array<string | undefined> = []
+
+  const tool = connectProfileTool({
+    isSignedIn: () => true,
+    isOwner: () => false,
+    getConnectionStatus: () => 'none',
+    onConnect: async (submitMessage) => {
+
+      sent.push(submitMessage)
+
+      return { status: 'ok', message: `Connection request sent` }
+    }
+  })
+
+  checkEqual(tool.name, 'connect_profile', 'tool name')
+
+  const result = await tool.execute({ message: 'Let us collaborate' })
+
+  checkEqual(result, `Connection request sent`, 'return message from connect')
+  checkDeepEqual(sent, ['Let us collaborate'], 'message passed through')
+
+  const noMessage = await tool.execute({})
+
+  checkEqual(noMessage, `Connection request sent`, 'connect without message')
+  checkDeepEqual(sent, ['Let us collaborate', undefined], 'omitted message passes undefined')
+})
+
+evals('profiles: connect_profile rejects signed-out, owner and existing connections', async () => {
+
+  const base = (status: 'none' | 'pending' | 'connected', owner: boolean, signedIn: boolean) => connectProfileTool({
+    isSignedIn: () => signedIn,
+    isOwner: () => owner,
+    getConnectionStatus: () => status,
+    onConnect: async () => ({ status: 'ok', message: '' })
+  })
+
+  await checkThrows(() => base('none', false, false).execute({}), `Sign in to connect with profiles`, 'signed-out should throw')
+  await checkThrows(() => base('none', true, true).execute({}), `You cannot connect with your own profile`, 'own profile should throw')
+  await checkThrows(() => base('pending', false, true).execute({}), `already pending`, 'pending connection should throw')
+  await checkThrows(() => base('connected', false, true).execute({}), `already connected`, 'connected profile should throw')
+})
+
+evals('profiles: remove_profile_connection only works when connected', async () => {
+
+  const removed: number[] = []
+
+  const tool = removeProfileConnectionTool({
+    isSignedIn: () => true,
+    getConnectionStatus: () => 'connected',
+    onRemove: async () => {
+
+      removed.push(1)
+
+      return { status: 'ok', message: `Connection removed` }
+    }
+  })
+
+  checkEqual(tool.name, 'remove_profile_connection', 'tool name')
+
+  const result = await tool.execute({})
+
+  checkEqual(result, `Connection removed`, 'return message from remove')
+  checkEqual(removed.length, 1, 'remove called once')
+
+  const notConnected = removeProfileConnectionTool({
+    isSignedIn: () => true,
+    getConnectionStatus: () => 'none',
+    onRemove: async () => ({ status: 'ok', message: '' })
+  })
+
+  await checkThrows(() => notConnected.execute({}), `You are not connected with this profile`, 'not connected should throw')
+
+  const signedOut = removeProfileConnectionTool({
+    isSignedIn: () => false,
+    getConnectionStatus: () => 'connected',
+    onRemove: async () => ({ status: 'ok', message: '' })
+  })
+
+  await checkThrows(() => signedOut.execute({}), `Sign in to manage connections`, 'signed-out should throw')
 })

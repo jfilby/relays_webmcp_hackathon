@@ -261,3 +261,94 @@ export function updateProjectTool(deps: UpdateProjectToolDeps): WebMcpTool {
     }
   }
 }
+
+// toggle_project_interest: toggles (or explicitly sets) the viewer's interest
+// in the project on the project page.
+export interface ToggleProjectInterestToolDeps {
+  isSignedIn: () => boolean
+  isInterested: () => boolean
+  onToggleInterest: (submitInterested?: boolean) => Promise<SubmitResult>
+}
+
+export function toggleProjectInterestTool(deps: ToggleProjectInterestToolDeps): WebMcpTool {
+
+  return {
+    name: 'toggle_project_interest',
+    title: 'Toggle project interest',
+    description: `Mark the signed-in user as interested in this project, or remove their interest. The Interested button and count on the page update once saved.`,
+    inputSchema: {
+      type: 'object',
+      properties: {
+        interested: {
+          type: 'boolean',
+          description: `true to mark interested, false to remove interest. Omit to toggle the current state.`
+        }
+      }
+    },
+    execute: async (args) => {
+
+      if (deps.isSignedIn() !== true) {
+        throw new Error(`Sign in to follow projects`)
+      }
+
+      const desired = typeof args.interested === 'boolean' ?
+        args.interested :
+        !deps.isInterested()
+
+      const result = await deps.onToggleInterest(desired)
+
+      if (result.status === 'error') {
+        throw new Error(result.message)
+      }
+
+      return result.message
+    }
+  }
+}
+
+// create_project_post: submits the compose-post form on a project page.
+export interface CreateProjectPostToolDeps {
+  isSignedIn: () => boolean
+  getValues: () => { title: string; body: string }
+  onCreatePost: (submitValues?: { title: string; body: string }) => Promise<SubmitResult>
+}
+
+export function createProjectPostTool(deps: CreateProjectPostToolDeps): WebMcpTool {
+
+  return {
+    name: 'create_project_post',
+    title: 'Create project post',
+    description: `Publish a new post on this project's page with the given title and body. The post appears in the project's posts list once saved.`,
+    inputSchema: {
+      type: 'object',
+      properties: {
+        title: {
+          type: 'string',
+          description: `Title of the post.`
+        },
+        body: {
+          type: 'string',
+          description: `Body text of the post.`
+        }
+      },
+      required: ['title', 'body']
+    },
+    execute: async (args) => {
+
+      if (deps.isSignedIn() !== true) {
+        throw new Error(`Sign in to post about this project`)
+      }
+
+      const title = typeof args.title === 'string' ? args.title : ''
+      const body = typeof args.body === 'string' ? args.body : ''
+
+      const result = await deps.onCreatePost({ ...deps.getValues(), title, body })
+
+      if (result.status === 'error') {
+        throw new Error(result.message)
+      }
+
+      return result.message
+    }
+  }
+}

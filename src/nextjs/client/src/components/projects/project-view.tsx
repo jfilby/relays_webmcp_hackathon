@@ -12,8 +12,11 @@ import { useMutation } from '@apollo/client/react'
 import { toggleProjectInterestMutation } from '@/apollo/projects'
 import { createDiscussPostMutation, deleteDiscussPostMutation } from '@/apollo/discussion'
 import type { DiscussPostItem, Project } from '@/types/client-only-types'
-import DiscussPostListItem from '@/components/discussion/discuss-post-list-item'
 import { projectStageName } from '@/types/client-only-types'
+import DiscussPostListItem from '@/components/discussion/discuss-post-list-item'
+import { useWebMcpTools } from '@/webmcp/webmcp'
+import { createProjectPostTool, toggleProjectInterestTool } from '@/webmcp/tools/projects'
+import type { SubmitResult } from '@/webmcp/tools/types'
 import { projectVisibilityName } from './project-card'
 import DeleteDialog from '@/components/dialogs/delete-dialog'
 
@@ -104,10 +107,20 @@ export default function ProjectView({
   const [deleteConfirmed, setDeleteConfirmed] = useState<boolean>(false)
 
   // Functions
-  async function toggleInterest() {
+  async function toggleInterest(desired?: boolean): Promise<SubmitResult> {
 
-    if (userProfileId == null || userProfileId === '') {
-      return
+    if (signedIn === false) {
+      return { status: 'error', message: `Sign in to follow projects` }
+    }
+
+    // With an explicit desired state, don't flip when already in it
+    if (desired != null && viewerIsInterested === desired) {
+      return {
+        status: 'ok',
+        message: viewerIsInterested === true ?
+          `You are already interested in ${project.name}` :
+          `You are not interested in ${project.name}`
+      }
     }
 
     setToggling(true)
@@ -125,7 +138,8 @@ export default function ProjectView({
 
     if (toggledData == null) {
       toast.error(`Failed to update your interest`)
-      return
+
+      return { status: 'error', message: `Failed to update your interest` }
     }
 
     toast(toggledData.message)
@@ -141,13 +155,23 @@ export default function ProjectView({
     if (wasInterested === false && toggledData.interested === true) {
       setInterestCount(current => current + 1)
     }
+
+    return { status: 'ok', message: toggledData.message }
   }
 
-  async function createPost() {
+  async function createPost(submitValues?: { title: string; body: string }): Promise<SubmitResult> {
 
-    if (userProfileId == null || userProfileId === '' ||
-      title.trim() === '' || body.trim() === '') {
-      return
+    const values = {
+      title: (submitValues?.title ?? title).trim(),
+      body: (submitValues?.body ?? body).trim()
+    }
+
+    if (signedIn === false) {
+      return { status: 'error', message: `Sign in to post about this project` }
+    }
+
+    if (values.title === '' || values.body === '') {
+      return { status: 'error', message: `A post title and body are required` }
     }
 
     setCreatingPost(true)
@@ -157,8 +181,8 @@ export default function ProjectView({
     await sendCreateDiscussPostMutation({
       variables: {
         userProfileId: userProfileId,
-        title: title.trim(),
-        body: body.trim(),
+        title: values.title,
+        body: values.body,
         projectId: project.id
       }
     }).then(result => createdData = result.data?.createDiscussPost)
@@ -167,7 +191,8 @@ export default function ProjectView({
 
     if (createdData == null) {
       toast.error(`Failed to create your post`)
-      return
+
+      return { status: 'error', message: `Failed to create your post` }
     }
 
     toast(createdData.message)
@@ -178,6 +203,12 @@ export default function ProjectView({
     if (createdData.status === true && onPostsChanged != null) {
       onPostsChanged()
     }
+
+    if (createdData.status !== true) {
+      return { status: 'error', message: createdData.message }
+    }
+
+    return { status: 'ok', message: createdData.message }
   }
 
   function requestDeletePost(postId: string) {
@@ -212,6 +243,7 @@ export default function ProjectView({
         }
       }).then(result => deletedData = result.data?.deleteDiscussPost)
 
+
       if (deletedData == null) {
         toast.error(`Failed to delete the post`)
         return
@@ -227,6 +259,21 @@ export default function ProjectView({
     fetchData()
 
   }, [deleteConfirmed])
+
+  // WebMCP
+  useWebMcpTools(() => [
+    toggleProjectInterestTool({
+      isSignedIn: () => signedIn,
+      isInterested: () => viewerIsInterested === true,
+      onToggleInterest: (desired) => toggleInterest(desired)
+    }),
+    createProjectPostTool({
+      isSignedIn: () => signedIn,
+      getValues: () => ({ title, body }),
+      onCreatePost: (submitValues) => createPost(submitValues)
+    })
+  ])
+
 
   // Effects
   useEffect(() => {
@@ -336,7 +383,7 @@ export default function ProjectView({
           <div style={{ alignItems: 'center', display: 'flex', gap: '0.75em', marginTop: '1em' }}>
             <Button
               disabled={toggling}
-              onClick={toggleInterest}
+              onClick={() => toggleInterest()}
               variant={viewerIsInterested === true ? 'contained' : 'outlined'}>
               {viewerIsInterested === true ? '★' : '☆'}
               &nbsp;
@@ -453,7 +500,7 @@ export default function ProjectView({
             <Button
               disabled={creatingPost || title.trim() === '' ||
                 body.trim() === ''}
-              onClick={createPost}
+              onClick={() => createPost()}
               style={{ marginTop: '0.75em' }}
               variant='contained'>
               Post

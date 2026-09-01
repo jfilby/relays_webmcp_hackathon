@@ -16,6 +16,9 @@ import {
 import DiscussPostListItem from '@/components/discussion/discuss-post-list-item'
 import ProjectCard from '@/components/projects/project-card'
 import DeleteDialog from '@/components/dialogs/delete-dialog'
+import { useWebMcpTools } from '@/webmcp/webmcp'
+import { connectProfileTool, removeProfileConnectionTool } from '@/webmcp/tools/profiles'
+import type { SubmitResult } from '@/webmcp/tools/types'
 import type { DiscussPostItem, Endorsement, Profile, ProfileLink, ProfileSkill, Project } from '@/types/client-only-types'
 import { profileTypeName } from './profile-card'
 
@@ -152,13 +155,15 @@ export default function ProfileView({
     })
 
   // Functions
-  async function onSendConnectionRequest() {
+  async function onSendConnectionRequest(submitMessage?: string): Promise<SubmitResult> {
 
     if (viewerUserProfileId == null || viewerUserProfileId === '') {
-      return
+      return { status: 'error', message: `Sign in to connect with profiles` }
     }
 
     setConnecting(true)
+
+    const message = submitMessage ?? connectionMessage
 
     // Query
     let sentData: SendConnectionRequestResult | undefined
@@ -167,13 +172,15 @@ export default function ProfileView({
       variables: {
         userProfileId: viewerUserProfileId,
         toProfileId: profile.id,
-        message: connectionMessage !== '' ? connectionMessage : null
+        message: message !== '' ? message : null
       }
     }).then(result => sentData = result.data?.sendConnectionRequest)
 
     // Get results
     if (sentData == null) {
       toast.error(`Failed to send the connection request`)
+
+      return { status: 'error', message: `Failed to send the connection request` }
     } else if (sentData.status === true) {
       toast.success(sentData.message)
       setConnectionStatus('pending')
@@ -185,12 +192,18 @@ export default function ProfileView({
 
     // Done
     setConnecting(false)
+
+    if (sentData.status !== true) {
+      return { status: 'error', message: sentData.message }
+    }
+
+    return { status: 'ok', message: sentData.message }
   }
 
-  async function onRemoveConnection() {
+  async function onRemoveConnection(): Promise<SubmitResult> {
 
     if (viewerUserProfileId == null || viewerUserProfileId === '') {
-      return
+      return { status: 'error', message: `Sign in to manage connections` }
     }
 
     setConnecting(true)
@@ -208,6 +221,8 @@ export default function ProfileView({
     // Get results
     if (removedData == null) {
       toast.error(`Failed to remove the connection`)
+
+      return { status: 'error', message: `Failed to remove the connection` }
     } else if (removedData.status === true) {
       toast.success(removedData.message)
       setConnectionStatus('none')
@@ -217,6 +232,12 @@ export default function ProfileView({
 
     // Done
     setConnecting(false)
+
+    if (removedData.status !== true) {
+      return { status: 'error', message: removedData.message }
+    }
+
+    return { status: 'ok', message: removedData.message }
   }
 
   async function onCreatePost() {
@@ -282,6 +303,7 @@ export default function ProfileView({
       // Query
       let deletedData: DeleteDiscussPostResult | undefined
 
+
       await sendDeleteDiscussPostMutation({
         variables: {
           userProfileId: viewerUserProfileId,
@@ -305,6 +327,22 @@ export default function ProfileView({
     fetchData()
 
   }, [deleteConfirmed])
+
+  // WebMCP
+  useWebMcpTools(() => [
+    connectProfileTool({
+      isSignedIn: () => viewerUserProfileId != null && viewerUserProfileId !== '',
+      isOwner: () => owner === true,
+      getConnectionStatus: () => connectionStatus,
+      onConnect: (submitMessage) => onSendConnectionRequest(submitMessage)
+    }),
+    removeProfileConnectionTool({
+      isSignedIn: () => viewerUserProfileId != null && viewerUserProfileId !== '',
+      getConnectionStatus: () => connectionStatus,
+      onRemove: () => onRemoveConnection()
+    })
+  ])
+
 
   // Render
   return (
@@ -425,7 +463,7 @@ export default function ProfileView({
                 <div style={{ display: 'flex', gap: '0.75em' }}>
                   <Button
                     disabled={connecting}
-                    onClick={onSendConnectionRequest}
+                    onClick={() => onSendConnectionRequest()}
                     variant='contained'>
                     Send request
                   </Button>

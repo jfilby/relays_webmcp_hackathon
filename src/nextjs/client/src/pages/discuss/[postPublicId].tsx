@@ -21,7 +21,15 @@ import DeleteDiscussComment from '@/components/discussion/delete-discuss-comment
 import LoadProfileByUserProfileId from '@/components/profiles/load-by-user-profile-id'
 import FlagContent from '@/components/discussion/flag-content'
 import { useWebMcpTools } from '@/webmcp/webmcp'
-import { addDiscussCommentTool, addDiscussReplyTool } from '@/webmcp/tools/discuss'
+import {
+  addDiscussCommentTool,
+  addDiscussReplyTool,
+  deleteDiscussCommentTool,
+  deleteDiscussPostTool,
+  flagDiscussCommentTool,
+  flagDiscussPostTool
+} from '@/webmcp/tools/discuss'
+import type { SubmitResult } from '@/webmcp/tools/types'
 import type { GetServerSidePropsContext } from 'next'
 
 interface Props {
@@ -68,6 +76,21 @@ function buildCommentTree(comments: DiscussCommentItem[]): CommentNode[] {
   }
 
   return roots
+}
+
+// Flatten the comment tree into the order the comments appear on the page
+// (depth-first, top to bottom), so WebMCP tools can target a comment by its
+// on-page position.
+function flattenCommentTree(nodes: CommentNode[]): DiscussCommentItem[] {
+
+  const flat: DiscussCommentItem[] = []
+
+  for (const node of nodes) {
+    flat.push(node.comment)
+    flat.push(...flattenCommentTree(node.children))
+  }
+
+  return flat
 }
 
 export default function DiscussPostPage({
@@ -157,17 +180,42 @@ export default function DiscussPostPage({
     return { status: 'ok', message: `Posting your reply` }
   }
 
-  function onDeleteComment() {
+  function onDeletePost(): SubmitResult {
+
+    setAlertSeverity(undefined)
+    setMessage(undefined)
     setDeletePostAction(true)
+
+    return { status: 'ok', message: `Deleting your post` }
   }
 
-  function onFlagPost() {
+  function onFlagPost(): SubmitResult {
+
+    setAlertSeverity(undefined)
+    setMessage(undefined)
     setFlagPostAction(true)
+
+    return { status: 'ok', message: `Flagging this post for review` }
   }
 
-  function onFlagComment(commentId: string) {
+  function onDeleteComment(commentId: string): SubmitResult {
+
+    setAlertSeverity(undefined)
+    setMessage(undefined)
+    setDeleteCommentId(commentId)
+    setDeleteCommentAction(true)
+
+    return { status: 'ok', message: `Deleting your comment` }
+  }
+
+  function onFlagComment(commentId: string): SubmitResult {
+
+    setAlertSeverity(undefined)
+    setMessage(undefined)
     setFlagCommentId(commentId)
     setFlagCommentAction(true)
+
+    return { status: 'ok', message: `Flagging this comment for review` }
   }
 
   // Renders one comment, its inline reply form, and its nested replies.
@@ -274,10 +322,7 @@ export default function DiscussPostPage({
             <IconButton
               aria-label='delete comment'
               color='error'
-              onClick={() => {
-                setDeleteCommentId(comment.id)
-                setDeleteCommentAction(true)
-              }}
+              onClick={() => onDeleteComment(comment.id)}
               size='small'>
               <DeleteIcon />
             </IconButton>
@@ -308,6 +353,29 @@ export default function DiscussPostPage({
       isSignedIn: () => signedIn,
       getReplyTarget: () => replyValuesRef.current.replyToCommentId,
       onReplySubmit: (commentId, submitValues) => onReplySubmit(commentId, submitValues)
+    }),
+    deleteDiscussPostTool({
+      isSignedIn: () => signedIn,
+      isAuthor: () => isPostAuthor === true,
+      onDeletePost: () => onDeletePost()
+    }),
+    flagDiscussPostTool({
+      isSignedIn: () => signedIn,
+      canFlag: () => signedIn && viewerProfile != null &&
+        isPostAuthor === false,
+      onFlagPost: () => onFlagPost()
+    }),
+    deleteDiscussCommentTool({
+      isSignedIn: () => signedIn,
+      viewerProfileId: () => viewerProfile?.id ?? '',
+      getComments: () => flattenCommentTree(buildCommentTree(comments ?? [])),
+      onDeleteComment: (commentId) => onDeleteComment(commentId)
+    }),
+    flagDiscussCommentTool({
+      isSignedIn: () => signedIn,
+      viewerProfileId: () => viewerProfile?.id ?? '',
+      getComments: () => flattenCommentTree(buildCommentTree(comments ?? [])),
+      onFlagComment: (commentId) => onFlagComment(commentId)
     })
   ])
 
@@ -385,7 +453,7 @@ export default function DiscussPostPage({
               {isPostAuthor ?
                 <Button
                   color='error'
-                  onClick={onDeleteComment}
+                  onClick={onDeletePost}
                   size='small'
                   startIcon={<DeleteIcon />}
                   variant='outlined'>
