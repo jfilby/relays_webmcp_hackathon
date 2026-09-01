@@ -45,16 +45,26 @@ export function isWebMcpAvailable(): boolean {
   return getModelContext() != null
 }
 
-// Registers each tool with the browser's model context for the lifetime of the
-// component. Tools are registered once; `execute` is always read from the latest
+// Re-registers when the tool *name set* changes (e.g. a page conditionally
+// exposes a tool based on state); `execute` is always read from the latest
 // render, so tool callbacks see current state without re-registration.
 // `getTools` is a factory so page tool definitions (and their state accessors)
 // are built lazily, the same as inline tool literals.
 export function useWebMcpTools(getTools: () => WebMcpTool[]): void {
 
+  // Tool definitions are built during render; the ref is updated after render
+  // (see below) so execute callbacks and registration always see the latest.
+  const tools = getTools()
+
+  // Re-run the registration effect only when the tool names change
+  const toolNames = tools.map(tool => tool.name).join(',')
+
   // Latest tools
-  const toolsRef = useRef<WebMcpTool[]>([])
-  toolsRef.current = getTools()
+  const toolsRef = useRef<WebMcpTool[]>(tools)
+
+  useEffect(() => {
+    toolsRef.current = tools
+  })
 
   useEffect(() => {
 
@@ -105,5 +115,5 @@ export function useWebMcpTools(getTools: () => WebMcpTool[]): void {
     return () => {
       controller.abort()
     }
-  }, [])
+  }, [toolNames])
 }

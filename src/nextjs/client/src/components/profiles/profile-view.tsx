@@ -329,19 +329,41 @@ export default function ProfileView({
   }, [deleteConfirmed])
 
   // WebMCP
-  useWebMcpTools(() => [
-    connectProfileTool({
-      isSignedIn: () => viewerUserProfileId != null && viewerUserProfileId !== '',
-      isOwner: () => owner === true,
-      getConnectionStatus: () => connectionStatus,
-      onConnect: (submitMessage) => onSendConnectionRequest(submitMessage)
-    }),
-    removeProfileConnectionTool({
-      isSignedIn: () => viewerUserProfileId != null && viewerUserProfileId !== '',
-      getConnectionStatus: () => connectionStatus,
-      onRemove: () => onRemoveConnection()
-    })
-  ])
+  useWebMcpTools(() => {
+
+    // Mirror the UI buttons: only offer the tool matching the current
+    // connection state, so agents see one actionable tool, not two.
+    const signedIn = viewerUserProfileId != null && viewerUserProfileId !== ''
+    const isOwner = owner === true
+
+    if (signedIn !== true || isOwner) {
+      return []
+    }
+
+    if (connectionStatus === 'none') {
+      return [
+        connectProfileTool({
+          isSignedIn: () => signedIn,
+          isOwner: () => isOwner,
+          getConnectionStatus: () => connectionStatus,
+          onConnect: (submitMessage) => onSendConnectionRequest(submitMessage)
+        })
+      ]
+    }
+
+    if (connectionStatus === 'connected') {
+      return [
+        removeProfileConnectionTool({
+          isSignedIn: () => signedIn,
+          getConnectionStatus: () => connectionStatus,
+          onRemove: () => onRemoveConnection()
+        })
+      ]
+    }
+
+    // 'pending': no action available, same as the UI
+    return []
+  })
 
 
   // Render

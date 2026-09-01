@@ -221,6 +221,7 @@ const Mutation = {
   // Connections
   sendConnectionRequest,
   respondToConnectionRequest,
+  removeConnection,
 
   // Discussion
   createDiscussPost,
