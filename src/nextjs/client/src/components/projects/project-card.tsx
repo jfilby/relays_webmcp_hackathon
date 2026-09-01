@@ -34,9 +34,8 @@ export default function ProjectCard({
         cursor: 'pointer',
         marginBottom: '1.25em',
         padding: '1.5em 1.75em',
-        transition: 'transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease',
+        transition: 'box-shadow 0.18s ease, border-color 0.18s ease',
         '&:hover': {
-          transform: 'translateY(-2px)',
           boxShadow: '0 8px 22px rgba(0, 0, 0, 0.08)',
           borderColor: '#c4c4c4'
         }

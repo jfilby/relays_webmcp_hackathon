@@ -108,9 +108,8 @@ export default function PlansPage({
                               display: 'block',
                               marginBottom: '1em',
                               padding: '1.25em 1.5em',
-                              transition: 'transform 0.18s ease, box-shadow 0.18s ease',
+                              transition: 'box-shadow 0.18s ease',
                               '&:hover': {
-                                transform: 'translateY(-2px)',
                                 boxShadow: '0 8px 22px rgba(0, 0, 0, 0.08)'
                               }
                             }}>
