@@ -327,7 +327,7 @@ export default function ProfileView({
             <img
               alt={`${profile.displayName} avatar`}
               src={profile.avatar}
-              style={{ borderRadius: '50%', height: '6em', width: '6em' }} />
+              style={{ borderRadius: '50%', height: '6em', width: '6em', marginRight: '1em' }} />
             :
             <></>
           }
