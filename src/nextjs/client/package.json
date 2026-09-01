@@ -5,6 +5,7 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
+    "start": "next start",
     "evals": "tsx src/webmcp/evals/run.ts",
     "lint": "eslint"
   },
