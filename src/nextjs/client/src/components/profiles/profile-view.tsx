@@ -489,7 +489,7 @@ export default function ProfileView({
         <></>
       }
 
-      <div style={{ marginBottom: '1em' }}>
+      <div style={{ marginBottom: '2em' }}>
         {profile.location != null && profile.location !== '' ?
           <Typography variant='body2'>
             Location: {profile.location}
