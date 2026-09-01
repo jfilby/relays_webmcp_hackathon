@@ -321,21 +321,21 @@ export default function ProfileView({
 
       <div style={{ marginBottom: '2em' }}>
 
-        {profile.avatar != null && profile.avatar !== '' ?
-          <div style={{ marginBottom: '1em' }}>
-            {/* eslint-disable-next-line @next/next/no-img-element */}
+        <div style={{ alignItems: 'center', display: 'flex', gap: '1em', marginBottom: '0.5em' }}>
+          {profile.avatar != null && profile.avatar !== '' ?
+            // eslint-disable-next-line @next/next/no-img-element
             <img
               alt={`${profile.displayName} avatar`}
               src={profile.avatar}
               style={{ borderRadius: '50%', height: '6em', width: '6em' }} />
-          </div>
-          :
-          <></>
-        }
+            :
+            <></>
+          }
 
-        <Typography variant='h3'>
-          {profile.displayName}
-        </Typography>
+          <Typography variant='h3'>
+            {profile.displayName}
+          </Typography>
+        </div>
 
         <div style={{ alignItems: 'center', display: 'flex', gap: '0.5em', marginBottom: '0.5em' }}>
           <Typography
@@ -458,10 +458,22 @@ export default function ProfileView({
         {viewerUserProfileId != null && owner !== true &&
           connectionStatus === 'pending' ?
           <Typography
-            style={{ color: '#2c6e2c', marginBottom: '2em' }}
+            style={{ color: '#2c6e2c' }}
             variant='body1'>
             Connection request pending
           </Typography>
+          :
+          <></>
+        }
+
+        {owner === true ?
+          <div>
+            <Button
+              onClick={() => window.location.href = '/profile/edit'}
+              variant='outlined'>
+              Edit my profile
+            </Button>
+          </div>
           :
           <></>
         }
@@ -584,18 +596,6 @@ export default function ProfileView({
               }
             </Typography>
           ))}
-        </div>
-        :
-        <></>
-      }
-
-      {owner === true ?
-        <div style={{ marginBottom: '2em' }}>
-          <Button
-            onClick={() => window.location.href = '/profile/edit'}
-            variant='outlined'>
-            Edit my profile
-          </Button>
         </div>
         :
         <></>
