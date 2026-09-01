@@ -52,35 +52,59 @@ export class EmbeddingService {
       return undefined
     }
 
-    // Request
-    try {
-      const response = await fetch(`${this.baseUrl}/embeddings`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${this.apiKey}`
-        },
-        body: JSON.stringify({
-          model: this.model,
-          input: trimmed
-        }),
-        signal: AbortSignal.timeout(10000)
-      })
+    // Request with retries for rate limiting (429) and transient server
+    // errors. Backs off exponentially (1s, 2s, 4s, 8s) unless the provider
+    // specifies a longer Retry-After.
+    const maxAttempts = 5
+    for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+      try {
+        const response = await fetch(`${this.baseUrl}/embeddings`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${this.apiKey}`
+          },
+          body: JSON.stringify({
+            model: this.model,
+            input: trimmed
+          }),
+          signal: AbortSignal.timeout(10000)
+        })
 
-      if (response.ok === false) {
-        console.error(`${fnName}: embeddings request failed: ${response.status}`)
+        if (response.ok === false) {
+          const retryable = response.status === 429 || response.status >= 500
+          if (retryable && attempt < maxAttempts) {
+            const retryAfter = Number(response.headers.get('Retry-After'))
+            const delay = Math.max(
+              1000 * 2 ** (attempt - 1),
+              Number.isFinite(retryAfter) && retryAfter > 0 ?
+                Math.min(retryAfter * 1000, 30000) : 0)
+            console.warn(
+              `${fnName}: request failed with ${response.status}, ` +
+              `retry ${attempt}/${maxAttempts - 1} in ${Math.round(delay / 1000)}s`)
+            const { promise, resolve } = Promise.withResolvers<void>()
+            setTimeout(resolve, delay)
+            await promise
+            continue
+          }
+          console.error(
+            `${fnName}: embeddings request failed: ${response.status}`)
+          return undefined
+        }
+
+        const body = await response.json() as {
+          data?: Array<{ embedding?: number[] }>
+        }
+
+        return body.data?.[0]?.embedding
+      } catch (error) {
+        console.error(`${fnName}: error: ${error}`)
         return undefined
       }
-
-      const body = await response.json() as {
-        data?: Array<{ embedding?: number[] }>
-      }
-
-      return body.data?.[0]?.embedding
-    } catch (error) {
-      console.error(`${fnName}: error: ${error}`)
-      return undefined
     }
+
+    // Unreachable: the loop either returns or logs and returns undefined
+    return undefined
   }
 
   // The searchable text for a profile: identity and descriptive fields.
