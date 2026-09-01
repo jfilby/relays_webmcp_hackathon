@@ -22,8 +22,9 @@ server/prisma/custom-migrations/search-setup.sql
 
 ## Demo data
 
-The Relays project will be assigned to the builder's user profile, make sure
-it exists with publicId 'jason-filby' before running the demo-data command.
+The demo data might need to be modified according to your needs, as right now
+it expects a Profile with publicId 'jason-filby' before running the demo-data
+command.
 
 
 ## Llama Prompt Guard 2 86M
