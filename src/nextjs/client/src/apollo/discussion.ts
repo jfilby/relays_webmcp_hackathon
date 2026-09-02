@@ -91,6 +91,7 @@ export const getDiscussCommentsByPostIdQuery = gql`
         id
         publicId
         postId
+        parentCommentId
         authorProfileId
         authorName
         authorProfilePublicId
