@@ -86,6 +86,12 @@ Notable dirs:
   - types: most types used across the server project
 
 
+## Verification
+
+Verify that GraphQL client definitions match server definitions when making
+changes to either side.
+
+
 ## Testing
 
 While you can write tests, don't attempt to perform any testing, this is done
