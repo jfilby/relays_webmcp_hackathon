@@ -25,6 +25,7 @@ export const getLatestActivityQuery = gql`
         isOpenToCollaborators
         isPromoted
         isPublic
+        created
         ownerName
         ownerProfilePublicId
         ownerProfileIsPublic
