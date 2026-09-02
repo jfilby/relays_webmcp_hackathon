@@ -106,80 +106,83 @@ export default function NetworkPage({
 
           {userProfile.id != null && userProfile.id !== '' ?
             <div style={{ marginBottom: '2em' }}>
-              <Typography
-                style={{ marginBottom: '0.5em' }}
-                variant='h4'>
-                Pending requests
-              </Typography>
-
               {requests == null ?
                 <></>
                 :
                 <>
                   {requests.length > 0 ?
-                    requests.map(request => (
-                      <Paper
-                        key={request.id}
-                        sx={{
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: '1em',
-                          padding: '1em 1.25em',
-                          marginBottom: '0.75em'
-                        }}>
-                        <Avatar
-                          alt={`${request.fromDisplayName} avatar`}
-                          src={request.fromAvatar || undefined}
-                          sx={{
-                            width: '2.6em',
-                            height: '2.6em',
-                            backgroundColor: '#111111',
-                            color: '#ffffff',
-                            fontWeight: 700
-                          }}>
-                          {request.fromDisplayName?.charAt(0)?.toUpperCase()}
-                        </Avatar>
+                    <>
+                      <Typography
+                        style={{ marginBottom: '0.5em' }}
+                        variant='h4'>
+                        Pending requests
+                      </Typography>
+                      <>
+                        {requests.map(request => (
+                          <Paper
+                            key={request.id}
+                            sx={{
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: '1em',
+                              padding: '1em 1.25em',
+                              marginBottom: '0.75em'
+                            }}>
+                            <Avatar
+                              alt={`${request.fromDisplayName} avatar`}
+                              src={request.fromAvatar || undefined}
+                              sx={{
+                                width: '2.6em',
+                                height: '2.6em',
+                                backgroundColor: '#111111',
+                                color: '#ffffff',
+                                fontWeight: 700
+                              }}>
+                              {request.fromDisplayName?.charAt(0)?.toUpperCase()}
+                            </Avatar>
 
-                        <div style={{ flex: 1 }}>
-                          <Typography
-                            sx={{ fontWeight: 600 }}
-                            variant='body1'>
-                            {request.fromDisplayName}
-                          </Typography>
+                            <div style={{ flex: 1 }}>
+                              <Typography
+                                sx={{ fontWeight: 600 }}
+                                variant='body1'>
+                                {request.fromDisplayName}
+                              </Typography>
 
-                          {request.message != null && request.message !== '' ?
-                            <Typography
-                              style={{ color: '#5a5a5a', marginTop: '0.15em' }}
-                              variant='body2'>
-                              {request.message}
-                            </Typography>
-                            :
-                            <></>
-                          }
+                              {request.message != null && request.message !== '' ?
+                                <Typography
+                                  style={{ color: '#5a5a5a', marginTop: '0.15em' }}
+                                  variant='body2'>
+                                  {request.message}
+                                </Typography>
+                                :
+                                <></>
+                              }
 
-                          <Typography
-                            style={{ color: '#9a9a9a', marginTop: '0.15em', fontSize: '0.8rem' }}
-                            variant='body2'>
-                            {formatDate(request.created)}
-                          </Typography>
-                        </div>
+                              <Typography
+                                style={{ color: '#9a9a9a', marginTop: '0.15em', fontSize: '0.8rem' }}
+                                variant='body2'>
+                                {formatDate(request.created)}
+                              </Typography>
+                            </div>
 
-                        <Button
-                          disabled={respondingTo === request.id}
-                          onClick={() => onRespond(request.id, 'A')}
-                          size='small'
-                          variant='contained'>
-                          Accept
-                        </Button>
-                        <Button
-                          disabled={respondingTo === request.id}
-                          onClick={() => onRespond(request.id, 'R')}
-                          size='small'
-                          variant='outlined'>
-                          Reject
-                        </Button>
-                      </Paper>
-                    ))
+                            <Button
+                              disabled={respondingTo === request.id}
+                              onClick={() => onRespond(request.id, 'A')}
+                              size='small'
+                              variant='contained'>
+                              Accept
+                            </Button>
+                            <Button
+                              disabled={respondingTo === request.id}
+                              onClick={() => onRespond(request.id, 'R')}
+                              size='small'
+                              variant='outlined'>
+                              Reject
+                            </Button>
+                          </Paper>
+                        ))}
+                      </>
+                    </>
                     :
                     <></>
                   }
@@ -204,6 +207,12 @@ export default function NetworkPage({
                     <>
                       {profiles.length > 0 ?
                         <>
+                          <Typography
+                            style={{ marginBottom: '0.5em' }}
+                            variant='h4'>
+                            Connections
+                          </Typography>
+
                           {profiles.map(profile => (
                             <ProfileCard
                               key={profile.id}
