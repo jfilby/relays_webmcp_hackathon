@@ -121,7 +121,7 @@ export default function SearchOmnibar() {
           sx={{ width: 32, height: 32 }}>
           {profile.displayName.charAt(0)}
         </Avatar>
-        <Box sx={{ minWidth: 0 }}>
+        <Box sx={{ minWidth: 0, textAlign: 'left' }}>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: '0.5em' }}>
             <Typography
               variant='body2'
@@ -165,7 +165,7 @@ export default function SearchOmnibar() {
           color: 'inherit',
           '&:hover': { backgroundColor: 'rgba(0, 0, 0, 0.04)' }
         }}>
-        <Box sx={{ minWidth: 0 }}>
+        <Box sx={{ minWidth: 0, textAlign: 'left' }}>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: '0.5em' }}>
             <Typography
               variant='body2'
@@ -205,7 +205,7 @@ export default function SearchOmnibar() {
           color: 'inherit',
           '&:hover': { backgroundColor: 'rgba(0, 0, 0, 0.04)' }
         }}>
-        <Box sx={{ minWidth: 0 }}>
+        <Box sx={{ minWidth: 0, textAlign: 'left' }}>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: '0.5em' }}>
             <Typography
               variant='body2'
