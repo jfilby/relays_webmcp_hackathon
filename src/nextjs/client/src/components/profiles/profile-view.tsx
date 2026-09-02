@@ -19,8 +19,8 @@ import DeleteDialog from '@/components/dialogs/delete-dialog'
 import { useWebMcpTools } from '@/webmcp/webmcp'
 import { connectProfileTool, removeProfileConnectionTool } from '@/webmcp/tools/profiles'
 import type { SubmitResult } from '@/webmcp/tools/types'
+import { profileTypeName } from '@/types/client-only-types'
 import type { DiscussPostItem, Endorsement, Profile, ProfileLink, ProfileSkill, Project } from '@/types/client-only-types'
-import { profileTypeName } from './profile-card'
 
 interface Props {
   profile: Profile

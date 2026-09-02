@@ -5,6 +5,7 @@ import { SessionProvider } from 'next-auth/react'
 import Head from 'next/head'
 import './styles.css'
 import { CssBaseline, ThemeProvider } from '@mui/material'
+import GlobalWebMcpTools from '@/webmcp/global-tools'
 import { blackAndWhiteTheme } from '@/components/layouts/themes/black-and-white'
 
 const apolloClient = new ApolloClient({
@@ -35,6 +36,7 @@ export default function App({
         <ApolloProvider client={apolloClient}>
           <ThemeProvider theme={blackAndWhiteTheme}>
             <CssBaseline />
+            <GlobalWebMcpTools />
             <Component {...pageProps} />
           </ThemeProvider>
         </ApolloProvider>

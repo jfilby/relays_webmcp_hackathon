@@ -14,8 +14,7 @@ import SearchIcon from '@mui/icons-material/Search'
 import LoadProfilesByFilter from '@/components/profiles/load-by-filter'
 import LoadProjectsByFilter from '@/components/projects/load-by-filter'
 import LoadDiscussPostsBySearch from '@/components/discussion/search-discuss-posts'
-import { profileTypeName } from '@/components/profiles/profile-card'
-import { projectStageName } from '@/types/client-only-types'
+import { projectStageName, profileTypeName } from '@/types/client-only-types'
 import type { DiscussPostItem, Profile, Project } from '@/types/client-only-types'
 
 // Number of results shown per group before the user expands it

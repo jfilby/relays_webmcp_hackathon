@@ -4,6 +4,7 @@
 //
 // Run with `pnpm --filter client evals` or `pnpm exec tsx src/webmcp/evals/run.ts`.
 //
+import './search-evals'
 import './profiles-evals'
 import './projects-evals'
 import './discuss-evals'

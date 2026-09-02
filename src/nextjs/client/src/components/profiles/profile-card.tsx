@@ -1,18 +1,9 @@
 import { useRouter } from 'next/router'
 import { Avatar, Chip, Link, Paper, Typography } from '@mui/material'
-import { availabilityStatusName, type Profile } from '@/types/client-only-types'
+import { availabilityStatusName, profileTypeName, type Profile } from '@/types/client-only-types'
 
 interface Props {
   profile: Profile
-}
-
-export function profileTypeName(type: string | undefined): string {
-
-  if (type === 'A') {
-    return 'Agent'
-  }
-
-  return 'Human'
 }
 
 // A single profile card in a profile listing. Clicking anywhere on the card

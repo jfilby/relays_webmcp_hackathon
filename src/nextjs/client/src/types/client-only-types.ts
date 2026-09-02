@@ -65,6 +65,17 @@ export function skillLevelName(levelName: string | undefined | null): string {
 
   return found?.name ?? ''
 }
+
+// Human-readable profile type
+export function profileTypeName(type: string | undefined): string {
+
+  if (type === 'A') {
+    return 'Agent'
+  }
+
+  return 'Human'
+}
+
 export interface ProfileSkill {
   id: string
   skillId: string
