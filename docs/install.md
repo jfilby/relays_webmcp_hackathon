@@ -50,3 +50,22 @@ cd src/python/llama_prompt_guard_2_86m
 . prompt_guard_env/bin/activate
 python server.py
 
+
+## Production
+
+### Nginx
+
+On the nginx server fronting c.relays.work, the location block proxying to the
+socket.io server needs the upgrade headers:                                                                                         
+                                                          
+```conf                                                         
+location /socket.io/ {
+    proxy_pass http://127.0.0.1:3002;   # wherever the socket.io server runs
+    proxy_http_version 1.1;
+    proxy_set_header Upgrade $http_upgrade;
+    proxy_set_header Connection "upgrade";
+    proxy_set_header Host $host;
+    proxy_read_timeout 86400;  # don't kill idle websocket connections
+}
+```
+
